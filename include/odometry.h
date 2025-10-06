@@ -2,7 +2,7 @@
 
 #include <math.h>
 #include <Arduino.h>
-#include "../include/motors.h"
+#include "HAL.h"
 
 #define SQR(x) ((x) * (x))
 #define SGN(x) ( ( (x)<0 ) ? -1 : 1)
@@ -13,6 +13,8 @@ extern float current_x;
 extern float current_y;
 extern float current_phi; // angle between x axis and the robot's center axis, in radians
 extern float absolute_phi; // phi without modulo 2PI
+extern int32_t previous_encoder_count_R;
+extern int32_t previous_encoder_count_L;
 
 void update_position();
 void reset_position();

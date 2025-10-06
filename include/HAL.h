@@ -47,8 +47,8 @@ extern int PWM_max;
 extern int CPR;
 
 //global variables
-extern volatile int encoderRCount;
-extern volatile int encoderLCount;
+extern volatile int encoder_count_R;
+extern volatile int encoder_count_L;
 extern volatile int32_t speedCalculationPreviousTimeR;
 extern volatile int32_t speedCalculationCurrentTimeR;
 extern volatile int32_t speedCalculationPreviousTimeL;
@@ -57,11 +57,17 @@ extern volatile int8_t direction_R;
 extern volatile int8_t direction_L;
 extern volatile float current_speed_R;
 extern volatile float current_speed_L;
+extern volatile float target_speed_R;
+extern volatile float target_speed_L;
+extern int PWM_offset_R;
+extern int PWM_offset_L;
+extern volatile int PWM_R;
+extern volatile int PWM_L;
 
 //physical parameters
 extern float wheel_diameter_R;
 extern float wheel_diameter_L;
-extern float wheel_spacing;
+extern float wheels_spacing;
 
 void set_motor_pins(int right_forward, int right_backward, int left_forward, int left_backward);
 void set_encoder_channels(int encoderRA, int encoderRB, int encoderLA, int encoderLB, int cpr);
@@ -71,7 +77,13 @@ void set_wheel_diameter_and_spacing(float wheel_diameter_R, float wheel_diameter
 void run_right_motor();
 void run_left_motor();
 
+void stop_motors();
+
 void IRAM_ATTR encoderRISRA();
 void IRAM_ATTR encoderLISRA();
+
+void set_target_speeds(float target__speed_R, float target__speed_L);
+void send_values_to_usart(float value1, float value2, float value3, float value4);
+
 
 void HAL_setup();

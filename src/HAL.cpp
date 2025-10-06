@@ -1,3 +1,5 @@
+#pragma once
+
 #include "HAL.h"
 
 // motor pins
@@ -25,8 +27,8 @@ int PWM_max;
 int CPR;
 
 //global variables
-volatile int encoderRCount;
-volatile int encoderLCount;
+volatile int encoder_count_R;
+volatile int encoder_count_L;
 volatile int32_t speedCalculationPreviousTimeR;
 volatile int32_t speedCalculationCurrentTimeR;
 volatile int32_t speedCalculationPreviousTimeL;
@@ -35,13 +37,17 @@ volatile int8_t direction_R;
 volatile int8_t direction_L;
 volatile float current_speed_R;
 volatile float current_speed_L;
+float target_speed_R;
+float target_speed_L;
+int PWM_offset_R;
+int PWM_offset_L;
 volatile int PWM_R;
 volatile int PWM_L;
 
 //physical parameters
 float wheel_diameter_R;
 float wheel_diameter_L;
-float wheel_spacing;
+float wheels_spacing;
 
 void set_motor_pins(int right_forward, int right_backward, int left_forward, int left_backward){
     motorRa = right_forward;
@@ -63,10 +69,10 @@ void set_PWM_min_max(int PWM_max, int PWM_R_forward_min, int PWM_L_forward_min, 
     PWM_L_forward_min = PWM_L_forward_min;
     PWM_L_backward_min = PWM_L_backward_min;
 }
-void set_wheel_diameter_and_spacing(float wheel_diameter_R, float wheel_diameter_L, float wheel_spacing){
+void set_wheel_diameter_and_spacing(float wheel_diameter_R, float wheel_diameter_L, float wheels_spacing){
     wheel_diameter_R = wheel_diameter_R;
     wheel_diameter_L = wheel_diameter_L;
-    wheel_spacing = wheel_spacing;
+    wheels_spacing = wheels_spacing;
 }
 
 void run_right_motor(){
@@ -92,12 +98,19 @@ void run_left_motor(){
     }
 }
 
+void set_target_speeds(float target__speed_R, float target__speed_L){
+	PWM_offset_R = (target__speed_R > 0)? PWM_R_forward_min - 30: PWM_R_backward_min +30;
+	target_speed_R = target__speed_R;
+	PWM_offset_L = (target__speed_L > 0)? PWM_L_forward_min - 30: PWM_L_backward_min +30;
+	target_speed_L = target__speed_L;
+}
+
 void IRAM_ATTR encoderRISRA(){
     if(FAST_READ(encoderRB) == FAST_READ1(encoderRA)){
-    encoderRCount--;
+    encoder_count_R--;
     direction_R = -1;
   }else{
-    encoderRCount++;
+    encoder_count_R++;
     direction_R = 1;
   }
   speedCalculationPreviousTimeR = speedCalculationCurrentTimeR;
@@ -108,15 +121,35 @@ void IRAM_ATTR encoderRISRA(){
 }
 void IRAM_ATTR encoderLISRA(){
     if(FAST_READ(encoderLB) == FAST_READ(encoderLA)){
-    encoderLCount++;
+    encoder_count_L++;
     direction_L = 1;
   }else{
-    encoderLCount--;
+    encoder_count_L--;
     direction_L = -1;
   }
   speedCalculationPreviousTimeL = speedCalculationCurrentTimeL;
   speedCalculationCurrentTimeL = micros();
   current_speed_L = (wheel_diameter_L*PI/CPR * direction_L) / (speedCalculationCurrentTimeL - speedCalculationPreviousTimeL);
+}
+
+void send_values_to_usart(float value1, float value2, float value3, float value4){
+    // temporary
+    Serial.print(value1);
+    Serial.print(",");
+    Serial.print(value2);
+    Serial.print(",");
+    Serial.print(value3);
+    Serial.print(",");
+    Serial.println(value4);
+}
+
+void stop_motors(){
+    PWM_R = 0;
+    PWM_L = 0;
+    target_speed_R = 0;
+    target_speed_L = 0;
+    run_right_motor();
+    run_left_motor();
 }
 
 void HAL_setup(){

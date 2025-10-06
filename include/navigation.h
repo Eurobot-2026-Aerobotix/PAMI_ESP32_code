@@ -2,7 +2,7 @@
 
 #include <math.h>
 #include <Arduino.h>
-#include "../include/odometry.h"
+#include "odometry.h"
 
 enum Wheel_state{
 	DEAD_STOP,
@@ -10,7 +10,7 @@ enum Wheel_state{
 	CONTROLLED_BREAK,
 	EMERGENCY_BREAK,
 	CRUISING // holding the same speed
-}; // other states will be added, like doing a curve
+};
 
 enum Trajectory{
 	STRAIGHT,

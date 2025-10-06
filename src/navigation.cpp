@@ -63,7 +63,7 @@ int move_forward(float distance, float speed){
 			lane_correction_term = 0;
 		}
 		set_target_speeds(calculate_instant_target_speed_R(x, distance)*(1 + lane_correction_term) ,calculate_instant_target_speed_L(x, distance)* (1 - lane_correction_term));
-		HAL_Delay(4);
+		vTaskDelay(4);
 		previous_distance_to_target = distance_to_target;
 		distance_to_target = get_distance_to(target_point_x, target_point_y);
 
@@ -90,7 +90,7 @@ int move_forward(float distance, float speed){
 		set_target_speeds(speed*(1 + lane_correction_term) ,speed* (1 - lane_correction_term));
 		speed = MAX(speed*0.995, 0);
 		previous_distance_to_target = distance_to_target;
-		HAL_Delay(2);
+		vTaskDelay(2);
 		distance_to_target = get_distance_to(x_closest, y_closest);
 
 		if(micros() - phase_two_start_time> 4000000){
@@ -158,7 +158,7 @@ int move_backward(float distance, float speed){
 			lane_correction_term = 0;
 		}
 		set_target_speeds(calculate_instant_target_speed_R(x, distance)*(1 - lane_correction_term) ,calculate_instant_target_speed_L(x, distance)* (1 + lane_correction_term));
-		HAL_Delay(4);
+		vTaskDelay(4);
 		previous_distance_to_target = distance_to_target;
 		distance_to_target = get_distance_to(target_point_x, target_point_y);
 //		if (distance_to_target >= previous_distance_to_target + 2){
@@ -185,7 +185,7 @@ int move_backward(float distance, float speed){
 		set_target_speeds(speed*(1 - lane_correction_term) ,speed* (1 + lane_correction_term));
 		speed = MIN(speed*0.995, 0);
 		previous_distance_to_target = distance_to_target;
-		HAL_Delay(2);
+		vTaskDelay(2);
 		distance_to_target = get_distance_to(x_closest, y_closest);
 
 		if(micros() - phase_two_start_time> 4000000){
@@ -277,7 +277,7 @@ float calculate_instant_target_phi(float x, float distance){
 int rotate(float angle, int8_t is_radian){
 	float rotating_breaking_acceleration = -3.7;
 	angle = is_radian? angle: deg_to_rad(angle);
-	float arc_length = (dead_wheels_spacing/2) * angle;
+	float arc_length = (wheels_spacing/2) * angle;
 
 	direction_R = SGN(arc_length);
 	direction_L = -direction_R;
@@ -338,9 +338,9 @@ int rotate(float angle, int8_t is_radian){
 		}
 		speed = calculate_instant_target_speed_R_full(x, distance, ramping_acceleration, rotating_breaking_acceleration);
 		set_target_speeds(speed*(1 - yaw_centering_term) ,-speed* (1 + yaw_centering_term));
-		HAL_Delay(4);
+		vTaskDelay(4);
 		previous_distance_to_target = distance_to_target;
-		distance_to_target = (dead_wheels_spacing/2) * fabs(target_phi - absolute_phi);
+		distance_to_target = (wheels_spacing/2) * fabs(target_phi - absolute_phi);
 
 //		if (distance_to_target >= previous_distance_to_target + 2){
 //			stop_motors();
@@ -352,10 +352,10 @@ int rotate(float angle, int8_t is_radian){
 	// completing the last part of distance separately, so the break happens on point
 
 	speed = (target_speed_R - target_speed_L)/ 2; // one of the speeds is negative, that's why there is a minus
-	if (fabs(speed) < (deg_to_rad(phase_two_angle) * dead_wheels_spacing/2)*(-rotating_breaking_acceleration) ){ // handling the case where the robot skips the first while loop, being too close to target_phi
-		speed = (deg_to_rad(phase_two_angle) * dead_wheels_spacing/2)*(-rotating_breaking_acceleration) * direction_R;
+	if (fabs(speed) < (deg_to_rad(phase_two_angle) * wheels_spacing/2)*(-rotating_breaking_acceleration) ){ // handling the case where the robot skips the first while loop, being too close to target_phi
+		speed = (deg_to_rad(phase_two_angle) * wheels_spacing/2)*(-rotating_breaking_acceleration) * direction_R;
 	}
-	distance_to_target = dead_wheels_spacing * fabs(target_phi - absolute_phi);
+	distance_to_target = wheels_spacing * fabs(target_phi - absolute_phi);
 	previous_distance_to_target = distance_to_target;
 
 	uint32_t phase_two_start_time = micros();
@@ -367,8 +367,8 @@ int rotate(float angle, int8_t is_radian){
 		set_target_speeds(speed*(1 - yaw_centering_term) ,-speed* (1 + yaw_centering_term));
 		speed = MAX(fabs(speed)*0.985, 0) * direction_R;
 		previous_distance_to_target = distance_to_target;
-		HAL_Delay(2);
-		distance_to_target = dead_wheels_spacing * fabs(target_phi - absolute_phi);
+		vTaskDelay(2);
+		distance_to_target = wheels_spacing * fabs(target_phi - absolute_phi);
 
 		if(micros() - phase_two_start_time> 3000000){
 			break;
@@ -391,8 +391,8 @@ int move_forward_with_deviation(float distance, float deviation, float speed){
 	float radius = ( SQR(distance/2) + SQR(deviation) ) / ( 2*deviation );
 	float alpha = atan( (distance/2) / ( fabs(radius) - fabs(deviation) ) ) * SGN(deviation);
 	float arc_length = 2 * fabs(alpha * radius);
-	float arc_length_R = fabs( 2 * alpha * ( radius - dead_wheels_spacing/2) );
-	float arc_length_L = fabs( 2 * alpha * ( radius + dead_wheels_spacing/2) );
+	float arc_length_R = fabs( 2 * alpha * ( radius - wheels_spacing/2) );
+	float arc_length_L = fabs( 2 * alpha * ( radius + wheels_spacing/2) );
 
 	float target_point_x = current_x + distance*cos(current_phi);
 	float target_point_y = current_y + distance*sin(current_phi);
@@ -404,7 +404,7 @@ int move_forward_with_deviation(float distance, float deviation, float speed){
 	float center_point_y = current_y + radius*sin(current_phi - PI/2 + alpha);
 
 	rotate(alpha, 1);
-	HAL_Delay(500);
+	vTaskDelay(1000);
 
 	direction_R = 1;
 	direction_L = 1;
@@ -454,7 +454,7 @@ int move_forward_with_deviation(float distance, float deviation, float speed){
 			lane_correction_term = 0;
 		}
 		set_target_speeds(calculate_instant_target_speed_R_full(x, arc_length, ramping_acceleration_R, breaking_acceleration_R)*(1 + lane_correction_term) ,calculate_instant_target_speed_L_full(x, arc_length, ramping_acceleration_L, breaking_acceleration_L)* (1 - lane_correction_term));
-		HAL_Delay(4);
+		vTaskDelay(4);
 		previous_distance_to_target = distance_to_target;
 
 		distance_to_target = get_arc_distance_to(target_point_x, target_point_y, center_point_x, center_point_y, radius);
@@ -478,7 +478,7 @@ int move_forward_with_deviation(float distance, float deviation, float speed){
 		speed_R = MAX(speed_R*0.995, 0);
 		speed_L = MAX(speed_L*0.995, 0);
 		previous_distance_to_target = distance_to_target;
-		HAL_Delay(2);
+		vTaskDelay(2);
 		distance_to_target = get_arc_distance_to(target_point_x, target_point_y, center_point_x, center_point_y, radius);
 
 		if(micros() - phase_two_start_time> 4000000){
@@ -516,8 +516,8 @@ int circle_curve(float target_x, float target_y, float target_phi, float speed){
 	float distance = get_distance_to(target_x, target_y);
 	float radius = distance / ( 2*sin(alpha) );
 	float arc_length = 2 * fabs( alpha * radius);
-	float arc_length_R = 2 * fabs( alpha * ( radius - dead_wheels_spacing/2) );
-	float arc_length_L = 2 * fabs( alpha * ( radius + dead_wheels_spacing/2) );
+	float arc_length_R = 2 * fabs( alpha * ( radius - wheels_spacing/2) );
+	float arc_length_L = 2 * fabs( alpha * ( radius + wheels_spacing/2) );
 
 	starting_phi = 2*trajectory_phi - target_phi + (absolute_phi - current_phi); // the part between paratheses is to offset the phi to make it in the prespective of absolute phi not current_phi
 
@@ -528,7 +528,7 @@ int circle_curve(float target_x, float target_y, float target_phi, float speed){
 	float center_point_y = target_y + radius*sin(target_phi - PI/2 );
 
 	orientate( 2*trajectory_phi - target_phi , 1);
-	HAL_Delay(500);
+	vTaskDelay(1000);
 
 	direction_R = 1;
 	direction_L = 1;
@@ -578,7 +578,7 @@ int circle_curve(float target_x, float target_y, float target_phi, float speed){
 			lane_correction_term = 0;
 		}
 		set_target_speeds(calculate_instant_target_speed_R_full(x, arc_length, ramping_acceleration_R, breaking_acceleration_R)*(1 + lane_correction_term) ,calculate_instant_target_speed_L_full(x, arc_length, ramping_acceleration_L, breaking_acceleration_L)* (1 - lane_correction_term));
-		HAL_Delay(4);
+		vTaskDelay(4);
 		previous_distance_to_target = distance_to_target;
 
 		distance_to_target = get_arc_distance_to(target_x, target_y, center_point_x, center_point_y, radius);
@@ -602,7 +602,7 @@ int circle_curve(float target_x, float target_y, float target_phi, float speed){
 		speed_R = MAX(speed_R*0.996, 0);
 		speed_L = MAX(speed_L*0.996, 0);
 		previous_distance_to_target = distance_to_target;
-		HAL_Delay(2);
+		vTaskDelay(2);
 		distance_to_target = get_arc_distance_to(target_x, target_y, center_point_x, center_point_y, radius);
 
 		if(micros() - phase_two_start_time> 4000000){
@@ -625,7 +625,7 @@ int go_to(float x, float y, float speed){
 	if ( orientate( get_angle_to(x, y), 1 ) ){
 		return 1;
 	}
-	HAL_Delay(500);
+	vTaskDelay(1000);
 	return move_forward(get_distance_to(x, y), speed) * 2; // why *2 ? view in .h file
 }
 void emergency_break(){
@@ -633,7 +633,7 @@ void emergency_break(){
 	wheel_state_L = EMERGENCY_BREAK;
 	int32_t last_encoder_count_R = encoder_count_R;
 	int32_t last_encoder_count_L = encoder_count_L;
-	HAL_Delay(4);
+	vTaskDelay(4);
 	while (current_speed_R > 0.5 || current_speed_L > 0.5){
 		float dx_R = ticks_to_distance(fabs(encoder_count_R - last_encoder_count_R), wheel_diameter_R);
 		float dx_L = ticks_to_distance(fabs(encoder_count_L - last_encoder_count_L), wheel_diameter_L);
@@ -642,7 +642,7 @@ void emergency_break(){
 
 		last_encoder_count_R = encoder_count_R;
 		last_encoder_count_L = encoder_count_L;
-		HAL_Delay(4);
+		vTaskDelay(4);
 	}
 	stop_motors();
 }

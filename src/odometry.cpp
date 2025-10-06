@@ -1,11 +1,13 @@
 #pragma once
 
-#include "../include/odometry.h"
+#include "odometry.h"
 
 float current_x = 0;
 float current_y = 0;
 float current_phi = 0;
 float absolute_phi = 0;
+int32_t previous_encoder_count_R = 0;
+int32_t previous_encoder_count_L = 0;
 
 void update_position(){
 
@@ -14,7 +16,7 @@ void update_position(){
 	float dC = (dR+dL)/2;
 
 	float previous_absolute_phi = absolute_phi;
-	absolute_phi = ( ticks_to_distance(encoder_count_R, wheel_diameter_R) - ticks_to_distance(encoder_count_L, wheel_diameter_L) )/dead_wheels_spacing;
+	absolute_phi = ( ticks_to_distance(encoder_count_R, wheel_diameter_R) - ticks_to_distance(encoder_count_L, wheel_diameter_L) )/wheels_spacing;
 
 	current_x += dC*cos( ( previous_absolute_phi + absolute_phi ) / 2 );
 	current_y += dC*sin( ( previous_absolute_phi + absolute_phi ) / 2 );
