@@ -63,7 +63,7 @@ void prepare_circle_curve(float target_x, float target_y, float target_phi, floa
     arguments["target_y"] = target_y;
     arguments["target_phi"] = target_phi;
     arguments["speed"] = speed;
-    current_command = CIRCLE_CURVE;
+    current_command = CIRCLE_CURVE_CMD;
 }
 
 void execute_command(){
