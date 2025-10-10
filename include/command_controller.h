@@ -9,13 +9,13 @@
 enum Command
 {
     NONE,
-    MOVE_FORWARD,
-    MOVE_BACKWARD,
-    ROTATE,
-    ORIENTATE,
-    GO_TO,
-    MOVE_FORWARD_WITH_DEVIATION,
-    CIRCLE_CURVE_CMD
+    MOVIN_FORWARD,
+    MOVIN_BACKWARD,
+    ROTATIN,
+    ORIENTATIN,
+    GOIN_TO,
+    MOVIN_FORWARD_WITH_DEVIATION,
+    CIRCLIN_CURVE_CMD
 };
 
 extern std::unordered_map<std::string, float> arguments;

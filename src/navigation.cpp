@@ -7,8 +7,7 @@ float ramping_acceleration = 5;
 float breaking_acceleration = -2;
 float emergency_breaking_acceleration = -10;
 float rotating_speed = 200;
-volatile float direction_R;
-volatile float direction_L;
+
 float cruise_speed_R;
 float cruise_speed_L;
 float starting_phi;

@@ -4,46 +4,10 @@
 #include "navigation.h"
 #include "command_controller.h"
 
-#include <micro_ros_arduino.h>
-#include <stdio.h>
-#include <rcl/rcl.h>
-#include <rcl/error_handling.h>
-#include <rclc/rclc.h>
-#include <rclc/executor.h>
-#include <std_msgs/msg/int32.h>
-
 /// tasks
 TaskHandle_t communicationTaskHandle;
 TaskHandle_t PIDTaskHandle;
 TaskHandle_t commandExecutionTaskHandle;
-
-// micro-ROS variables
-rcl_publisher_t publisher;
-std_msgs__msg__Int32 msg;
-rclc_executor_t executor;
-rclc_support_t support;
-rcl_allocator_t allocator;
-rcl_node_t node;
-rcl_timer_t timer;
-bool microros_initialized = false;
-
-#define RCCHECK(fn)                      \
-  {                                      \
-    rcl_ret_t temp_rc = fn;              \
-    if ((temp_rc != RCL_RET_OK))         \
-    {                                    \
-      Serial.println("micro-ROS error"); \
-      microros_initialized = false;      \
-    }                                    \
-  }
-#define RCSOFTCHECK(fn)                       \
-  {                                           \
-    rcl_ret_t temp_rc = fn;                   \
-    if ((temp_rc != RCL_RET_OK))              \
-    {                                         \
-      Serial.println("micro-ROS soft error"); \
-    }                                         \
-  }
 
 float kpS_R = 5;
 float kdS_R = 0.0000;
@@ -67,59 +31,13 @@ void communicationTask(void *pvParameters)
   const TickType_t xDelay = pdMS_TO_TICKS(1000); // 1 second delay
   TickType_t xLastWakeTime = xTaskGetTickCount();
 
-  // Initialize micro-ROS
-  Serial.println("Initializing micro-ROS in communication task...");
+  Serial.println("Communication task started");
 
-  // Set up WiFi transport - replace with your WiFi credentials and PC IP
-  set_microros_wifi_transports("eurobot", "eurobot2026", "10.42.0.1", 8888);
-  delay(2000);
-
-  allocator = rcl_get_default_allocator();
-
-  // Create support
-  RCCHECK(rclc_support_init(&support, 0, NULL, &allocator));
-
-  // Create node
-  RCCHECK(rclc_node_init_default(&node, "pami_esp32_node", "", &support));
-
-  // Create publisher
-  RCCHECK(rclc_publisher_init_default(
-      &publisher,
-      &node,
-      ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32),
-      "pami_data"));
-
-  msg.data = 0;
-  microros_initialized = true;
-  Serial.println("micro-ROS initialized successfully!");
-
-  while (1)
+  for (;;) // Infinite loop - CRITICAL!
   {
-    if (microros_initialized)
-    {
-      // Publish message
-      Serial.print("Publishing message: ");
-      Serial.println(msg.data);
+    Serial.println("Communication task running...");
 
-      rcl_ret_t ret = rcl_publish(&publisher, &msg, NULL);
-      if (ret != RCL_RET_OK)
-      {
-        Serial.print("Publish failed with error: ");
-        Serial.println(ret);
-        microros_initialized = false;
-      }
-      else
-      {
-        Serial.println("Message published successfully!");
-      }
-
-      msg.data++;
-    }
-    else
-    {
-      Serial.println("micro-ROS not initialized, retrying...");
-      delay(1000);
-    }
+    // Add your communication logic here later
 
     vTaskDelayUntil(&xLastWakeTime, xDelay);
   }
@@ -127,93 +45,163 @@ void communicationTask(void *pvParameters)
 
 void PIDTask(void *pvParameters)
 {
-  const TickType_t xDelay = 2;
+  const TickType_t xDelay = pdMS_TO_TICKS(10); // Increased to 10ms delay for stability
   TickType_t xLastWakeTime = xTaskGetTickCount();
 
-  update_position();
-  float tmp = (micros() - previous_speed_control_time) / 1000000.0; // in seconds
-  // right motor speed control
-  float error = target_speed_R - current_speed_R;
+  Serial.println("PID task started");
 
-  speed_derivative_R = speed_derivative_R * 0.999 + 0.001 * (error - previous_speed_error_R) / tmp; // unit = mm/s²
-  speed_integral_R += error * tmp;
-
-  previous_speed_error_R = error;
-
-  PWM_R = PWM_R * 0.2 + 0.8 * (PWM_offset_R + kpS_R * error + kdS_R * speed_derivative_R + kiS_R * speed_integral_R); // the first part is a simple filter to reduce jitter
-  PWM_R = (PWM_R > PWM_max) ? PWM_max : (PWM_R < -PWM_max) ? -PWM_max
-                                                           : PWM_R;
-  PWM_R = (target_speed_R == 0) ? 0 : PWM_R;
-
-  speed_integral_R = ((PWM_R == PWM_max) || (PWM_R == -PWM_max)) ? (speed_integral_R - 2 * error * tmp) : speed_integral_R;
-
-  // left motor speed control
-  error = target_speed_L - current_speed_L;
-  speed_derivative_L = speed_derivative_L * 0.999 + 0.001 * (error - previous_speed_error_L) / tmp; // unit = mm/s²
-  speed_integral_L += error * tmp;
-
-  previous_speed_error_L = error;
+  // Initialize previous_speed_control_time
   previous_speed_control_time = micros();
 
-  PWM_L = PWM_L * 0.2 + 0.8 * (PWM_offset_L + kpS_L * error + kdS_L * speed_derivative_L + kiS_L * speed_integral_L);
-  PWM_L = (PWM_L > PWM_max) ? PWM_max : (PWM_L < -PWM_max) ? -PWM_max
-                                                           : PWM_L;
-  PWM_L = (target_speed_L == 0) ? 0 : PWM_L;
+  // Wait a bit before starting PID control
+  delay(2000);
 
-  speed_integral_L = ((PWM_L == PWM_max) || (PWM_L == -PWM_max)) ? (speed_integral_L - 2 * error * tmp) : speed_integral_L;
-  vTaskDelayUntil(&xLastWakeTime, xDelay);
+  for (;;) // Infinite loop - CRITICAL!
+  {
+    // Add error checking
+    if (previous_speed_control_time == 0)
+    {
+      previous_speed_control_time = micros();
+      vTaskDelayUntil(&xLastWakeTime, xDelay);
+      continue;
+    }
+
+    update_position();
+
+    float tmp = (micros() - previous_speed_control_time) / 1000000.0; // in seconds
+
+    // Prevent division by zero or very small numbers
+    if (tmp < 0.001)
+    {
+      vTaskDelayUntil(&xLastWakeTime, xDelay);
+      continue;
+    }
+
+    // right motor speed control
+    float error = target_speed_R - current_speed_R;
+
+    speed_derivative_R = speed_derivative_R * 0.999 + 0.001 * (error - previous_speed_error_R) / tmp; // unit = mm/s²
+    speed_integral_R += error * tmp;
+
+    previous_speed_error_R = error;
+
+    PWM_R = PWM_R * 0.2 + 0.8 * (PWM_offset_R + kpS_R * error + kdS_R * speed_derivative_R + kiS_R * speed_integral_R); // the first part is a simple filter to reduce jitter
+    PWM_R = (PWM_R > PWM_max) ? PWM_max : (PWM_R < -PWM_max) ? -PWM_max
+                                                             : PWM_R;
+    PWM_R = (target_speed_R == 0) ? 0 : PWM_R;
+
+    speed_integral_R = ((PWM_R == PWM_max) || (PWM_R == -PWM_max)) ? (speed_integral_R - 2 * error * tmp) : speed_integral_R;
+
+    // left motor speed control
+    error = target_speed_L - current_speed_L;
+    speed_derivative_L = speed_derivative_L * 0.999 + 0.001 * (error - previous_speed_error_L) / tmp; // unit = mm/s²
+    speed_integral_L += error * tmp;
+
+    previous_speed_error_L = error;
+    previous_speed_control_time = micros();
+
+    PWM_L = PWM_L * 0.2 + 0.8 * (PWM_offset_L + kpS_L * error + kdS_L * speed_derivative_L + kiS_L * speed_integral_L);
+    PWM_L = (PWM_L > PWM_max) ? PWM_max : (PWM_L < -PWM_max) ? -PWM_max
+                                                             : PWM_L;
+    PWM_L = (target_speed_L == 0) ? 0 : PWM_L;
+
+    speed_integral_L = ((PWM_L == PWM_max) || (PWM_L == -PWM_max)) ? (speed_integral_L - 2 * error * tmp) : speed_integral_L;
+
+    vTaskDelayUntil(&xLastWakeTime, xDelay);
+  }
 }
 
 void commandExecutionTask(void *pvParameters)
 {
-  execute_command();
+  const TickType_t xDelay = pdMS_TO_TICKS(50); // 50ms delay
+  TickType_t xLastWakeTime = xTaskGetTickCount();
+
+  Serial.println("Command execution task started");
+
+  for (;;) // Infinite loop - CRITICAL!
+  {
+    // execute_command();
+    vTaskDelayUntil(&xLastWakeTime, xDelay);
+  }
 }
 
 void setup()
 {
   // Initialize Serial for debugging
   Serial.begin(115200);
-  while (!Serial)
-  {
-    delay(10);
-  }
-  Serial.println("=== PAMI ESP32 micro-ROS Setup ===");
+  delay(1000); // Give time for serial to initialize
+  Serial.println("=== PAMI ESP32 Setup ===");
 
+  // Add more delay for stable startup
+  delay(2000);
+
+  Serial.println("Setting motor pins...");
   set_motor_pins(5, 6, 9, 10);
+  delay(500);
+
+  Serial.println("Setting encoder channels...");
   set_encoder_channels(2, 3, 18, 19, 1440);
+  delay(500);
+
+  Serial.println("Setting PWM parameters...");
   set_PWM_min_max(255, 30, 30, 30, 30);
+  delay(500);
+
+  Serial.println("Setting wheel parameters...");
   set_wheel_diameter_and_spacing(0.1, 0.1, 0.2);
+  delay(500);
 
-  HAL_setup();
+  Serial.println("Starting HAL setup...");
 
+  // Temporarily comment out HAL setup to isolate the issue
+  Serial.println("HAL setup skipped for debugging");
+  // HAL_setup();
+
+  delay(1000);
+
+  Serial.println("Creating tasks...");
+
+  // Create tasks with lower stack sizes first
   xTaskCreatePinnedToCore(
       communicationTask,
       "communicationTask",
-      2048,
+      4096, // Back to smaller stack
       NULL,
-      2,
+      1, // Lower priority
       &communicationTaskHandle,
-      1);
+      0); // Pin to core 0
 
-  xTaskCreatePinnedToCore(
-      PIDTask,
-      "PIDTask",
-      2048,
-      NULL,
-      3,
-      &PIDTaskHandle,
-      1);
+  delay(500); // Delay between task creation
+  Serial.println("Communication task created");
 
   xTaskCreatePinnedToCore(
       commandExecutionTask,
       "commandExecutionTask",
-      2048,
+      4096, // Back to smaller stack
       NULL,
-      1,
+      1, // Lower priority
       &commandExecutionTaskHandle,
-      1);
+      0); // Pin to core 0
+
+  delay(500); // Delay between task creation
+  Serial.println("Command execution task created");
+
+  // Create PID task last (it might be causing issues)
+  xTaskCreatePinnedToCore(
+      PIDTask,
+      "PIDTask",
+      4096, // Back to smaller stack
+      NULL,
+      2, // Medium priority
+      &PIDTaskHandle,
+      1); // Pin to core 1
+
+  Serial.println("All tasks created successfully!");
+  delay(1000);
 }
 
 void loop()
 {
+  // Keep loop empty - tasks handle everything
+  delay(1000);
 }
