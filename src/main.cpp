@@ -3,6 +3,7 @@
 #include "odometry.h"
 #include "navigation.h"
 #include "command_controller.h"
+#include "communication.h"
 
 /// tasks
 TaskHandle_t communicationTaskHandle;
@@ -26,18 +27,53 @@ float previous_speed_error_L = 0;
 
 int32_t previous_speed_control_time = 0;
 
+// Custom strategy implementation
+void strategy()
+{
+  Serial.println("PAMI Robot Strategy Started!");
+
+  // Example strategy implementation:
+  // 1. Check crate colors
+  Serial.println("Current crate colors:");
+  for (int i = 0; i < 8; i++)
+  {
+    Serial.print("Crate ");
+    Serial.print(i + 1);
+    Serial.print(": ");
+    Serial.println(crate_colors[i] ? "YELLOW" : "BLUE");
+  }
+
+  // 2. Execute some movement or action
+  // Example: move forward, rotate, etc.
+  // move_forward(100, 50); // Move 100mm at 50mm/s speed
+
+  // 3. Send completion signal
+  send_action_done(1);
+
+  Serial.println("Strategy execution completed!");
+}
+
 void communicationTask(void *pvParameters)
 {
-  const TickType_t xDelay = pdMS_TO_TICKS(1000); // 1 second delay
+  const TickType_t xDelay = pdMS_TO_TICKS(50); // 50ms delay for responsive communication
   TickType_t xLastWakeTime = xTaskGetTickCount();
 
   Serial.println("Communication task started");
 
+  // Setup micro-ROS
+  if (setup_micro_ros("eurobot", "eurobot2026", "10.42.0.1", 8888))
+  {
+    Serial.println("micro-ROS setup successful");
+  }
+  else
+  {
+    Serial.println("micro-ROS setup failed");
+  }
+
   for (;;) // Infinite loop - CRITICAL!
   {
-    Serial.println("Communication task running...");
-
-    // Add your communication logic here later
+    // Run the communication loop
+    communication_loop();
 
     vTaskDelayUntil(&xLastWakeTime, xDelay);
   }
@@ -132,24 +168,17 @@ void setup()
   delay(1000); // Give time for serial to initialize
   Serial.println("=== PAMI ESP32 Setup ===");
 
-  // Add more delay for stable startup
-  delay(2000);
-
   Serial.println("Setting motor pins...");
   set_motor_pins(5, 6, 9, 10);
-  delay(500);
 
   Serial.println("Setting encoder channels...");
   set_encoder_channels(2, 3, 18, 19, 1440);
-  delay(500);
 
   Serial.println("Setting PWM parameters...");
   set_PWM_min_max(255, 30, 30, 30, 30);
-  delay(500);
 
   Serial.println("Setting wheel parameters...");
   set_wheel_diameter_and_spacing(0.1, 0.1, 0.2);
-  delay(500);
 
   Serial.println("Starting HAL setup...");
 
@@ -165,7 +194,7 @@ void setup()
   xTaskCreatePinnedToCore(
       communicationTask,
       "communicationTask",
-      4096, // Back to smaller stack
+      8192,
       NULL,
       1, // Lower priority
       &communicationTaskHandle,
