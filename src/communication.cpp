@@ -48,7 +48,7 @@ void communication_loop()
     switch (comm_state)
     {
     case WAITING_AGENT:
-        EXECUTE_EVERY_N_MS(500, comm_state = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? AGENT_AVAILABLE : WAITING_AGENT; if (comm_state == AGENT_AVAILABLE) { Serial.println("Agent detected!"); });
+        EXECUTE_EVERY_N_MS(1000, comm_state = (RMW_RET_OK == rmw_uros_ping_agent(500, 3)) ? AGENT_AVAILABLE : WAITING_AGENT; if (comm_state == AGENT_AVAILABLE) { Serial.println("Agent detected!"); });
         break;
 
     case AGENT_AVAILABLE:
@@ -66,8 +66,8 @@ void communication_loop()
         break;
 
     case AGENT_CONNECTED:
-        EXECUTE_EVERY_N_MS(200,
-                           comm_state = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? AGENT_CONNECTED : AGENT_DISCONNECTED;);
+        EXECUTE_EVERY_N_MS(1000,
+                           comm_state = (RMW_RET_OK == rmw_uros_ping_agent(500, 3)) ? AGENT_CONNECTED : AGENT_DISCONNECTED;);
         if (comm_state == AGENT_CONNECTED)
         {
             rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100));
@@ -81,6 +81,8 @@ void communication_loop()
     case AGENT_DISCONNECTED:
         Serial.println("Cleaning up and reconnecting...");
         destroy_entities();
+        // Add a small delay before reconnecting to let the agent stabilize
+        vTaskDelay(pdMS_TO_TICKS(1000)); // 1 second delay
         comm_state = WAITING_AGENT;
         break;
 
