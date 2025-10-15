@@ -156,7 +156,7 @@ void commandExecutionTask(void *pvParameters)
 
   for (;;) // Infinite loop - CRITICAL!
   {
-    // execute_command();
+    execute_command();
     vTaskDelayUntil(&xLastWakeTime, xDelay);
   }
 }
@@ -169,7 +169,7 @@ void setup()
   Serial.println("=== PAMI ESP32 Setup ===");
 
   Serial.println("Setting motor pins...");
-  set_motor_pins(5, 6, 9, 10);
+  set_motor_pins(22, 23, 19, 18);
 
   Serial.println("Setting encoder channels...");
   set_encoder_channels(2, 3, 18, 19, 1440);
@@ -180,11 +180,7 @@ void setup()
   Serial.println("Setting wheel parameters...");
   set_wheel_diameter_and_spacing(0.1, 0.1, 0.2);
 
-  Serial.println("Starting HAL setup...");
-
-  // Temporarily comment out HAL setup to isolate the issue
-  Serial.println("HAL setup skipped for debugging");
-  // HAL_setup();
+  HAL_setup();
 
   delay(1000);
 

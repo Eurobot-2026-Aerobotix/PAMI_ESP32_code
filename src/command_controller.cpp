@@ -85,29 +85,35 @@ void execute_command()
     {
     case MOVIN_FORWARD:
         move_forward(arguments["distance"], arguments["speed"]);
+        robot_state_mutex.unlock();
         break;
     case MOVIN_BACKWARD:
         move_backward(arguments["distance"], arguments["speed"]);
+        robot_state_mutex.unlock();
         break;
     case ROTATIN:
         rotate(arguments["angle"], (int8_t)arguments["is_radian"]);
+        robot_state_mutex.unlock();
         break;
     case ORIENTATIN:
         orientate(arguments["orientation"], (int8_t)arguments["is_radian"]);
+        robot_state_mutex.unlock();
         break;
     case GOIN_TO:
         go_to(arguments["x"], arguments["y"], arguments["speed"]);
+        robot_state_mutex.unlock();
         break;
     case MOVIN_FORWARD_WITH_DEVIATION:
         move_forward_with_deviation(arguments["distance"], arguments["deviation"], arguments["speed"]);
+        robot_state_mutex.unlock();
         break;
     case CIRCLIN_CURVE_CMD:
         circle_curve(arguments["target_x"], arguments["target_y"], arguments["target_phi"], arguments["speed"]);
+        robot_state_mutex.unlock();
         break;
     default:
         vTaskDelay(1);
         break;
     }
     current_command = NONE;
-    robot_state_mutex.unlock();
 }

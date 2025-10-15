@@ -177,10 +177,10 @@ void stop_motors()
 
 void HAL_setup()
 {
-    motorRa_channel = 0;
-    motorRb_channel = 1;
-    motorLa_channel = 2;
-    motorLb_channel = 3;
+    motorRa_channel = 8;
+    motorRb_channel = 9;
+    motorLa_channel = 10;
+    motorLb_channel = 11;
     ledcSetup(motorRa_channel, 20000, 10);
     ledcSetup(motorRb_channel, 20000, 10);
     ledcSetup(motorLa_channel, 20000, 10);
