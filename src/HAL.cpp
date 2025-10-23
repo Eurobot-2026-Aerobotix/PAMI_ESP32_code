@@ -7,16 +7,16 @@ int motorLa;
 int motorLb;
 int motorRa;
 int motorRb;
+int motorREN;
+int motorLEN;
 
 // encoder pins
 int encoderRA;
 int encoderRB;
 int encoderLA;
 int encoderLB;
-int motorLa_channel;
-int motorLb_channel;
-int motorRa_channel;
-int motorRb_channel;
+int motorREN_channel;
+int motorLEN_channel;
 
 // global constants
 int PWM_R_forward_min;
@@ -27,8 +27,8 @@ int PWM_max;
 int CPR;
 
 // global variables
-volatile int encoder_count_R;
-volatile int encoder_count_L;
+volatile int32_t encoder_count_R;
+volatile int32_t encoder_count_L;
 volatile int32_t speedCalculationPreviousTimeR;
 volatile int32_t speedCalculationCurrentTimeR;
 volatile int32_t speedCalculationPreviousTimeL;
@@ -49,64 +49,71 @@ float wheel_diameter_R;
 float wheel_diameter_L;
 float wheels_spacing;
 
-void set_motor_pins(int right_forward, int right_backward, int left_forward, int left_backward)
+void set_motor_pins(int right_forward, int right_backward, int left_forward, int left_backward, int right_enable, int left_enable)
 {
     motorRa = right_forward;
     motorRb = right_backward;
     motorLa = left_forward;
     motorLb = left_backward;
+    motorREN = right_enable;
+    motorLEN = left_enable;
 }
-void set_encoder_channels(int encoderRA, int encoderRB, int encoderLA, int encoderLB, int cpr)
+void set_encoder_channels(int _encoderRA, int _encoderRB, int _encoderLA, int _encoderLB, int cpr)
 {
-    encoderRA = encoderRA;
-    encoderRB = encoderRB;
-    encoderLA = encoderLA;
-    encoderLB = encoderLB;
+    encoderRA = _encoderRA;
+    encoderRB = _encoderRB;
+    encoderLA = _encoderLA;
+    encoderLB = _encoderLB;
     CPR = cpr;
 }
-void set_PWM_min_max(int PWM_max, int PWM_R_forward_min, int PWM_L_forward_min, int PWM_R_backward_min, int PWM_L_backward_min)
+void set_PWM_min_max(int PWM__max, int PWM__R_forward_min, int PWM__L_forward_min, int PWM__R_backward_min, int PWM__L_backward_min)
 {
-    PWM_max = PWM_max;
-    PWM_R_forward_min = PWM_R_forward_min;
-    PWM_R_backward_min = PWM_R_backward_min;
-    PWM_L_forward_min = PWM_L_forward_min;
-    PWM_L_backward_min = PWM_L_backward_min;
+    PWM_max = PWM__max;
+    PWM_R_forward_min = PWM__R_forward_min;
+    PWM_R_backward_min = PWM__R_backward_min;
+    PWM_L_forward_min = PWM__L_forward_min;
+    PWM_L_backward_min = PWM__L_backward_min;
 }
-void set_wheel_diameter_and_spacing(float wheel_diameter_R, float wheel_diameter_L, float wheels_spacing)
+void set_wheel_diameter_and_spacing(float wheel__diameter_R, float wheel__diameter_L, float wheels__spacing)
 {
-    wheel_diameter_R = wheel_diameter_R;
-    wheel_diameter_L = wheel_diameter_L;
-    wheels_spacing = wheels_spacing;
+    wheel_diameter_R = wheel__diameter_R;
+    wheel_diameter_L = wheel__diameter_L;
+    wheels_spacing = wheels__spacing;
 }
 
 void run_right_motor()
 {
     int pwm = (PWM_R > 0) ? ((PWM_R < PWM_R_forward_min) ? 0 : PWM_R) : ((PWM_R > PWM_R_backward_min) ? 0 : PWM_R);
     pwm = constrain(pwm, -PWM_max, PWM_max);
-    if (pwm > 0)
-    {
-        ledcWrite(motorRa_channel, pwm);
-        ledcWrite(motorRb_channel, 0);
+    
+    ledcWrite(motorREN_channel, abs(pwm));
+    if (pwm > 0){
+        digitalWrite(motorRa, 1);
+        digitalWrite(motorRb, 0);
     }
-    else
-    {
-        ledcWrite(motorRa_channel, 0);
-        ledcWrite(motorRb_channel, -pwm);
+    else if (pwm < 0){
+        digitalWrite(motorRa, 0);
+        digitalWrite(motorRb, 1);
+    }else{
+        digitalWrite(motorRa, 1);
+        digitalWrite(motorRb, 1);
     }
 }
 void run_left_motor()
 {
-    int pwm = (PWM_R > 0) ? ((PWM_R < PWM_L_forward_min) ? 0 : PWM_R) : ((PWM_R > PWM_L_backward_min) ? 0 : PWM_R);
+    int pwm = (PWM_L > 0) ? ((PWM_L < PWM_L_forward_min) ? 0 : PWM_L) : ((PWM_L > PWM_L_backward_min) ? 0 : PWM_L);
     pwm = constrain(pwm, -PWM_max, PWM_max);
-    if (pwm > 0)
-    {
-        ledcWrite(motorLa_channel, pwm);
-        ledcWrite(motorLb_channel, 0);
+    ledcWrite(motorLEN_channel, abs(pwm));
+    if (pwm > 0){
+        digitalWrite(motorLa, 1);
+        digitalWrite(motorLb, 0);
     }
-    else
-    {
-        ledcWrite(motorLa_channel, 0);
-        ledcWrite(motorLb_channel, -pwm);
+    else if (pwm < 0){
+        digitalWrite(motorLa, 0);
+        digitalWrite(motorLb, 1);
+    }else{
+        digitalWrite(motorLa, 1);
+        digitalWrite(motorLb, 1);
     }
 }
 
@@ -120,7 +127,7 @@ void set_target_speeds(float target__speed_R, float target__speed_L)
 
 void IRAM_ATTR encoderRISRA()
 {
-    if (FAST_READ(encoderRB) == FAST_READ1(encoderRA))
+    if (FAST_READ(encoderRB) == FAST_READ(encoderRA))
     {
         encoder_count_R--;
         direction_R = -1;
@@ -133,8 +140,8 @@ void IRAM_ATTR encoderRISRA()
     speedCalculationPreviousTimeR = speedCalculationCurrentTimeR;
     speedCalculationCurrentTimeR = micros();
 
-    // optimise by replacing (wheel_diameter_R*PI/CPR * direction_R) by a constant factor
-    current_speed_R = (wheel_diameter_R * PI / CPR * direction_R) / (speedCalculationCurrentTimeR - speedCalculationPreviousTimeR);
+    // optimise by replacing (wheel_diameter_R*PI/CPR * direction_R) by a constant factors
+    current_speed_R = (wheel_diameter_R * PI / CPR * direction_R)*1000000 / (speedCalculationCurrentTimeR - speedCalculationPreviousTimeR);
 }
 void IRAM_ATTR encoderLISRA()
 {
@@ -150,19 +157,20 @@ void IRAM_ATTR encoderLISRA()
     }
     speedCalculationPreviousTimeL = speedCalculationCurrentTimeL;
     speedCalculationCurrentTimeL = micros();
-    current_speed_L = (wheel_diameter_L * PI / CPR * direction_L) / (speedCalculationCurrentTimeL - speedCalculationPreviousTimeL);
+    current_speed_L = (wheel_diameter_L * PI / CPR * direction_L)*1000000 / (speedCalculationCurrentTimeL - speedCalculationPreviousTimeL);
 }
 
 void send_values_to_usart(float value1, float value2, float value3, float value4)
 {
     // temporary
-    Serial.print(value1);
-    Serial.print(",");
-    Serial.print(value2);
-    Serial.print(",");
-    Serial.print(value3);
-    Serial.print(",");
-    Serial.println(value4);
+    Serial.write((uint8_t)0xAA);
+    Serial.write((uint8_t*)&value1, sizeof(value1));
+    Serial.write((uint8_t)0xAB);
+    Serial.write((uint8_t*)&value2, sizeof(value2));
+    Serial.write((uint8_t)0xAC);
+    Serial.write((uint8_t*)&value3, sizeof(value3));
+    Serial.write((uint8_t)0xAD);
+    Serial.write((uint8_t*)&value4, sizeof(value4));
 }
 
 void stop_motors()
@@ -177,18 +185,22 @@ void stop_motors()
 
 void HAL_setup()
 {
-    motorRa_channel = 8;
-    motorRb_channel = 9;
-    motorLa_channel = 10;
-    motorLb_channel = 11;
-    ledcSetup(motorRa_channel, 20000, 10);
-    ledcSetup(motorRb_channel, 20000, 10);
-    ledcSetup(motorLa_channel, 20000, 10);
-    ledcSetup(motorLb_channel, 20000, 10);
-    ledcAttachPin(motorRa, motorRa_channel);
-    ledcAttachPin(motorRb, motorRb_channel);
-    ledcAttachPin(motorLa, motorLa_channel);
-    ledcAttachPin(motorLb, motorLb_channel);
+    pinMode(motorRa, OUTPUT);
+    pinMode(motorRb, OUTPUT);
+    pinMode(motorLa, OUTPUT);
+    pinMode(motorLb, OUTPUT);
+
+    pinMode(encoderRA, INPUT_PULLUP);
+    pinMode(encoderRB, INPUT_PULLUP);
+    pinMode(encoderLA, INPUT_PULLUP);
+    pinMode(encoderLB, INPUT_PULLUP);
+
+    motorREN_channel = 8;
+    motorLEN_channel = 9;
+    ledcSetup(motorREN_channel, 20000, 10);
+    ledcSetup(motorLEN_channel, 20000, 10);
+    ledcAttachPin(motorREN, motorREN_channel);
+    ledcAttachPin(motorLEN, motorLEN_channel);
 
     // Global variables
     speedCalculationCurrentTimeR = micros();

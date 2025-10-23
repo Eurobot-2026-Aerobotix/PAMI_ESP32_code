@@ -89,10 +89,7 @@ void PIDTask(void *pvParameters)
   // Initialize previous_speed_control_time
   previous_speed_control_time = micros();
 
-  // Wait a bit before starting PID control
-  delay(2000);
-
-  for (;;) // Infinite loop - CRITICAL!
+  for (;;)
   {
     // Add error checking
     if (previous_speed_control_time == 0)
@@ -100,6 +97,15 @@ void PIDTask(void *pvParameters)
       previous_speed_control_time = micros();
       vTaskDelayUntil(&xLastWakeTime, xDelay);
       continue;
+    }
+
+
+    // this is the compromise for calculating the speed in the tick count update ISR
+    if ((micros() - speedCalculationPreviousTimeR) > 15000){
+      current_speed_R = 0;
+    }
+    if ((micros() - speedCalculationPreviousTimeL) > 15000){
+      current_speed_L = 0;
     }
 
     update_position();
@@ -122,8 +128,7 @@ void PIDTask(void *pvParameters)
     previous_speed_error_R = error;
 
     PWM_R = PWM_R * 0.2 + 0.8 * (PWM_offset_R + kpS_R * error + kdS_R * speed_derivative_R + kiS_R * speed_integral_R); // the first part is a simple filter to reduce jitter
-    PWM_R = (PWM_R > PWM_max) ? PWM_max : (PWM_R < -PWM_max) ? -PWM_max
-                                                             : PWM_R;
+    PWM_R = (PWM_R > PWM_max) ? PWM_max : (PWM_R < -PWM_max) ? -PWM_max : PWM_R;
     PWM_R = (target_speed_R == 0) ? 0 : PWM_R;
 
     speed_integral_R = ((PWM_R == PWM_max) || (PWM_R == -PWM_max)) ? (speed_integral_R - 2 * error * tmp) : speed_integral_R;
@@ -137,8 +142,7 @@ void PIDTask(void *pvParameters)
     previous_speed_control_time = micros();
 
     PWM_L = PWM_L * 0.2 + 0.8 * (PWM_offset_L + kpS_L * error + kdS_L * speed_derivative_L + kiS_L * speed_integral_L);
-    PWM_L = (PWM_L > PWM_max) ? PWM_max : (PWM_L < -PWM_max) ? -PWM_max
-                                                             : PWM_L;
+    PWM_L = (PWM_L > PWM_max) ? PWM_max : (PWM_L < -PWM_max) ? -PWM_max : PWM_L;
     PWM_L = (target_speed_L == 0) ? 0 : PWM_L;
 
     speed_integral_L = ((PWM_L == PWM_max) || (PWM_L == -PWM_max)) ? (speed_integral_L - 2 * error * tmp) : speed_integral_L;
@@ -169,19 +173,19 @@ void setup()
   Serial.println("=== PAMI ESP32 Setup ===");
 
   Serial.println("Setting motor pins...");
-  set_motor_pins(22, 23, 19, 18);
+  set_motor_pins(19, 18, 21, 22, 17, 23);
 
   Serial.println("Setting encoder channels...");
-  set_encoder_channels(2, 3, 18, 19, 1440);
+  set_encoder_channels(15, 2, 16, 4, 400);
 
   Serial.println("Setting PWM parameters...");
-  set_PWM_min_max(255, 30, 30, 30, 30);
+  set_PWM_min_max(1023, 250, 250, -250, -250);
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(0.1, 0.1, 0.2);
+  set_wheel_diameter_and_spacing(24.5, 43, 86); // howa la3jal 9add 9add ama wa7da lencodeur te3ha fih 700tck donc bech mano93odch na3mel fi CPR lkoll 3ajla hayka keka te5dem chihemmek fi waldeha
 
   HAL_setup();
-
+  
   delay(1000);
 
   Serial.println("Creating tasks...");
@@ -228,5 +232,5 @@ void setup()
 void loop()
 {
   // Keep loop empty - tasks handle everything
-  delay(1000);
+  Serial.println(current_speed_L);
 }

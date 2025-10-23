@@ -18,8 +18,7 @@
 
 #include <Arduino.h>
 
-#define FAST_READ(pin) (((uint32_t)GPIO.in >> pin) & 0x1)
-#define FAST_READ1(pin) (((uint32_t)GPIO.in1.val >> ((pin) - 32)) & 0x1)
+#define FAST_READ(pin) (((uint32_t)((pin) < 32 ? GPIO.in : GPIO.in1.val) >> ((pin) & 31)) & 0x1)
 #define PI 3.14159265358979323846
 
 // motor pins
@@ -27,10 +26,10 @@ extern int motorLa;
 extern int motorLb;
 extern int motorRa;
 extern int motorRb;
-extern int motorLa_channel;
-extern int motorLb_channel;
-extern int motorRa_channel;
-extern int motorRb_channel;
+extern int motorREN;
+extern int motorLEN;
+extern int motorREN_channel;
+extern int motorLEN_channel;
 
 // encoder pins
 extern int encoderRA;
@@ -47,8 +46,8 @@ extern int PWM_max;
 extern int CPR;
 
 // global variables
-extern volatile int encoder_count_R;
-extern volatile int encoder_count_L;
+extern volatile int32_t encoder_count_R;
+extern volatile int32_t encoder_count_L;
 extern volatile int32_t speedCalculationPreviousTimeR;
 extern volatile int32_t speedCalculationCurrentTimeR;
 extern volatile int32_t speedCalculationPreviousTimeL;
@@ -69,10 +68,10 @@ extern float wheel_diameter_R;
 extern float wheel_diameter_L;
 extern float wheels_spacing;
 
-void set_motor_pins(int right_forward, int right_backward, int left_forward, int left_backward);
-void set_encoder_channels(int encoderRA, int encoderRB, int encoderLA, int encoderLB, int cpr);
-void set_PWM_min_max(int PWM_max, int PWM_R_forward_min, int PWM_L_forward_min, int PWM_R_backward_min, int PWM_L_backward_min);
-void set_wheel_diameter_and_spacing(float wheel_diameter_R, float wheel_diameter_L, float wheel_spacing);
+void set_motor_pins(int right_forward, int right_backward, int left_forward, int left_backward, int right_enable, int left_enable);
+void set_encoder_channels(int _encoderRA, int _encoderRB, int _encoderLA, int _encoderLB, int cpr);
+void set_PWM_min_max(int PWM__max, int PWM__R_forward_min, int PWM__L_forward_min, int PWM__R_backward_min, int PWM__L_backward_min);
+void set_wheel_diameter_and_spacing(float wheel__diameter_R, float wheel__diameter_L, float wheel__spacing);
 
 void run_right_motor();
 void run_left_motor();
