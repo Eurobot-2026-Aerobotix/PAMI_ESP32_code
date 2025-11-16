@@ -29,6 +29,11 @@ void websocket_reconnect_if_needed();
 // FreeRTOS task function
 void websocketTask(void *pvParameters);
 
+// String reception functions
+void processReceivedString(const String& str);
+bool websocket_has_new_string();
+String websocket_get_last_string();
+
 // Data generation functions (examples - replace with your actual sensors)
 float generateValue1();
 float generateValue2();

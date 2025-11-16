@@ -35,6 +35,10 @@ static unsigned long last_wifi_check = 0;
 static unsigned long last_websocket_check = 0;
 static bool reconnecting = false;
 
+// === String Reception Variables ===
+static String received_string = "";
+static bool new_string_received = false;
+
 // === WiFi Connection ===
 void websocket_init() {
     if (websocket_enabled != 1) {
@@ -62,7 +66,24 @@ void websocket_init() {
         
         // Setup WebSocket callbacks
         client.onMessage([](WebsocketsMessage message) {
-            Serial.println("📥 Received: " + message.data());
+            if (message.isText()) {
+                // Handle text messages (Strings)
+                received_string = message.data();
+                new_string_received = true;
+                
+                // Process the received string
+                processReceivedString(received_string);
+                
+            } else if (message.isBinary()) {
+                // Handle binary messages
+                String binaryData = message.data();
+                for (int i = 0; i < binaryData.length(); i++) {
+                    Serial.printf("0x%02X ", (uint8_t)binaryData[i]);
+                }
+                Serial.println();
+            } else {
+                // Fallback for other message types
+            }
         });
         
         client.onEvent([](WebsocketsEvent event, String data) {
@@ -252,6 +273,54 @@ void websocket_send_data(uint8_t header, float value) {
     client.sendBinary((const char*)packet, 5);
 }
 
+
+// === String Processing Function ===
+void processReceivedString(const String& str) {
+    // Process different commands or data from server
+    if (str.startsWith("CMD:")) {
+        // Handle commands from server
+        String command = str.substring(4); // Remove "CMD:" prefix
+        Serial.println("🎯 Command received: " + command);
+        
+        if (command == "START") {
+            Serial.println("▶️ Start command received!");
+            // Add your start logic here
+        } else if (command == "STOP") {
+            Serial.println("⏹️ Stop command received!");
+            // Add your stop logic here
+        } else if (command.startsWith("SPEED:")) {
+            // Example: "SPEED:100" to set speed to 100
+            int speed = command.substring(6).toInt();
+            Serial.println("🏎️ Speed set to: " + String(speed));
+            // Add your speed control logic here
+        }
+        
+    } else if (str.startsWith("CONFIG:")) {
+        // Handle configuration data
+        String config = str.substring(7);
+        Serial.println("⚙️ Configuration: " + config);
+        
+    } else if (str.startsWith("DATA:")) {
+        // Handle data from server
+        String data = str.substring(5);
+        Serial.println("📊 Data received: " + data);
+        
+    } else {
+        // Handle plain text messages
+        //Serial.println("💬 Message: " + str);
+    }
+}
+
+// === Check for New String ===
+bool websocket_has_new_string() {
+    return new_string_received;
+}
+
+// === Get Last Received String ===
+String websocket_get_last_string() {
+    new_string_received = false; // Reset flag
+    return received_string;
+}
 
 // === Data Generation Functions (Replace with your actual sensors) ===
 float generateValue1() {

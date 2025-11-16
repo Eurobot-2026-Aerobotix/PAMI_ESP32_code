@@ -182,14 +182,18 @@ void websocketTask(void *pvParameters)
   {
     if (websocket == 1) {
       // Handle reconnections and polling
-      Serial.println("WebSocket reconnect and poll");
       websocket_reconnect_if_needed();
       websocket_poll();
+    
       // Send robot data via WebSocket at 10Hz (every 100ms)
       static TickType_t last_data_send = 0;
       if ((xTaskGetTickCount() - last_data_send) >= pdMS_TO_TICKS(100)) {
         last_data_send = xTaskGetTickCount();
-        
+        if (websocket_has_new_string()) {
+        String receivedMsg = websocket_get_last_string();
+        Serial.println("Processing: " + receivedMsg);
+    // String is automatically processed by processReceivedString()
+}
         if (websocket_is_connected()) {
           // Send current robot data
           websocket_send_data(0xAA, current_speed_R);  // Right motor speed
