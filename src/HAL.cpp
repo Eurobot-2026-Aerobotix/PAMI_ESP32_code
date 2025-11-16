@@ -141,7 +141,7 @@ void IRAM_ATTR encoderRISRA()
     speedCalculationCurrentTimeR = micros();
 
     // optimise by replacing (wheel_diameter_R*PI/CPR * direction_R) by a constant factors
-    current_speed_R = (wheel_diameter_R * PI / CPR * direction_R)*1000000 / (speedCalculationCurrentTimeR - speedCalculationPreviousTimeR);
+    current_speed_R = current_speed_R*0.9 + 0.1* (wheel_diameter_R * PI / CPR * direction_R)*1000000 / (speedCalculationCurrentTimeR - speedCalculationPreviousTimeR);
 }
 void IRAM_ATTR encoderLISRA()
 {
@@ -157,7 +157,7 @@ void IRAM_ATTR encoderLISRA()
     }
     speedCalculationPreviousTimeL = speedCalculationCurrentTimeL;
     speedCalculationCurrentTimeL = micros();
-    current_speed_L = (wheel_diameter_L * PI / CPR * direction_L)*1000000 / (speedCalculationCurrentTimeL - speedCalculationPreviousTimeL);
+    current_speed_L = current_speed_L*0.9 + 0.1* (wheel_diameter_L * PI / CPR * direction_L)*1000000 / (speedCalculationCurrentTimeL - speedCalculationPreviousTimeL);
 }
 
 void send_values_to_usart(float value1, float value2, float value3, float value4)

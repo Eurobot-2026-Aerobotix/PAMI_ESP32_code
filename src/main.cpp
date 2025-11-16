@@ -10,16 +10,16 @@ TaskHandle_t communicationTaskHandle;
 TaskHandle_t PIDTaskHandle;
 TaskHandle_t commandExecutionTaskHandle;
 
-float kpS_R = 5;
+float kpS_R = 0.5;
 float kdS_R = 0.0000;
-float kiS_R = 15;
+float kiS_R = 0.8;
 float speed_integral_R = 0;
 float speed_derivative_R = 0;
 float previous_speed_error_R = 0;
 
-float kpS_L = 5;
+float kpS_L = 0.5;
 float kdS_L = 0;
-float kiS_L = 15;
+float kiS_L = 0.8;
 float speed_integral_L = 0;
 float speed_derivative_L = 0;
 
@@ -101,10 +101,10 @@ void PIDTask(void *pvParameters)
 
 
     // this is the compromise for calculating the speed in the tick count update ISR
-    if ((micros() - speedCalculationPreviousTimeR) > 15000){
+    if ((micros() - speedCalculationPreviousTimeR) > 18000){
       current_speed_R = 0;
     }
-    if ((micros() - speedCalculationPreviousTimeL) > 15000){
+    if ((micros() - speedCalculationPreviousTimeL) > 18000){
       current_speed_L = 0;
     }
 
@@ -127,7 +127,7 @@ void PIDTask(void *pvParameters)
 
     previous_speed_error_R = error;
 
-    PWM_R = PWM_R * 0.2 + 0.8 * (PWM_offset_R + kpS_R * error + kdS_R * speed_derivative_R + kiS_R * speed_integral_R); // the first part is a simple filter to reduce jitter
+    PWM_R = PWM_R * 0 + 1 * (PWM_offset_R + kpS_R * error + kdS_R * speed_derivative_R + kiS_R * speed_integral_R); // the first part is a simple filter to reduce jitter
     PWM_R = (PWM_R > PWM_max) ? PWM_max : (PWM_R < -PWM_max) ? -PWM_max : PWM_R;
     PWM_R = (target_speed_R == 0) ? 0 : PWM_R;
 
@@ -141,11 +141,13 @@ void PIDTask(void *pvParameters)
     previous_speed_error_L = error;
     previous_speed_control_time = micros();
 
-    PWM_L = PWM_L * 0.2 + 0.8 * (PWM_offset_L + kpS_L * error + kdS_L * speed_derivative_L + kiS_L * speed_integral_L);
+    PWM_L = PWM_L * 0 + 1 * (PWM_offset_L + kpS_L * error + kdS_L * speed_derivative_L + kiS_L * speed_integral_L);
     PWM_L = (PWM_L > PWM_max) ? PWM_max : (PWM_L < -PWM_max) ? -PWM_max : PWM_L;
     PWM_L = (target_speed_L == 0) ? 0 : PWM_L;
 
     speed_integral_L = ((PWM_L == PWM_max) || (PWM_L == -PWM_max)) ? (speed_integral_L - 2 * error * tmp) : speed_integral_L;
+    run_right_motor();
+    run_left_motor();
 
     vTaskDelayUntil(&xLastWakeTime, xDelay);
   }
@@ -231,6 +233,14 @@ void setup()
 
 void loop()
 {
-  // Keep loop empty - tasks handle everything
-  Serial.println(current_speed_L);
+  send_values_to_usart(current_speed_R, current_speed_L, target_speed_R, target_speed_L);
+  delay(10);
+  
+  if (millis() > 5000 && millis() < 7000) {
+    set_target_speeds(300, 300);
+  }
+  if (millis() > 7000) {
+    set_target_speeds(0, 0);
+  }
+  // TODO: interrupt is struggeling after adding the filter, make it external?
 }
