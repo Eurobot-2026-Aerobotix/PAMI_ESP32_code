@@ -4,12 +4,15 @@
 #include "navigation.h"
 #include "command_controller.h"
 #include "communication.h"
+#include "websocket.h"
 
 /// tasks
 TaskHandle_t communicationTaskHandle;
 TaskHandle_t PIDTaskHandle;
 TaskHandle_t commandExecutionTaskHandle;
-
+TaskHandle_t websocketTaskHandle;
+int websocket=1;
+// Note: websocket_enabled variable is defined in websocket.cpp
 float kpS_R = 0.5;
 float kdS_R = 0.0000;
 float kiS_R = 0.8;
@@ -22,7 +25,6 @@ float kdS_L = 0;
 float kiS_L = 0.8;
 float speed_integral_L = 0;
 float speed_derivative_L = 0;
-
 float previous_speed_error_L = 0;
 
 int32_t previous_speed_control_time = 0;
@@ -167,6 +169,41 @@ void commandExecutionTask(void *pvParameters)
   }
 }
 
+void websocketTask(void *pvParameters)
+{
+  const TickType_t xDelay = pdMS_TO_TICKS(50); // 50ms delay for WebSocket operations
+  TickType_t xLastWakeTime = xTaskGetTickCount();
+  Serial.println("WebSocket task started");
+  
+  // Wait a bit for system initialization
+  vTaskDelay(pdMS_TO_TICKS(10));
+  
+  for (;;) // Infinite loop - CRITICAL!
+  {
+    if (websocket == 1) {
+      // Handle reconnections and polling
+      Serial.println("WebSocket reconnect and poll");
+      websocket_reconnect_if_needed();
+      websocket_poll();
+      // Send robot data via WebSocket at 10Hz (every 100ms)
+      static TickType_t last_data_send = 0;
+      if ((xTaskGetTickCount() - last_data_send) >= pdMS_TO_TICKS(100)) {
+        last_data_send = xTaskGetTickCount();
+        
+        if (websocket_is_connected()) {
+          // Send current robot data
+          websocket_send_data(0xAA, current_speed_R);  // Right motor speed
+          websocket_send_data(0xAB, current_speed_L);  // Left motor speed
+          websocket_send_data(0xAC, target_speed_R);   // Right target speed
+          websocket_send_data(0xAD, target_speed_L);   // Left target speed
+        }
+      }
+    }
+    
+    vTaskDelayUntil(&xLastWakeTime, xDelay);
+  }
+}
+
 void setup()
 {
   // Initialize Serial for debugging
@@ -188,22 +225,30 @@ void setup()
 
   HAL_setup();
   
+  // Initialize WebSocket if enabled
+  extern int websocket_enabled;
+  websocket_enabled = websocket;  // Set from the main websocket variable
+  if (websocket_enabled == 1) {
+    Serial.println("Initializing WebSocket...");
+    websocket_init();
+  }
+  
   delay(1000);
 
   Serial.println("Creating tasks...");
 
   // Create tasks with lower stack sizes first
-  xTaskCreatePinnedToCore(
-      communicationTask,
-      "communicationTask",
-      8192,
-      NULL,
-      1, // Lower priority
-      &communicationTaskHandle,
-      0); // Pin to core 0
+  // xTaskCreatePinnedToCore(
+  //     communicationTask,
+  //     "communicationTask",
+  //     8192,
+  //     NULL,
+  //     1, // Lower priority
+  //     &communicationTaskHandle,
+  //     0); // Pin to core 0
 
-  delay(500); // Delay between task creation
-  Serial.println("Communication task created");
+  // delay(500); // Delay between task creation
+  // Serial.println("Communication task created");
 
   xTaskCreatePinnedToCore(
       commandExecutionTask,
@@ -227,15 +272,37 @@ void setup()
       &PIDTaskHandle,
       1); // Pin to core 1
 
+  delay(500); // Delay between task creation
+  Serial.println("PID task created");
+
+  // Create WebSocket task if enabled
+  if (websocket_enabled == 1) {
+    xTaskCreatePinnedToCore(
+        websocketTask,
+        "websocketTask",
+        8192, // Larger stack for WebSocket operations
+        NULL,
+        1, // Lower priority than PID
+        &websocketTaskHandle,
+        0); // Pin to core 0 (same as other communication tasks)
+    
+    delay(500); // Delay between task creation
+    Serial.println("WebSocket task created");
+  }
+
   Serial.println("All tasks created successfully!");
   delay(1000);
 }
 
 void loop()
 {
-  send_values_to_usart(current_speed_R, current_speed_L, target_speed_R, target_speed_L);
-  delay(10);
+  //send_values_to_usart(current_speed_R, current_speed_L, target_speed_R, target_speed_L);
   
+  // WebSocket functionality is now handled by websocketTask
+  // No WebSocket code needed in main loop anymore
+  
+  delay(10);
+
   if (millis() > 5000 && millis() < 7000) {
     set_target_speeds(300, 300);
   }

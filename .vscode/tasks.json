@@ -1,0 +1,124 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "PlatformIO Build",
+			"type": "shell",
+			"command": "~/.platformio/penv/bin/platformio",
+			"args": [
+				"run"
+			],
+			"problemMatcher": [
+				"$platformio"
+			],
+			"group": "build"
+		},
+		{
+			"label": "PlatformIO Build Verbose",
+			"type": "shell",
+			"command": "~/.platformio/penv/bin/platformio",
+			"args": [
+				"run",
+				"-v"
+			],
+			"problemMatcher": [
+				"$platformio"
+			],
+			"group": "build"
+		},
+		{
+			"label": "PlatformIO Build Test",
+			"type": "shell",
+			"command": "~/.platformio/penv/bin/platformio",
+			"args": [
+				"run"
+			],
+			"problemMatcher": [
+				"$platformio"
+			],
+			"group": "build"
+		},
+		{
+			"label": "PlatformIO Upload",
+			"type": "shell",
+			"command": "~/.platformio/penv/bin/platformio",
+			"args": [
+				"run",
+				"--target",
+				"upload"
+			],
+			"problemMatcher": [
+				"$platformio"
+			],
+			"group": "build"
+		},
+		{
+			"label": "PlatformIO Build Fixed",
+			"type": "shell",
+			"command": "~/.platformio/penv/bin/platformio",
+			"args": [
+				"run"
+			],
+			"problemMatcher": [
+				"$platformio"
+			],
+			"group": "build"
+		},
+		{
+			"label": "PlatformIO Upload Fixed",
+			"type": "shell",
+			"command": "~/.platformio/penv/bin/platformio",
+			"args": [
+				"run",
+				"--target",
+				"upload"
+			],
+			"problemMatcher": [
+				"$platformio"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Upload Fixed Version",
+			"type": "shell",
+			"command": "~/.platformio/penv/bin/platformio",
+			"args": [
+				"run",
+				"--target",
+				"upload"
+			],
+			"problemMatcher": [
+				"$platformio"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Upload Better HTML",
+			"type": "shell",
+			"command": "~/.platformio/penv/bin/platformio",
+			"args": [
+				"run",
+				"--target",
+				"upload"
+			],
+			"problemMatcher": [
+				"$platformio"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Upload Canvas Version",
+			"type": "shell",
+			"command": "~/.platformio/penv/bin/platformio",
+			"args": [
+				"run",
+				"--target",
+				"upload"
+			],
+			"problemMatcher": [
+				"$platformio"
+			],
+			"group": "build"
+		}
+	]
+}
