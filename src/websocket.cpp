@@ -1,14 +1,3 @@
-/*
- * ESP32 WebSocket Client for Real-Time Data Plotting
- * 
- * Instructions:
- * 1. Install ArduinoWebsockets library: Sketch -> Include Library -> Manage Libraries -> Search "ArduinoWebsockets"
- * 2. Update WIFI_SSID and WIFI_PASSWORD with your WiFi network credentials
- * 3. Update SERVER_IP with your PC's IP address (shown when you run server.py)
- * 4. Make sure your PC and ESP32 are on the same WiFi network
- * 5. Set websocket_enabled = 1 to enable WebSocket functionality
- */
-
 #include "websocket.h"
 
 using namespace websockets;
