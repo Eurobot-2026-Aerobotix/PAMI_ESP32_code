@@ -3,10 +3,10 @@
 enum Wheel_state wheel_state_R = DEAD_STOP;
 enum Wheel_state wheel_state_L = DEAD_STOP;
 enum Trajectory trajectory = STRAIGHT;
-float ramping_acceleration = 5;
-float breaking_acceleration = -2;
+float ramping_acceleration = 15;
+float breaking_acceleration = -10;
 float emergency_breaking_acceleration = -10;
-float rotating_speed = 200;
+float rotating_speed = 300;
 
 float cruise_speed_R;
 float cruise_speed_L;
@@ -58,7 +58,7 @@ int move_forward(float distance, float speed){
 			return 0;
 		}
 
-		lane_correction_term = (calculate_instant_target_phi(x, distance) - absolute_phi) * 1; // the coefficient is tunable
+		lane_correction_term = MAX((calculate_instant_target_phi(x, distance) - absolute_phi) * 1, 1); // the coefficient is tunable
 		if (x < 0.1 * x1){
 			lane_correction_term = 0;
 		}
@@ -86,7 +86,7 @@ int move_forward(float distance, float speed){
 	previous_distance_to_target = distance_to_target;
 	int32_t phase_two_start_time = micros();
 	while (distance_to_target > 0.1 && distance_to_target <= previous_distance_to_target){
-		lane_correction_term = (calculate_instant_target_phi(x, distance) - absolute_phi) * 4; // the coefficient is tunable
+		lane_correction_term = MIN((calculate_instant_target_phi(x, distance) - absolute_phi) * 4, 1); // the coefficient is tunable
 		set_target_speeds(speed * (1 + lane_correction_term), speed * (1 - lane_correction_term));
 		speed = MAX(speed * 0.995, 100);
 		previous_distance_to_target = distance_to_target;
@@ -313,7 +313,7 @@ float calculate_instant_target_phi(float x, float distance)
 }
 int rotate(float angle, int8_t is_radian){
 	reset_speed_control_variables();
-	float rotating_breaking_acceleration = -3.7;
+	float rotating_breaking_acceleration = -10;
 	angle = is_radian ? angle : deg_to_rad(angle);
 	float arc_length = (wheels_spacing / 2) * angle;
 
@@ -377,41 +377,35 @@ int rotate(float angle, int8_t is_radian){
 		distance_traveled_R = fabs(encoder_count_R - starting_encoder_count_R) * wheel_diameter_R * PI / CPR;
 		distance_traveled_L = fabs(encoder_count_L - starting_encoder_count_L) * wheel_diameter_L * PI / CPR;
 
-		yaw_centering_term = (distance_traveled_R - distance_traveled_L) * 0.05; // the coefficient is tunable
+		yaw_centering_term = MIN((distance_traveled_R - distance_traveled_L) * 0.0, 1); // the coefficient is tunable
 		if (x < 0.1 * x1)
 		{
 			yaw_centering_term = 0;
 		}
 		speed = calculate_instant_target_speed_R_full(x, distance, ramping_acceleration, rotating_breaking_acceleration);
-		set_target_speeds(speed * (1 - yaw_centering_term), -speed * (1 + yaw_centering_term)); //TODO: roddou dima positive
+		speed = fabs(speed) * direction_R;
+		set_target_speeds(speed * (1 - yaw_centering_term), -speed * (1 + yaw_centering_term));
 		custom_delay(4);
 		previous_distance_to_target = distance_to_target;
 		distance_to_target = (wheels_spacing / 2) * fabs(target_phi - absolute_phi);
 		distance_to_target = MIN(distance_to_target, distance);
-
-		//		if (distance_to_target >= previous_distance_to_target + 2){
-		//			stop_motors();
-		//			return 1;
-		//		}
 
 		send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
 	}
 	// completing the last part of distance separately, so the break happens on point
 
 	speed = (target_speed_R - target_speed_L) / 2; // one of the speeds is negative, that's why there is a minus
-	if (fabs(speed) < (deg_to_rad(phase_two_angle) * wheels_spacing / 2) * (-rotating_breaking_acceleration))
-	{ // handling the case where the robot skips the first while loop, being too close to target_phi
+	if (fabs(speed) < (deg_to_rad(phase_two_angle) * wheels_spacing / 2) * (-rotating_breaking_acceleration)){ // handling the case where the robot skips the first while loop, being too close to target_phi
 		speed = (deg_to_rad(phase_two_angle) * wheels_spacing / 2) * (-rotating_breaking_acceleration) * direction_R;
 	}
 	distance_to_target = wheels_spacing * fabs(target_phi - absolute_phi);
 	previous_distance_to_target = distance_to_target;
 
 	uint32_t phase_two_start_time = micros();
-	while (fabs(target_phi - absolute_phi) > deg_to_rad(0.2) && distance_to_target <= previous_distance_to_target + 10)
-	{
+	while (fabs(target_phi - absolute_phi) > deg_to_rad(0.2) && distance_to_target <= previous_distance_to_target + 10){
 		distance_traveled_R = (encoder_count_R - starting_encoder_count_R) * wheel_diameter_R * PI / CPR;
 		distance_traveled_L = (encoder_count_L - starting_encoder_count_L) * wheel_diameter_L * PI / CPR;
-		yaw_centering_term = (fabs(distance_traveled_R) - fabs(distance_traveled_L)) * 0.05;
+		yaw_centering_term = MIN((fabs(distance_traveled_R) - fabs(distance_traveled_L)) * 0.0, 1);
 
 		set_target_speeds(speed * (1 - yaw_centering_term), -speed * (1 + yaw_centering_term));
 		speed = MAX(fabs(speed) * 0.985, 100) * direction_R;
@@ -697,7 +691,6 @@ int circle_curve(float target_x, float target_y, float target_phi, float speed)
 	wheel_state_L = DEAD_STOP;
 	return 0;
 }
-
 int go_to(float x, float y, float speed)
 {
 	if (orientate(get_angle_to(x, y), 1))

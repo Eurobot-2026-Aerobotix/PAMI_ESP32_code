@@ -57,9 +57,9 @@ float speed_integral_R = 0;
 float speed_derivative_R = 0;
 float previous_speed_error_R = 0;
 
-float kpS_L = 0;
+float kpS_L = 5;//0
 float kdS_L = 0;
-float kiS_L = 3;
+float kiS_L = 10;//3
 float speed_integral_L = 0;
 float speed_derivative_L = 0;
 float previous_speed_error_L = 0;
@@ -196,6 +196,7 @@ void stop_motors()
     target_speed_L = 0;
     run_right_motor();
     run_left_motor();
+    set_target_speeds(0, 0);
 }
 
 void HAL_setup()

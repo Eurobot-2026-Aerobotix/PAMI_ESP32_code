@@ -23,7 +23,7 @@ TaskHandle_t communicationTaskHandle;
 TaskHandle_t PIDTaskHandle;
 TaskHandle_t commandExecutionTaskHandle;
 TaskHandle_t websocketTaskHandle;
-int websocket=1;
+int websocket=0;
 // Note: websocket_enabled variable is defined in websocket.cpp
 
 // Custom strategy implementation
@@ -193,16 +193,16 @@ void websocketTask(void *pvParameters)
 }
         if (websocket_is_connected()) {
           // Send current robot data
+          /*
           websocket_send_data(0xAA, current_speed_R_filtered);
           websocket_send_data(0xAB, current_speed_L_filtered);
           websocket_send_data(0xAC, target_speed_R);
           websocket_send_data(0xAD, target_speed_L);
-          /*
+          */
           websocket_send_data(0xAA, current_x);
           websocket_send_data(0xAB, current_y);
-          websocket_send_data(0xAC, current_phi*100);
-          websocket_send_data(0xAD, absolute_phi*100);
-          */
+          websocket_send_data(0xAC, rad_to_deg(current_phi));
+          websocket_send_data(0xAD, rad_to_deg(absolute_phi));
         }
       }
     }
@@ -215,7 +215,7 @@ void setup()
 {
   // Initialize Serial for debugging
   Serial.begin(115200);
-  delay(1000); // Give time for serial to initialize
+
   Serial.println("=== PAMI ESP32 Setup ===");
 
   Serial.println("Setting motor pins...");
@@ -225,10 +225,10 @@ void setup()
   set_encoder_channels(15, 2, 16, 4, 400);
 
   Serial.println("Setting PWM parameters...");
-  set_PWM_min_max(1023, 320, 320, -320, -320);
+  set_PWM_min_max(1023, 320, 340, -320, -340);
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(24.5, 43, 86); // howa la3jal 9add 9add ama wa7da lencodeur te3ha fih 700tck donc bech mano93odch na3mel fi CPR lkoll 3ajla hayka keka te5dem chihemmek fi waldeha
+  set_wheel_diameter_and_spacing(25.7393438962633966203, 44.72738447547409904512, 88.83238033718186); // howa la3jal 9add 9add ama wa7da lencodeur te3ha fih 700tck donc bech mano93odch na3mel fi CPR lkoll 3ajla hayka keka te5dem chihemmek fi waldeha
 
   HAL_setup();
   
@@ -238,9 +238,9 @@ void setup()
   if (websocket_enabled == 1) {
     Serial.println("Initializing WebSocket...");
     websocket_init();
+    delay(1000);
   }
-  
-  delay(1000);
+
 
   Serial.println("Creating tasks...");
 
@@ -265,8 +265,6 @@ void setup()
       1, // Lower priority
       &commandExecutionTaskHandle,
       0); // Pin to core 0
-
-  delay(500); // Delay between task creation
   Serial.println("Command execution task created");
 
   // Create PID task last (it might be causing issues)
@@ -278,8 +276,6 @@ void setup()
       2, // Medium priority
       &PIDTaskHandle,
       1); // Pin to core 1
-
-  delay(500); // Delay between task creation
   Serial.println("PID task created");
 
   // Create WebSocket task if enabled
@@ -298,13 +294,8 @@ void setup()
   }
 
   Serial.println("All tasks created successfully!");
-  delay(1000);
+  prepare_rotate(90, 0);
 }
 
-void loop()
-{
-  //send_values_to_usart(current_speed_R, current_speed_L, target_speed_R, target_speed_L);
-  
-  // WebSocket functionality is now handled by websocketTask
-  // No WebSocket code needed in main loop anymore
+void loop(){
 }
