@@ -32,6 +32,7 @@ extern float cruise_speed_R; // the speed which the right wheel is accelerating 
 extern float cruise_speed_L;
 extern float starting_phi;
 extern float turning_radius;
+extern int32_t previous_speed_control_time;
 
 int move_forward(float distance, float speed);	// will return 0 if target has been reached successfully or 1 if it could not be reached
 int move_backward(float distance, float speed); // will return 0 if target has been reached successfully or 1 if it could not be reached
@@ -46,3 +47,4 @@ int move_forward_with_deviation(float distance, float deviation, float speed); /
 int circle_curve(float target_x, float target_y, float target_phi, float speed);
 int go_to(float x, float y, float speed); // will return 0 if target has been reached successfully or 1 if some error happened in rotation, 2 if some error happened in moving forward
 void emergency_break();
+void reset_speed_control_variables();

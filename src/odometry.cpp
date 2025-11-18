@@ -14,6 +14,8 @@ void update_position(){
 	float dR = ticks_to_distance(encoder_count_R - previous_encoder_count_R, wheel_diameter_R);
 	float dL = ticks_to_distance(encoder_count_L - previous_encoder_count_L, wheel_diameter_L);
 	float dC = (dR+dL)/2;
+	previous_encoder_count_R = encoder_count_R;
+	previous_encoder_count_L = encoder_count_L;
 
 	float previous_absolute_phi = absolute_phi;
 	absolute_phi = ( ticks_to_distance(encoder_count_R, wheel_diameter_R) - ticks_to_distance(encoder_count_L, wheel_diameter_L) )/wheels_spacing;
@@ -28,6 +30,8 @@ void update_position(){
 	while (current_phi <= -PI){
 		current_phi += 2*PI;
 	}
+    current_speed_R_filtered = current_speed_R_filtered * 0.5 + 0.5 * current_speed_R;
+    current_speed_L_filtered = current_speed_L_filtered * 0.5 + 0.5 * current_speed_L;
 }
 void reset_position(){
 	current_x = 0;

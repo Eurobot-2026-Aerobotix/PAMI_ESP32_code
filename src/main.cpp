@@ -13,8 +13,6 @@
  */
 
 #include <Arduino.h>
-#include "HAL.h"
-#include "odometry.h"
 #include "navigation.h"
 #include "command_controller.h"
 #include "communication.h"
@@ -27,21 +25,6 @@ TaskHandle_t commandExecutionTaskHandle;
 TaskHandle_t websocketTaskHandle;
 int websocket=1;
 // Note: websocket_enabled variable is defined in websocket.cpp
-float kpS_R = 0.5;
-float kdS_R = 0.0000;
-float kiS_R = 0.8;
-float speed_integral_R = 0;
-float speed_derivative_R = 0;
-float previous_speed_error_R = 0;
-
-float kpS_L = 0.5;
-float kdS_L = 0;
-float kiS_L = 0.8;
-float speed_integral_L = 0;
-float speed_derivative_L = 0;
-float previous_speed_error_L = 0;
-
-int32_t previous_speed_control_time = 0;
 
 // Custom strategy implementation
 void strategy()
@@ -97,7 +80,7 @@ void communicationTask(void *pvParameters)
 
 void PIDTask(void *pvParameters)
 {
-  const TickType_t xDelay = pdMS_TO_TICKS(10); // Increased to 10ms delay for stability
+  const TickType_t xDelay = pdMS_TO_TICKS(1); // Increased to 10ms delay for stability
   TickType_t xLastWakeTime = xTaskGetTickCount();
 
   Serial.println("PID task started");
@@ -136,28 +119,28 @@ void PIDTask(void *pvParameters)
     }
 
     // right motor speed control
-    float error = target_speed_R - current_speed_R;
+    float error = target_speed_R - current_speed_R_filtered;
 
     speed_derivative_R = speed_derivative_R * 0.999 + 0.001 * (error - previous_speed_error_R) / tmp; // unit = mm/s²
     speed_integral_R += error * tmp;
 
     previous_speed_error_R = error;
 
-    PWM_R = PWM_R * 0 + 1 * (PWM_offset_R + kpS_R * error + kdS_R * speed_derivative_R + kiS_R * speed_integral_R); // the first part is a simple filter to reduce jitter
+    PWM_R = PWM_R * 0.9 + 0.1 * (PWM_offset_R + kpS_R * error + kdS_R * speed_derivative_R + kiS_R * speed_integral_R); // the first part is a simple filter to reduce jitter
     PWM_R = (PWM_R > PWM_max) ? PWM_max : (PWM_R < -PWM_max) ? -PWM_max : PWM_R;
     PWM_R = (target_speed_R == 0) ? 0 : PWM_R;
 
     speed_integral_R = ((PWM_R == PWM_max) || (PWM_R == -PWM_max)) ? (speed_integral_R - 2 * error * tmp) : speed_integral_R;
 
     // left motor speed control
-    error = target_speed_L - current_speed_L;
+    error = target_speed_L - current_speed_L_filtered;
     speed_derivative_L = speed_derivative_L * 0.999 + 0.001 * (error - previous_speed_error_L) / tmp; // unit = mm/s²
     speed_integral_L += error * tmp;
 
     previous_speed_error_L = error;
     previous_speed_control_time = micros();
 
-    PWM_L = PWM_L * 0 + 1 * (PWM_offset_L + kpS_L * error + kdS_L * speed_derivative_L + kiS_L * speed_integral_L);
+    PWM_L = PWM_L * 0.95 + 0.05 * (PWM_offset_L + kpS_L * error + kdS_L * speed_derivative_L + kiS_L * speed_integral_L);
     PWM_L = (PWM_L > PWM_max) ? PWM_max : (PWM_L < -PWM_max) ? -PWM_max : PWM_L;
     PWM_L = (target_speed_L == 0) ? 0 : PWM_L;
 
@@ -190,7 +173,7 @@ void websocketTask(void *pvParameters)
   Serial.println("WebSocket task started");
   
   // Wait a bit for system initialization
-  vTaskDelay(pdMS_TO_TICKS(10));
+  vTaskDelay(pdMS_TO_TICKS(3));
   
   for (;;) // Infinite loop - CRITICAL!
   {
@@ -210,10 +193,16 @@ void websocketTask(void *pvParameters)
 }
         if (websocket_is_connected()) {
           // Send current robot data
-          websocket_send_data(0xAA, current_speed_R);  // Right motor speed
-          websocket_send_data(0xAB, current_speed_L);  // Left motor speed
-          websocket_send_data(0xAC, target_speed_R);   // Right target speed
-          websocket_send_data(0xAD, target_speed_L);   // Left target speed
+          websocket_send_data(0xAA, current_speed_R_filtered);
+          websocket_send_data(0xAB, current_speed_L_filtered);
+          websocket_send_data(0xAC, target_speed_R);
+          websocket_send_data(0xAD, target_speed_L);
+          /*
+          websocket_send_data(0xAA, current_x);
+          websocket_send_data(0xAB, current_y);
+          websocket_send_data(0xAC, current_phi*100);
+          websocket_send_data(0xAD, absolute_phi*100);
+          */
         }
       }
     }
@@ -236,7 +225,7 @@ void setup()
   set_encoder_channels(15, 2, 16, 4, 400);
 
   Serial.println("Setting PWM parameters...");
-  set_PWM_min_max(1023, 250, 250, -250, -250);
+  set_PWM_min_max(1023, 320, 320, -320, -320);
 
   Serial.println("Setting wheel parameters...");
   set_wheel_diameter_and_spacing(24.5, 43, 86); // howa la3jal 9add 9add ama wa7da lencodeur te3ha fih 700tck donc bech mano93odch na3mel fi CPR lkoll 3ajla hayka keka te5dem chihemmek fi waldeha
@@ -318,14 +307,4 @@ void loop()
   
   // WebSocket functionality is now handled by websocketTask
   // No WebSocket code needed in main loop anymore
-  
-  delay(10);
-
-  if (millis() > 5000 && millis() < 7000) {
-    set_target_speeds(300, 300);
-  }
-  if (millis() > 7000) {
-    set_target_speeds(0, 0);
-  }
-  // TODO: interrupt is struggeling after adding the filter, make it external?
 }

@@ -1,5 +1,3 @@
-#pragma once
-
 #include "HAL.h"
 
 // motor pins
@@ -37,6 +35,8 @@ float direction_R;
 float direction_L;
 volatile float current_speed_R;
 volatile float current_speed_L;
+float current_speed_L_filtered = 0;
+float current_speed_R_filtered = 0;
 volatile float target_speed_R;
 volatile float target_speed_L;
 int PWM_offset_R;
@@ -48,6 +48,21 @@ volatile int PWM_L;
 float wheel_diameter_R;
 float wheel_diameter_L;
 float wheels_spacing;
+
+// PID control parameters
+float kpS_R = 5;
+float kdS_R = 0.0000;
+float kiS_R = 10;
+float speed_integral_R = 0;
+float speed_derivative_R = 0;
+float previous_speed_error_R = 0;
+
+float kpS_L = 0;
+float kdS_L = 0;
+float kiS_L = 3;
+float speed_integral_L = 0;
+float speed_derivative_L = 0;
+float previous_speed_error_L = 0;
 
 void set_motor_pins(int right_forward, int right_backward, int left_forward, int left_backward, int right_enable, int left_enable)
 {
@@ -141,7 +156,7 @@ void IRAM_ATTR encoderRISRA()
     speedCalculationCurrentTimeR = micros();
 
     // optimise by replacing (wheel_diameter_R*PI/CPR * direction_R) by a constant factors
-    current_speed_R = current_speed_R*0.9 + 0.1* (wheel_diameter_R * PI / CPR * direction_R)*1000000 / (speedCalculationCurrentTimeR - speedCalculationPreviousTimeR);
+    current_speed_R = (wheel_diameter_R * PI / CPR * direction_R)*1000000 / (speedCalculationCurrentTimeR - speedCalculationPreviousTimeR);
 }
 void IRAM_ATTR encoderLISRA()
 {
@@ -157,7 +172,7 @@ void IRAM_ATTR encoderLISRA()
     }
     speedCalculationPreviousTimeL = speedCalculationCurrentTimeL;
     speedCalculationCurrentTimeL = micros();
-    current_speed_L = current_speed_L*0.9 + 0.1* (wheel_diameter_L * PI / CPR * direction_L)*1000000 / (speedCalculationCurrentTimeL - speedCalculationPreviousTimeL);
+    current_speed_L = (wheel_diameter_L * PI / CPR * direction_L)*1000000 / (speedCalculationCurrentTimeL - speedCalculationPreviousTimeL);
 }
 
 void send_values_to_usart(float value1, float value2, float value3, float value4)
@@ -215,4 +230,12 @@ void HAL_setup()
     // Interrupts
     attachInterrupt(digitalPinToInterrupt(encoderRA), encoderRISRA, CHANGE);
     attachInterrupt(digitalPinToInterrupt(encoderLA), encoderLISRA, CHANGE);
+}
+void custom_delay(int ms)
+{
+    unsigned long start_time = millis();
+    while (millis() - start_time < ms)
+    {
+        vTaskDelay(1);
+    }
 }

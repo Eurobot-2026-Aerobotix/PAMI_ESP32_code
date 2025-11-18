@@ -56,6 +56,8 @@ extern float direction_R;
 extern float direction_L;
 extern volatile float current_speed_R;
 extern volatile float current_speed_L;
+extern float current_speed_L_filtered;
+extern float current_speed_R_filtered;
 extern volatile float target_speed_R;
 extern volatile float target_speed_L;
 extern int PWM_offset_R;
@@ -67,6 +69,21 @@ extern volatile int PWM_L;
 extern float wheel_diameter_R;
 extern float wheel_diameter_L;
 extern float wheels_spacing;
+
+// PID control parameters
+extern float kpS_R;
+extern float kdS_R;
+extern float kiS_R;
+extern float speed_integral_R;
+extern float speed_derivative_R;
+extern float previous_speed_error_R;
+
+extern float kpS_L;
+extern float kdS_L;
+extern float kiS_L;
+extern float speed_integral_L;
+extern float speed_derivative_L;
+extern float previous_speed_error_L;
 
 void set_motor_pins(int right_forward, int right_backward, int left_forward, int left_backward, int right_enable, int left_enable);
 void set_encoder_channels(int _encoderRA, int _encoderRB, int _encoderLA, int _encoderLB, int cpr);
@@ -85,3 +102,4 @@ void set_target_speeds(float target__speed_R, float target__speed_L);
 void send_values_to_usart(float value1, float value2, float value3, float value4);
 
 void HAL_setup();
+void custom_delay(int ms);

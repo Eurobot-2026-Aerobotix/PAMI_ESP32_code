@@ -1,4 +1,6 @@
 #include "websocket.h"
+#include "navigation.h"
+#include <command_controller.h>
 
 using namespace websockets;
 
@@ -273,15 +275,47 @@ void processReceivedString(const String& str) {
         
         if (command == "START") {
             Serial.println("▶️ Start command received!");
-            // Add your start logic here
+            //prepare_move_forward(200, 300);
+            prepare_rotate(180, 0);
         } else if (command == "STOP") {
             Serial.println("⏹️ Stop command received!");
-            // Add your stop logic here
-        } else if (command.startsWith("SPEED:")) {
+            set_target_speeds(0, 0);
+        } else if (command.startsWith("T")) {
             // Example: "SPEED:100" to set speed to 100
-            int speed = command.substring(6).toInt();
-            Serial.println("🏎️ Speed set to: " + String(speed));
-            // Add your speed control logic here
+            command = command.substring(1);
+            if (command.startsWith("L")) {
+                int value = command.substring(1).toFloat();
+                set_target_speeds(target_speed_R, value);
+                Serial.println("Left motor target speed set to: " + String(value));
+            }else if (command.startsWith("R")) {
+                int value = command.substring(1).toFloat();
+                set_target_speeds(value, target_speed_L);
+                Serial.println("Right motor target speed set to: " + String(value));
+            }
+        }else if (command.startsWith("L")) {
+            // Example: "SPEED:100" to set speed to 100
+            String cmd = command.substring(1);
+            if (cmd.startsWith("I")) {
+                float value = cmd.substring(1).toFloat();
+                kiS_L = value;
+                Serial.println("Left motor integral gain set to: " + String(kiS_L));
+            }else if (cmd.startsWith("P")) {
+                float value = cmd.substring(1).toFloat();
+                kpS_L = value;
+                Serial.println("Left motor proportional gain set to: " + String(kpS_L));
+            }
+        } else if (command.startsWith("R")) {
+            // Example: "SPEED:100" to set speed to 100
+            String cmd = command.substring(1);
+            if (cmd.startsWith("I")) {
+                float value = cmd.substring(1).toFloat();
+                kiS_R = value;
+                Serial.println("Right motor integral gain set to: " + String(kiS_R));
+            }else if (cmd.startsWith("P")) {
+                float value = cmd.substring(1).toFloat();
+                kpS_R = value;
+                Serial.println("Right motor proportional gain set to: " + String(kpS_R));
+            }
         }
         
     } else if (str.startsWith("CONFIG:")) {

@@ -35,10 +35,10 @@ curveJ = plot.plot(pen='y')
 plot.setYRange(-1000, 1000)
 plot.showGrid(x=True, y=True)
 
-dataR = np.zeros(1000)
-dataL = np.zeros(1000)
-dataT = np.zeros(1000)
-dataJ = np.zeros(1000)
+dataR = np.zeros(100)
+dataL = np.zeros(100)
+dataT = np.zeros(100)
+dataJ = np.zeros(100)
 
 data_buffer = bytearray()
 
@@ -121,16 +121,16 @@ async def send_to_client(msg: str):
 def on_start_button_clicked():
     if start_button.text() == "Start":
         start_button.setText("Stop")
-        loop.create_task(send_to_client("START"))
+        loop.create_task(send_to_client("CMD:START"))
     else:
         start_button.setText("Start")
-        loop.create_task(send_to_client("STOP"))
+        loop.create_task(send_to_client("CMD:STOP"))
 
 
 def on_send_button_clicked():
     text = message_input.text().strip()
     if text != "":
-        loop.create_task(send_to_client(text))
+        loop.create_task(send_to_client("CMD:" + text.upper()))
 
 
 # ------------------------
@@ -155,6 +155,7 @@ message_input.setPlaceholderText("Enter message...")
 
 start_button.clicked.connect(on_start_button_clicked)
 send_button.clicked.connect(on_send_button_clicked)
+message_input.returnPressed.connect(on_send_button_clicked)
 
 control_panel.addWidget(start_button)
 control_panel.addWidget(message_input)
