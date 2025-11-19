@@ -33,6 +33,8 @@ volatile int32_t speedCalculationPreviousTimeL;
 volatile int32_t speedCalculationCurrentTimeL;
 float direction_R;
 float direction_L;
+float directionR;
+float directionL;
 volatile float current_speed_R;
 volatile float current_speed_L;
 float current_speed_L_filtered = 0;
@@ -57,7 +59,7 @@ float speed_integral_R = 0;
 float speed_derivative_R = 0;
 float previous_speed_error_R = 0;
 
-float kpS_L = 5;//0
+float kpS_L = 6;//0
 float kdS_L = 0;
 float kiS_L = 10;//3
 float speed_integral_L = 0;
@@ -145,34 +147,34 @@ void IRAM_ATTR encoderRISRA()
     if (FAST_READ(encoderRB) == FAST_READ(encoderRA))
     {
         encoder_count_R--;
-        direction_R = -1;
+        directionR = -1;
     }
     else
     {
         encoder_count_R++;
-        direction_R = 1;
+        directionR = 1;
     }
     speedCalculationPreviousTimeR = speedCalculationCurrentTimeR;
     speedCalculationCurrentTimeR = micros();
 
     // optimise by replacing (wheel_diameter_R*PI/CPR * direction_R) by a constant factors
-    current_speed_R = (wheel_diameter_R * PI / CPR * direction_R)*1000000 / (speedCalculationCurrentTimeR - speedCalculationPreviousTimeR);
+    current_speed_R = (wheel_diameter_R * PI / CPR * directionR)*1000000 / (speedCalculationCurrentTimeR - speedCalculationPreviousTimeR);
 }
 void IRAM_ATTR encoderLISRA()
 {
     if (FAST_READ(encoderLB) == FAST_READ(encoderLA))
     {
         encoder_count_L++;
-        direction_L = 1;
+        directionL = 1;
     }
     else
     {
         encoder_count_L--;
-        direction_L = -1;
+        directionL = -1;
     }
     speedCalculationPreviousTimeL = speedCalculationCurrentTimeL;
     speedCalculationCurrentTimeL = micros();
-    current_speed_L = (wheel_diameter_L * PI / CPR * direction_L)*1000000 / (speedCalculationCurrentTimeL - speedCalculationPreviousTimeL);
+    current_speed_L = (wheel_diameter_L * PI / CPR * directionL)*1000000 / (speedCalculationCurrentTimeL - speedCalculationPreviousTimeL);
 }
 
 void send_values_to_usart(float value1, float value2, float value3, float value4)
@@ -194,8 +196,11 @@ void stop_motors()
     PWM_L = 0;
     target_speed_R = 0;
     target_speed_L = 0;
-    run_right_motor();
-    run_left_motor();
+    for(int i=0; i<10; i++){
+        run_right_motor();
+        run_left_motor();
+        custom_delay(10);
+    }
     set_target_speeds(0, 0);
 }
 
@@ -227,6 +232,8 @@ void HAL_setup()
     current_speed_R = 0;
     direction_R = 1;
     direction_L = 1;
+    directionR = 1;
+    directionL = 1;
 
     // Interrupts
     attachInterrupt(digitalPinToInterrupt(encoderRA), encoderRISRA, CHANGE);

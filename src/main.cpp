@@ -24,11 +24,13 @@ TaskHandle_t PIDTaskHandle;
 TaskHandle_t commandExecutionTaskHandle;
 TaskHandle_t websocketTaskHandle;
 int websocket=0;
+int8_t strategy_waiting = 0;
 // Note: websocket_enabled variable is defined in websocket.cpp
 
 // Custom strategy implementation
 void strategy()
 {
+  /*
   Serial.println("PAMI Robot Strategy Started!");
 
   // Example strategy implementation:
@@ -41,11 +43,17 @@ void strategy()
     Serial.print(": ");
     Serial.println(crate_colors[i] ? "YELLOW" : "BLUE");
   }
+  */
 
   // 2. Execute some movement or action
   // Example: move forward, rotate, etc.
   // move_forward(100, 50); // Move 100mm at 50mm/s speed
-
+  custom_delay(500);
+  go_to(300, 300, 300); // Go to (500, 0) at 300mm/s speed
+  custom_delay(800);
+  go_to(300, 0, 300);
+  custom_delay(800);
+  orientate(0, 0); // Orientate to 0 degrees
   // 3. Send completion signal
   send_action_done(1);
 
@@ -161,6 +169,10 @@ void commandExecutionTask(void *pvParameters)
 
   for (;;) // Infinite loop - CRITICAL!
   {
+    if (strategy_waiting) {
+      strategy_waiting = 0;
+      strategy();
+    }
     execute_command();
     vTaskDelayUntil(&xLastWakeTime, xDelay);
   }
@@ -225,7 +237,7 @@ void setup()
   set_encoder_channels(15, 2, 16, 4, 400);
 
   Serial.println("Setting PWM parameters...");
-  set_PWM_min_max(1023, 320, 340, -320, -340);
+  set_PWM_min_max(1023, 320, 320, -320, -320);
 
   Serial.println("Setting wheel parameters...");
   set_wheel_diameter_and_spacing(25.7393438962633966203, 44.72738447547409904512, 88.83238033718186); // howa la3jal 9add 9add ama wa7da lencodeur te3ha fih 700tck donc bech mano93odch na3mel fi CPR lkoll 3ajla hayka keka te5dem chihemmek fi waldeha
@@ -294,7 +306,7 @@ void setup()
   }
 
   Serial.println("All tasks created successfully!");
-  prepare_rotate(90, 0);
+  strategy_waiting = 1;
 }
 
 void loop(){

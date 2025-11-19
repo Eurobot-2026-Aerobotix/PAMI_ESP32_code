@@ -54,6 +54,8 @@ extern volatile int32_t speedCalculationPreviousTimeL;
 extern volatile int32_t speedCalculationCurrentTimeL;
 extern float direction_R;
 extern float direction_L;
+extern float directionR;
+extern float directionL;
 extern volatile float current_speed_R;
 extern volatile float current_speed_L;
 extern float current_speed_L_filtered;
