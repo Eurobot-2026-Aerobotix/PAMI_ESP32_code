@@ -24,8 +24,6 @@ TaskHandle_t PIDTaskHandle;
 TaskHandle_t commandExecutionTaskHandle;
 TaskHandle_t websocketTaskHandle;
 int websocket=0;
-int8_t strategy_waiting = 0;
-// Note: websocket_enabled variable is defined in websocket.cpp
 
 // Custom strategy implementation
 void strategy()
@@ -48,7 +46,7 @@ void strategy()
   // 2. Execute some movement or action
   // Example: move forward, rotate, etc.
   // move_forward(100, 50); // Move 100mm at 50mm/s speed
-  custom_delay(500);
+  //custom_delay(500);
   go_to(300, 300, 300); // Go to (500, 0) at 300mm/s speed
   custom_delay(800);
   go_to(300, 0, 300);
@@ -256,18 +254,18 @@ void setup()
 
   Serial.println("Creating tasks...");
 
-  // Create tasks with lower stack sizes first
-  // xTaskCreatePinnedToCore(
-  //     communicationTask,
-  //     "communicationTask",
-  //     8192,
-  //     NULL,
-  //     1, // Lower priority
-  //     &communicationTaskHandle,
-  //     0); // Pin to core 0
+  //Create tasks with lower stack sizes first
+  xTaskCreatePinnedToCore(
+      communicationTask,
+      "communicationTask",
+      8192,
+      NULL,
+      1, // Lower priority
+      &communicationTaskHandle,
+      0); // Pin to core 0
 
-  // delay(500); // Delay between task creation
-  // Serial.println("Communication task created");
+  delay(500); // Delay between task creation
+  Serial.println("Communication task created");
 
   xTaskCreatePinnedToCore(
       commandExecutionTask,
@@ -306,7 +304,7 @@ void setup()
   }
 
   Serial.println("All tasks created successfully!");
-  strategy_waiting = 1;
+  strategy_waiting = false;
 }
 
 void loop(){

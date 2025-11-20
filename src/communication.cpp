@@ -13,6 +13,7 @@ std_msgs__msg__Int32 crates_color_msg;
 std_msgs__msg__Int32 action_done_msg;
 bool micro_ros_init_successful = false;
 enum CommunicationState comm_state = WAITING_AGENT;
+bool strategy_waiting=false ;
 bool crate_colors[8] = {false}; // Initialize all as blue (0 = blue, 1 = yellow)
 
 // Setup micro-ROS with WiFi connection and agent configuration
@@ -158,6 +159,7 @@ void start_callback(const void *msgin)
 
     if (msg->data == 1)
     {
+        strategy_waiting=true;
         Serial.println("Start signal detected (value = 1)!");
         strategy(); // Call the strategy function
     }

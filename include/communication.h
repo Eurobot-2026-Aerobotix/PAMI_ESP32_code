@@ -60,7 +60,7 @@ extern std_msgs__msg__Int32 action_done_msg;
 extern bool micro_ros_init_successful;
 extern enum CommunicationState comm_state;
 extern bool crate_colors[8];
-
+extern bool strategy_waiting;
 // Core functions
 bool setup_micro_ros(const char *wifi_ssid, const char *wifi_password, const char *agent_ip, int agent_port);
 void communication_loop();
