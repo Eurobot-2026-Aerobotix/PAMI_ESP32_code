@@ -64,8 +64,8 @@ void communicationTask(void *pvParameters)
   TickType_t xLastWakeTime = xTaskGetTickCount();
 
   Serial.println("Communication task started");
-
-  // Setup micro-ROS
+  
+  // Setup micro-ROS (will handle WiFi connection internally)
   if (setup_micro_ros("eurobot", "eurobot2026", "10.42.0.1", 8888))
   {
     Serial.println("micro-ROS setup successful");
@@ -74,11 +74,18 @@ void communicationTask(void *pvParameters)
   {
     Serial.println("micro-ROS setup failed");
   }
-
+  
   for (;;) // Infinite loop - CRITICAL!
   {
-    // Run the communication loop
-    communication_loop();
+    // Only run communication loop if WiFi is connected
+    if (WiFi.status() == WL_CONNECTED) {
+      communication_loop();
+    } else {
+      // If WiFi disconnected, try to reconnect
+      Serial.println("WiFi disconnected in task, attempting reconnection...");
+      connect_wifi("eurobot", "eurobot2026");
+      vTaskDelay(pdMS_TO_TICKS(5000)); // Wait 5 seconds before next attempt
+    }
 
     vTaskDelayUntil(&xLastWakeTime, xDelay);
   }

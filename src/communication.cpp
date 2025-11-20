@@ -16,14 +16,91 @@ enum CommunicationState comm_state = WAITING_AGENT;
 bool strategy_waiting=false ;
 bool crate_colors[8] = {false}; // Initialize all as blue (0 = blue, 1 = yellow)
 
+// WiFi reconnection variables
+unsigned long last_wifi_check = 0;
+const unsigned long WIFI_CHECK_INTERVAL = 5000; // Check every 5 seconds
+const int MAX_WIFI_RETRY = 10;
+
+// Store WiFi credentials for reconnection
+static String stored_wifi_ssid = "";
+static String stored_wifi_password = "";
+
+// WiFi connection function with retry logic
+bool connect_wifi(const char *ssid, const char *password) {
+    // Store credentials for reconnection
+    stored_wifi_ssid = String(ssid);
+    stored_wifi_password = String(password);
+    
+    Serial.print("Connecting to WiFi: ");
+    Serial.println(ssid);
+    
+    WiFi.disconnect(true);
+    WiFi.mode(WIFI_STA);
+    
+    // Configure WiFi to be more aggressive with reconnection
+    WiFi.setAutoReconnect(true);
+    WiFi.persistent(false);
+    
+    WiFi.begin(ssid, password);
+    
+    int retry_count = 0;
+    while (WiFi.status() != WL_CONNECTED && retry_count < MAX_WIFI_RETRY) {
+        delay(500);
+        Serial.print(".");
+        retry_count++;
+        
+        // If connection attempt fails, try again
+        if (retry_count % 5 == 0) {
+            Serial.println("\nRetrying connection...");
+            WiFi.disconnect();
+            delay(100);
+            WiFi.begin(ssid, password);
+        }
+    }
+    
+    // Give WiFi extra time to finish connecting after association errors
+    if (WiFi.status() != WL_CONNECTED) {
+        Serial.println("\nWaiting for WiFi to stabilize...");
+        delay(2000);
+    }
+    
+    if (WiFi.status() == WL_CONNECTED) {
+        Serial.println("\nWiFi connected!");
+        Serial.print("IP address: ");
+        Serial.println(WiFi.localIP());
+        return true;
+    } else {
+        Serial.println("\nWiFi connection failed!");
+        return false;
+    }
+}
+
+// Check and maintain WiFi connection
+void check_wifi_connection(const char *ssid, const char *password) {
+    if (millis() - last_wifi_check > WIFI_CHECK_INTERVAL) {
+        last_wifi_check = millis();
+        
+        if (WiFi.status() != WL_CONNECTED) {
+            Serial.println("WiFi disconnected! Reconnecting...");
+            connect_wifi(ssid, password);
+        }
+    }
+}
+
 // Setup micro-ROS with WiFi connection and agent configuration
 bool setup_micro_ros(const char *wifi_ssid, const char *wifi_password, const char *agent_ip, int agent_port)
 {
     Serial.println("=== Setting up micro-ROS ===");
 
-    // Setup WiFi transport (cast to non-const for the library)
-    Serial.print("Connecting to WiFi: ");
-    Serial.println(wifi_ssid);
+    // Connect to WiFi with retry logic
+    if (!connect_wifi(wifi_ssid, wifi_password)) {
+        Serial.println("Failed to connect to WiFi - retrying in background");
+        // Don't return false, allow micro-ROS setup to continue
+        // WiFi will be retried in the communication loop
+    }
+
+    // Setup micro-ROS transport
+    Serial.println("Setting up micro-ROS transport...");
     set_microros_wifi_transports((char *)wifi_ssid, (char *)wifi_password, (char *)agent_ip, agent_port);
 
     // Initialize LED pin

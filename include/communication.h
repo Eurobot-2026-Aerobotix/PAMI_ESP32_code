@@ -65,7 +65,7 @@ extern bool strategy_waiting;
 bool setup_micro_ros(const char *wifi_ssid, const char *wifi_password, const char *agent_ip, int agent_port);
 void communication_loop();
 void cleanup_micro_ros();
-
+bool connect_wifi(const char *ssid, const char *password);
 // Entity management
 bool create_entities();
 void destroy_entities();
@@ -78,6 +78,6 @@ void crates_color_callback(const void *msgin);
 void update_crate_colors(int32_t decimal_value);
 void send_action_done(int value);
 bool is_agent_connected();
-
+void check_wifi_connection(const char *ssid, const char *password);
 // Strategy function (to be implemented by user)
 void strategy();
