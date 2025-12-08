@@ -16,6 +16,10 @@ int encoderLB;
 int motorREN_channel;
 int motorLEN_channel;
 
+// distance sensor pins
+int trigger;
+int echo;
+
 // global constants
 int PWM_R_forward_min;
 int PWM_R_backward_min;
@@ -66,6 +70,26 @@ float speed_integral_L = 0;
 float speed_derivative_L = 0;
 float previous_speed_error_L = 0;
 
+float previous_position_error_R = 0;
+float previous_position_error_L = 0;
+int32_t previous_position_control_time = 0;
+float position_max_response = 600;
+float position_integral_R = 0;
+float position_derivative_R = 0;
+float position_integral_L = 0;
+float position_derivative_L = 0;
+int32_t target_encoder_count_R = 0;
+int32_t target_encoder_count_L = 0;
+
+// position control parameters
+float kpP_R = 3;
+float kdP_R = 0.2;
+float kiP_R = 20;
+
+float kpP_L = 3;
+float kdP_L = 0.2;
+float kiP_L = 20;
+
 void set_motor_pins(int right_forward, int right_backward, int left_forward, int left_backward, int right_enable, int left_enable)
 {
     motorRa = right_forward;
@@ -74,6 +98,11 @@ void set_motor_pins(int right_forward, int right_backward, int left_forward, int
     motorLb = left_backward;
     motorREN = right_enable;
     motorLEN = left_enable;
+}
+
+void set_ultrasonic_pins(int trigger_pin, int echo_pin){
+    trigger = trigger_pin;
+    echo = echo_pin;
 }
 void set_encoder_channels(int _encoderRA, int _encoderRB, int _encoderLA, int _encoderLB, int cpr)
 {
@@ -188,6 +217,45 @@ void send_values_to_usart(float value1, float value2, float value3, float value4
     Serial.write((uint8_t*)&value3, sizeof(value3));
     Serial.write((uint8_t)0xAD);
     Serial.write((uint8_t*)&value4, sizeof(value4));
+}
+
+float get_ultrasonic_distance(){
+    long duration;
+    float distance;
+
+    // Clear the trigger pin
+    digitalWrite(trigger, LOW);
+    delayMicroseconds(2);
+
+    // Set the trigger pin HIGH for 10 microseconds
+    digitalWrite(trigger, HIGH);
+    delayMicroseconds(10);
+    digitalWrite(trigger, LOW);
+
+    // Read the echo pin
+    duration = pulseIn(echo, HIGH, 2000); // Timeout after 2000us to avoid blocking
+
+    // Calculate distance in mm
+    distance = (duration / 2.0) * 0.343; // Speed of sound is ~343 m/s or 0.0343 mm/µs
+
+    // If no echo received, return -1
+    if (duration == 0) {
+        return 500.0;
+    }
+
+    return distance;
+}
+
+void reset_position_control_variables(){
+	previous_position_control_time = micros()-999;
+	position_integral_L = 0;
+	position_integral_R = 0;
+	position_derivative_L = 0;
+	position_derivative_R = 0;
+	PWM_L = 0;
+	PWM_R = 0;
+	previous_position_error_L = 0;
+	previous_position_error_R = 0;
 }
 
 void stop_motors()

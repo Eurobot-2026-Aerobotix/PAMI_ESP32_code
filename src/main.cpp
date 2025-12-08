@@ -23,6 +23,7 @@ TaskHandle_t communicationTaskHandle;
 TaskHandle_t PIDTaskHandle;
 TaskHandle_t commandExecutionTaskHandle;
 TaskHandle_t websocketTaskHandle;
+TaskHandle_t emergencyBreakTaskHandle;
 int websocket=0;
 
 // Custom strategy implementation
@@ -47,11 +48,33 @@ void strategy()
   // Example: move forward, rotate, etc.
   // move_forward(100, 50); // Move 100mm at 50mm/s speed
   //custom_delay(500);
-  go_to(300, 300, 300); // Go to (500, 0) at 300mm/s speed
-  custom_delay(800);
-  go_to(300, 0, 300);
-  custom_delay(800);
-  orientate(0, 0); // Orientate to 0 degrees
+  int commands[] = {0, 300, 300, 300, // Go to (300, 300) at 300mm/s speed
+                    0, 300, 0, 400, // Go to (300, 0) at 400mm/s speed
+                    1, 0, 0}; // Orientate to 0 degrees
+  int num_commands = sizeof(commands) / sizeof(commands[0]);
+  int i = 0;
+  while (i < num_commands)
+  {
+    int command_type = commands[i];
+    if (command_type == 0) // Go to command
+    {
+      int x = commands[i + 1];
+      int y = commands[i + 2];
+      int speed = commands[i + 3];
+      while(go_to(x, y, speed)){
+        wait_for_obstacle_clearance();
+        go_to(x, y, speed);
+      }
+      i += 4;
+    }
+    else if (command_type == 1) // Orientate command
+    {
+      int angle = commands[i + 1];
+      int is_radian = commands[i + 2];
+      orientate(angle, is_radian);
+      i += 3;
+    }
+  }
   // 3. Send completion signal
   send_action_done(1);
 
@@ -91,6 +114,23 @@ void communicationTask(void *pvParameters)
   }
 }
 
+void emergencyBreakTask(void *pvParameters)
+{
+  const TickType_t xDelay = pdMS_TO_TICKS(30);
+  TickType_t xLastWakeTime = xTaskGetTickCount();
+  
+  for (;;)
+  {
+    if (wheel_state_L != EMERGENCY_BREAK && (get_ultrasonic_distance() < 50.0)) 
+    {
+      emergency_break();
+      Serial.println("Emergency break activated due to obstacle!");
+    }
+
+    vTaskDelayUntil(&xLastWakeTime, xDelay);
+  }
+}
+
 void PIDTask(void *pvParameters)
 {
   const TickType_t xDelay = pdMS_TO_TICKS(1); // Increased to 10ms delay for stability
@@ -122,42 +162,82 @@ void PIDTask(void *pvParameters)
 
     update_position();
 
-    float tmp = (micros() - previous_speed_control_time) / 1000000.0; // in seconds
-
-    // Prevent division by zero or very small numbers
-    if (tmp < 0.001)
-    {
-      vTaskDelayUntil(&xLastWakeTime, xDelay);
-      continue;
-    }
-
     // right motor speed control
-    float error = target_speed_R - current_speed_R_filtered;
+    if (control_loop_state == SPEED){
+      float dt = (micros() - previous_speed_control_time) / 1000000.0; // in seconds
 
-    speed_derivative_R = speed_derivative_R * 0.999 + 0.001 * (error - previous_speed_error_R) / tmp; // unit = mm/s²
-    speed_integral_R += error * tmp;
+      // Prevent division by zero or very small numbers
+      if (dt < 0.001)
+      {
+        vTaskDelayUntil(&xLastWakeTime, xDelay);
+        continue;
+      }
 
-    previous_speed_error_R = error;
+      float error = target_speed_R - current_speed_R_filtered;
 
-    PWM_R = PWM_R * 0.9 + 0.1 * (PWM_offset_R + kpS_R * error + kdS_R * speed_derivative_R + kiS_R * speed_integral_R); // the first part is a simple filter to reduce jitter
-    PWM_R = (PWM_R > PWM_max) ? PWM_max : (PWM_R < -PWM_max) ? -PWM_max : PWM_R;
-    PWM_R = (target_speed_R == 0) ? 0 : PWM_R;
+      speed_derivative_R = speed_derivative_R * 0.999 + 0.001 * (error - previous_speed_error_R) / dt; // unit = mm/s²
+      speed_integral_R += error * dt;
 
-    speed_integral_R = ((PWM_R == PWM_max) || (PWM_R == -PWM_max)) ? (speed_integral_R - 2 * error * tmp) : speed_integral_R;
+      previous_speed_error_R = error;
 
-    // left motor speed control
-    error = target_speed_L - current_speed_L_filtered;
-    speed_derivative_L = speed_derivative_L * 0.999 + 0.001 * (error - previous_speed_error_L) / tmp; // unit = mm/s²
-    speed_integral_L += error * tmp;
+      PWM_R = PWM_R * 0.9 + 0.1 * (PWM_offset_R + kpS_R * error + kdS_R * speed_derivative_R + kiS_R * speed_integral_R); // the first part is a simple filter to reduce jitter
+      PWM_R = (PWM_R > PWM_max) ? PWM_max : (PWM_R < -PWM_max) ? -PWM_max : PWM_R;
+      PWM_R = (target_speed_R == 0) ? 0 : PWM_R;
 
-    previous_speed_error_L = error;
-    previous_speed_control_time = micros();
+      speed_integral_R = ((PWM_R == PWM_max) || (PWM_R == -PWM_max)) ? (speed_integral_R - 2 * error * dt) : speed_integral_R;
 
-    PWM_L = PWM_L * 0.95 + 0.05 * (PWM_offset_L + kpS_L * error + kdS_L * speed_derivative_L + kiS_L * speed_integral_L);
-    PWM_L = (PWM_L > PWM_max) ? PWM_max : (PWM_L < -PWM_max) ? -PWM_max : PWM_L;
-    PWM_L = (target_speed_L == 0) ? 0 : PWM_L;
+      // left motor speed control
+      error = target_speed_L - current_speed_L_filtered;
+      speed_derivative_L = speed_derivative_L * 0.999 + 0.001 * (error - previous_speed_error_L) / dt; // unit = mm/s²
+      speed_integral_L += error * dt;
 
-    speed_integral_L = ((PWM_L == PWM_max) || (PWM_L == -PWM_max)) ? (speed_integral_L - 2 * error * tmp) : speed_integral_L;
+      previous_speed_error_L = error;
+      previous_speed_control_time = micros();
+
+      PWM_L = PWM_L * 0.95 + 0.05 * (PWM_offset_L + kpS_L * error + kdS_L * speed_derivative_L + kiS_L * speed_integral_L);
+      PWM_L = (PWM_L > PWM_max) ? PWM_max : (PWM_L < -PWM_max) ? -PWM_max : PWM_L;
+      PWM_L = (target_speed_L == 0) ? 0 : PWM_L;
+
+      speed_integral_L = ((PWM_L == PWM_max) || (PWM_L == -PWM_max)) ? (speed_integral_L - 2 * error * dt) : speed_integral_L;
+    }
+    else if (control_loop_state == POSITION){
+      float dt = (micros() - previous_position_control_time)/1000000.0;
+
+      if (dt < 0.001)
+      {
+        vTaskDelayUntil(&xLastWakeTime, xDelay);
+        continue;
+      }
+      // right motor position control
+      float error = (target_encoder_count_R - encoder_count_R); 
+
+      position_derivative_R = (error - previous_position_error_R)*dt; // unit = tick/s²
+
+      position_integral_R = ( SGN(error) == SGN( previous_position_error_R ) )? position_integral_R + error*dt : 0;
+
+      previous_position_error_R = error;
+
+      PWM_R = kpP_R*error + kdP_R*position_derivative_R + kiP_R*position_integral_R; // the first part is a simple filter to reduce jitter
+      PWM_R = (PWM_R > PWM_R_forward_min + position_max_response)? PWM_R_forward_min + position_max_response : (PWM_R < PWM_R_backward_min - position_max_response)? PWM_R_backward_min - position_max_response : PWM_R;
+
+      position_integral_R = ( (PWM_R == PWM_max) || (PWM_R == -PWM_max) )? (position_integral_R - 2*error*dt) : position_integral_R;
+
+      // left motor position control
+      error = (target_encoder_count_L - encoder_count_L)/3.6;
+
+      position_derivative_L = (error - previous_position_error_L)*dt; // unit = mm/s²
+      position_integral_L = ( SGN(error) == SGN( previous_position_error_L) )? position_integral_L + error*dt : 0;
+
+      previous_position_error_L = error;
+
+      PWM_L = kpP_L*error + kdP_L*position_derivative_L + kiP_L*position_integral_L; // the first part is a simple filter to reduce jitter
+      PWM_L = (PWM_L > PWM_L_forward_min + position_max_response)? PWM_L_forward_min + position_max_response : (PWM_L < PWM_L_backward_min - position_max_response)? PWM_L_backward_min - position_max_response : PWM_L;
+
+      position_integral_L = ( (PWM_L == PWM_max) || (PWM_L == -PWM_max) )? (position_integral_L - 2*error*dt) : position_integral_L;
+
+      previous_position_error_L = error;
+      previous_position_control_time = micros();
+    }
     run_right_motor();
     run_left_motor();
 
@@ -238,6 +318,8 @@ void setup()
   Serial.println("Setting motor pins...");
   set_motor_pins(19, 18, 21, 22, 17, 23);
 
+  set_ultrasonic_pins(5, 34);
+
   Serial.println("Setting encoder channels...");
   set_encoder_channels(15, 2, 16, 4, 400);
 
@@ -294,6 +376,15 @@ void setup()
       &PIDTaskHandle,
       1); // Pin to core 1
   Serial.println("PID task created");
+
+  xTaskCreatePinnedToCore(
+      emergencyBreakTask,
+      "emergencyBreakTask",
+      2048, // Stack size
+      NULL,
+      2, // High priority
+      &emergencyBreakTaskHandle,
+      1); // Pin to core 1
 
   // Create WebSocket task if enabled
   if (websocket_enabled == 1) {

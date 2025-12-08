@@ -37,6 +37,10 @@ extern int encoderRB;
 extern int encoderLA;
 extern int encoderLB;
 
+// distance sensor pins
+extern int trigger;
+extern int echo;
+
 // global constants
 extern int PWM_R_forward_min;
 extern int PWM_R_backward_min;
@@ -87,7 +91,28 @@ extern float speed_integral_L;
 extern float speed_derivative_L;
 extern float previous_speed_error_L;
 
+extern float previous_position_error_R;
+extern float previous_position_error_L;
+extern int32_t previous_position_control_time;
+extern float position_max_response;
+extern float position_integral_R;
+extern float position_derivative_R;
+extern float position_integral_L;
+extern float position_derivative_L;
+extern int32_t target_encoder_count_R;
+extern int32_t target_encoder_count_L;
+
+// position control parameters
+extern float kpP_R;
+extern float kdP_R;
+extern float kiP_R;
+
+extern float kpP_L;
+extern float kdP_L;
+extern float kiP_L;
+
 void set_motor_pins(int right_forward, int right_backward, int left_forward, int left_backward, int right_enable, int left_enable);
+void set_ultrasonic_pins(int trigger_pin, int echo_pin);
 void set_encoder_channels(int _encoderRA, int _encoderRB, int _encoderLA, int _encoderLB, int cpr);
 void set_PWM_min_max(int PWM__max, int PWM__R_forward_min, int PWM__L_forward_min, int PWM__R_backward_min, int PWM__L_backward_min);
 void set_wheel_diameter_and_spacing(float wheel__diameter_R, float wheel__diameter_L, float wheel__spacing);
@@ -102,6 +127,9 @@ void IRAM_ATTR encoderLISRA();
 
 void set_target_speeds(float target__speed_R, float target__speed_L);
 void send_values_to_usart(float value1, float value2, float value3, float value4);
+
+float get_ultrasonic_distance();
+void reset_position_control_variables();
 
 void HAL_setup();
 void custom_delay(int ms);
