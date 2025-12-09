@@ -48,26 +48,28 @@ void strategy()
   // Example: move forward, rotate, etc.
   // move_forward(100, 50); // Move 100mm at 50mm/s speed
   //custom_delay(500);
-  int commands[] = {0, 300, 300, 300, // Go to (300, 300) at 300mm/s speed
-                    0, 300, 0, 400, // Go to (300, 0) at 400mm/s speed
-                    1, 0, 0}; // Orientate to 0 degrees
+  int goto_cmd = 0, orientate_cmd = 1;
+  int commands[] = {goto_cmd, 0, 400, 500, // Go to (0, 300) at 500mm/s speed
+                    goto_cmd, 0, 0, 500, // Go to (0, 0) at 500mm/s speed
+                    goto_cmd, 0, 0, 500,
+                    orientate_cmd, 0, 0}; // Orientate to 0 degrees
   int num_commands = sizeof(commands) / sizeof(commands[0]);
   int i = 0;
   while (i < num_commands)
   {
     int command_type = commands[i];
-    if (command_type == 0) // Go to command
+    if (command_type == goto_cmd)
     {
       int x = commands[i + 1];
       int y = commands[i + 2];
       int speed = commands[i + 3];
       while(go_to(x, y, speed)){
         wait_for_obstacle_clearance();
-        go_to(x, y, speed);
+        Serial.println("obstacle cleared, resuming...");
       }
       i += 4;
     }
-    else if (command_type == 1) // Orientate command
+    else if (command_type == orientate_cmd)
     {
       int angle = commands[i + 1];
       int is_radian = commands[i + 2];
@@ -121,10 +123,16 @@ void emergencyBreakTask(void *pvParameters)
   
   for (;;)
   {
-    if (wheel_state_L != EMERGENCY_BREAK && (get_ultrasonic_distance() < 50.0)) 
+    if ((get_ultrasonic_distance() < min_distance && trajectory == STRAIGHT) ) 
     {
-      emergency_break();
-      Serial.println("Emergency break activated due to obstacle!");
+      custom_delay(10);
+      if (get_ultrasonic_distance() < min_distance){ // berrasmi ?
+        custom_delay(10);
+        if (get_ultrasonic_distance() < min_distance){ // gouwallah
+          emergency_break();
+          Serial.println("Emergency break activated due to obstacle!");
+        }
+      }
     }
 
     vTaskDelayUntil(&xLastWakeTime, xDelay);
@@ -223,7 +231,7 @@ void PIDTask(void *pvParameters)
       position_integral_R = ( (PWM_R == PWM_max) || (PWM_R == -PWM_max) )? (position_integral_R - 2*error*dt) : position_integral_R;
 
       // left motor position control
-      error = (target_encoder_count_L - encoder_count_L)/3.6;
+      error = (target_encoder_count_L - encoder_count_L);
 
       position_derivative_L = (error - previous_position_error_L)*dt; // unit = mm/s²
       position_integral_L = ( SGN(error) == SGN( previous_position_error_L) )? position_integral_L + error*dt : 0;
@@ -316,19 +324,18 @@ void setup()
   Serial.println("=== PAMI ESP32 Setup ===");
 
   Serial.println("Setting motor pins...");
-  set_motor_pins(19, 18, 21, 22, 17, 23);
+  set_motor_pins(22, 21, 18, 19, 23, 17);
 
-  set_ultrasonic_pins(5, 34);
+  set_ultrasonic_pins(14, 12);
 
   Serial.println("Setting encoder channels...");
-  set_encoder_channels(15, 2, 16, 4, 400);
+  set_encoder_channels(4, 16, 15, 2, 700);
 
   Serial.println("Setting PWM parameters...");
   set_PWM_min_max(1023, 320, 320, -320, -320);
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(25.7393438962633966203, 44.72738447547409904512, 88.83238033718186); // howa la3jal 9add 9add ama wa7da lencodeur te3ha fih 700tck donc bech mano93odch na3mel fi CPR lkoll 3ajla hayka keka te5dem chihemmek fi waldeha
-
+  set_wheel_diameter_and_spacing(48.228770633907, 48.072690470043, 94.6);
   HAL_setup();
   
   // Initialize WebSocket if enabled
@@ -344,17 +351,17 @@ void setup()
   Serial.println("Creating tasks...");
 
   //Create tasks with lower stack sizes first
-  xTaskCreatePinnedToCore(
-      communicationTask,
-      "communicationTask",
-      8192,
-      NULL,
-      1, // Lower priority
-      &communicationTaskHandle,
-      0); // Pin to core 0
+  // xTaskCreatePinnedToCore(
+  //     communicationTask,
+  //     "communicationTask",
+  //     8192,
+  //     NULL,
+  //     1, // Lower priority
+  //     &communicationTaskHandle,
+  //     0); // Pin to core 0
 
-  delay(500); // Delay between task creation
-  Serial.println("Communication task created");
+  // delay(500); // Delay between task creation
+  // Serial.println("Communication task created");
 
   xTaskCreatePinnedToCore(
       commandExecutionTask,
@@ -402,7 +409,7 @@ void setup()
   }
 
   Serial.println("All tasks created successfully!");
-  strategy_waiting = false;
+  strategy_waiting = true;
 }
 
 void loop(){

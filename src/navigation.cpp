@@ -4,7 +4,7 @@ enum Control_loop control_loop_state = SPEED;
 enum Wheel_state wheel_state_R = DEAD_STOP;
 enum Wheel_state wheel_state_L = DEAD_STOP;
 enum Trajectory trajectory = STRAIGHT;
-float ramping_acceleration = 12;
+float ramping_acceleration = 5;
 float breaking_acceleration = -5.5;
 float emergency_breaking_acceleration = -10;
 float rotating_speed = 300;
@@ -13,14 +13,14 @@ float cruise_speed_R;
 float cruise_speed_L;
 float starting_phi;
 float turning_radius;
-int complex_movement = 0;
-int min_distance = 50;
+int min_distance = 70;
 
 int32_t previous_speed_control_time = 0;
 
 int move_forward(float distance, float speed){
 	while(!is_idle()){
 		custom_delay(10);
+		Serial.println("Waiting for idle before moving forward");
 	};
 	custom_delay(200);
 	reset_speed_control_variables();
@@ -66,17 +66,15 @@ int move_forward(float distance, float speed){
 			return 1;
 		}
 
-		lane_correction_term = MAX(MIN((calculate_instant_target_phi(x, distance) - absolute_phi) * 3, 1), -1); // the coefficient is tunable
-		if (x < 0.1 * x1){
-			lane_correction_term = 0;
-		}
+		lane_correction_term = MAX(MIN((calculate_instant_target_phi(x, distance) - absolute_phi) * 10, 1), -1); // the coefficient is tunable
+
 		set_target_speeds(fabs(calculate_instant_target_speed_R(x, distance)) * (1 + lane_correction_term), fabs(calculate_instant_target_speed_R(x, distance)) * (1 - lane_correction_term));
 		custom_delay(4);
 		previous_distance_to_target = distance_to_target;
 		distance_to_target = get_distance_to(target_point_x, target_point_y);
 		distance_to_target = MIN(distance_to_target, distance);
 
-		send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
+		//send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
 	}
 	// completing the last part of distance separately, so the break happens on point
 	// calculating the distance to move that  results in the robot being the closest to target point, i can't explain the math in code unfortunately
@@ -102,7 +100,7 @@ int move_forward(float distance, float speed){
 		if (wheel_state_R == EMERGENCY_BREAK){
 			return 1;
 		}
-		send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
+		//send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
 	}
 	stop_motors();
 	set_target_encoder_counts(encoder_count_R, encoder_count_L - (calculate_instant_target_phi(distance, distance) - absolute_phi)*wheels_spacing*CPR / (wheel_diameter_L*PI) ); // the second part is there to fix any last minute fuck ups, concerning the phi
@@ -318,6 +316,7 @@ float calculate_instant_target_phi(float x, float distance)
 int rotate(float angle, int8_t is_radian){
 	while(!is_idle()){
 		custom_delay(10);
+		Serial.println("Waiting for idle before rotating");
 	};
 	custom_delay(200);
 	reset_speed_control_variables();
@@ -402,7 +401,7 @@ int rotate(float angle, int8_t is_radian){
 	previous_distance_to_target = distance_to_target;
 
 	uint32_t phase_two_start_time = micros();
-	while (fabs(target_phi - absolute_phi) > deg_to_rad(0.5) && distance_to_target <= previous_distance_to_target + 10){
+	while (fabs(target_phi - absolute_phi) > deg_to_rad(5) && distance_to_target <= previous_distance_to_target + 10){
 		distance_traveled_R = (encoder_count_R - starting_encoder_count_R) * wheel_diameter_R * PI / CPR;
 		distance_traveled_L = (encoder_count_L - starting_encoder_count_L) * wheel_diameter_L * PI / CPR;
 		yaw_centering_term = MIN((fabs(distance_traveled_R) - fabs(distance_traveled_L)) * 0.1, 1);
@@ -419,7 +418,7 @@ int rotate(float angle, int8_t is_radian){
 		{
 			break;
 		}
-		send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
+		//send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
 	}
 	stop_motors();
 	set_target_encoder_counts(encoder_count_R, encoder_count_L - (target_phi - absolute_phi)*wheels_spacing*CPR / (wheel_diameter_L*PI) ); // the second part is there to fix any last minute fuck ups, concerning phi
@@ -429,7 +428,6 @@ int rotate(float angle, int8_t is_radian){
 }
 int orientate(float orientation, int8_t is_radian)
 {
-	complex_movement = 1;
 	orientation = (is_radian) ? orientation : deg_to_rad(orientation);
 	int result = 0;
 	if (abs(orientation - current_phi) > deg_to_rad(0.5)){
@@ -442,29 +440,22 @@ int orientate(float orientation, int8_t is_radian)
 		}
 		result = rotate(angle, 1);
 	}
-	complex_movement = 0;
 	return result;
 }
 int go_to(float x, float y, float speed)
 {
-	complex_movement = 1;
 	if (orientate(get_angle_to(x, y), 1)){
 		return 1;
 	}
-	while(!is_idle()){
-		custom_delay(10);
-	}
-	custom_delay(200);
-	wait_for_obstacle_clearance();
 	int result = move_forward(get_distance_to(x, y), speed) * 2; // why *2 ? cause fuck you
-	complex_movement = 0;
 	return result;
 }
 void emergency_break()
 {
 	wheel_state_R = EMERGENCY_BREAK;
 	wheel_state_L = EMERGENCY_BREAK;
-	complex_movement = 0;
+	stop_motors();
+	custom_delay(500);
 	set_target_encoder_counts(encoder_count_R, encoder_count_L);
 }
 void reset_speed_control_variables(){
@@ -479,7 +470,7 @@ void reset_speed_control_variables(){
 	previous_speed_error_R = 0;
 }
 bool is_idle(){
-	int encoder_tolerance = 5;
+	int encoder_tolerance = 18;
 	int pwm_tolerance = 200;
 	bool right_wheel_idle = (fabs(target_encoder_count_R - encoder_count_R) < encoder_tolerance) && (fabs(PWM_R) < pwm_tolerance) && (fabs(previous_position_error_R) < encoder_tolerance);
 	bool left_wheel_idle = (fabs(target_encoder_count_L - encoder_count_L) < encoder_tolerance) && (fabs(PWM_L) < pwm_tolerance) && (fabs(previous_position_error_L) < encoder_tolerance);

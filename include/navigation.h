@@ -41,7 +41,6 @@ extern float cruise_speed_L;
 extern float starting_phi;
 extern float turning_radius;
 extern int32_t previous_speed_control_time;
-extern int complex_movement;
 extern int min_distance;
 
 int move_forward(float distance, float speed);	// will return 0 if target has been reached successfully or 1 if it could not be reached

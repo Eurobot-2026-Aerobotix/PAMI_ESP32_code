@@ -56,7 +56,7 @@ float wheel_diameter_L;
 float wheels_spacing;
 
 // PID control parameters
-float kpS_R = 5;
+float kpS_R = 6;
 float kdS_R = 0.0000;
 float kiS_R = 10;
 float speed_integral_R = 0;
@@ -73,7 +73,7 @@ float previous_speed_error_L = 0;
 float previous_position_error_R = 0;
 float previous_position_error_L = 0;
 int32_t previous_position_control_time = 0;
-float position_max_response = 600;
+float position_max_response = 100;
 float position_integral_R = 0;
 float position_derivative_R = 0;
 float position_integral_L = 0;
@@ -82,13 +82,13 @@ int32_t target_encoder_count_R = 0;
 int32_t target_encoder_count_L = 0;
 
 // position control parameters
-float kpP_R = 3;
-float kdP_R = 0.2;
-float kiP_R = 20;
+float kpP_R = 10;
+float kdP_R = 5;
+float kiP_R = 60;
 
-float kpP_L = 3;
-float kdP_L = 0.2;
-float kiP_L = 20;
+float kpP_L = 10;
+float kdP_L = 5;
+float kiP_L = 60;
 
 void set_motor_pins(int right_forward, int right_backward, int left_forward, int left_backward, int right_enable, int left_enable)
 {
@@ -141,8 +141,8 @@ void run_right_motor()
         digitalWrite(motorRa, 0);
         digitalWrite(motorRb, 1);
     }else{
-        digitalWrite(motorRa, 1);
-        digitalWrite(motorRb, 1);
+        digitalWrite(motorRa, 0);
+        digitalWrite(motorRb, 0);
     }
 }
 void run_left_motor()
@@ -158,8 +158,8 @@ void run_left_motor()
         digitalWrite(motorLa, 0);
         digitalWrite(motorLb, 1);
     }else{
-        digitalWrite(motorLa, 1);
-        digitalWrite(motorLb, 1);
+        digitalWrite(motorLa, 0);
+        digitalWrite(motorLb, 0);
     }
 }
 
@@ -283,6 +283,9 @@ void HAL_setup()
     pinMode(encoderRB, INPUT_PULLUP);
     pinMode(encoderLA, INPUT_PULLUP);
     pinMode(encoderLB, INPUT_PULLUP);
+
+    pinMode(trigger, OUTPUT);
+    pinMode(echo, INPUT);
 
     motorREN_channel = 8;
     motorLEN_channel = 9;
