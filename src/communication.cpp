@@ -3,11 +3,11 @@
 
 // Micro-ROS name constant
 
-const char* micro_ros_name = "pami1";
+const char* micro_ros_name = "ninja";
 // Dynamic topic names (constructed from micro_ros_name)
 char topic_action_done[50];
 char topic_start[50];
-char topic_strategy[50];
+char topic_crates_color[50];
 
 // Global variable definitions
 rclc_support_t support;
@@ -16,15 +16,14 @@ rclc_executor_t executor;
 rcl_allocator_t allocator;
 rcl_publisher_t action_done_publisher;
 rcl_subscription_t subscriber;
-rcl_subscription_t strategy_subscriber;
+rcl_subscription_t crates_color_subscriber;
 std_msgs__msg__Int32 start_msg;
+std_msgs__msg__Int32 crates_color_msg;
 std_msgs__msg__Int32 action_done_msg;
-std_msgs__msg__Float32MultiArray strategy_msg;
-float received_floats[100]; // Adjust size as needed
-size_t received_floats_count = 0;
 bool micro_ros_init_successful = false;
 enum CommunicationState comm_state = WAITING_AGENT;
 bool strategy_waiting=false ;
+bool crate_colors[8] = {false}; // Initialize all as blue (0 = blue, 1 = yellow)
 
 // WiFi reconnection variables
 unsigned long last_wifi_check = 0;
@@ -119,6 +118,7 @@ bool setup_micro_ros(const char *wifi_ssid, const char *wifi_password, const cha
 
     // Initialize message data
     start_msg.data = 0;
+    crates_color_msg.data = 0;
     action_done_msg.data = 0;
 
     // Set initial state
@@ -189,7 +189,7 @@ bool create_entities()
     // Construct topic names dynamically
     snprintf(topic_action_done, sizeof(topic_action_done), "%s/action_done", micro_ros_name);
     snprintf(topic_start, sizeof(topic_start), "%s/start", micro_ros_name);
-    snprintf(topic_strategy, sizeof(topic_strategy), "%s/strategy", micro_ros_name);
+    snprintf(topic_crates_color, sizeof(topic_crates_color), "%s/crates_color", micro_ros_name);
 
     // Create init_options
     RCCHECK(rclc_support_init(&support, 0, NULL, &allocator));
@@ -211,21 +211,18 @@ bool create_entities()
         ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32),
         topic_start));
 
-    // Create strategy subscriber
+    // Create crates_color subscriber
     RCCHECK(rclc_subscription_init_default(
-        &strategy_subscriber,
+        &crates_color_subscriber,
         &node,
-        ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32MultiArray),
-        topic_strategy));
-        // Allocate memory for incoming array
-        strategy_msg.data.data = (float *)malloc(60 * sizeof(float));
-        strategy_msg.data.size = 0;
-        strategy_msg.data.capacity = 60;
+        ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32),
+        topic_crates_color));
+
     // Create executor
     executor = rclc_executor_get_zero_initialized_executor();
     RCCHECK(rclc_executor_init(&executor, &support.context, 2, &allocator));
     RCCHECK(rclc_executor_add_subscription(&executor, &subscriber, &start_msg, &start_callback, ON_NEW_DATA));
-    RCCHECK(rclc_executor_add_subscription(&executor, &strategy_subscriber, &strategy_msg, &strategy_callback, ON_NEW_DATA));
+    RCCHECK(rclc_executor_add_subscription(&executor, &crates_color_subscriber, &crates_color_msg, &crates_color_callback, ON_NEW_DATA));
 
     return true;
 }
@@ -238,7 +235,7 @@ void destroy_entities()
 
     rcl_publisher_fini(&action_done_publisher, &node);
     rcl_subscription_fini(&subscriber, &node);
-    rcl_subscription_fini(&strategy_subscriber, &node);
+    rcl_subscription_fini(&crates_color_subscriber, &node);
     rclc_executor_fini(&executor);
     rcl_node_fini(&node);
     rclc_support_fini(&support);
@@ -259,22 +256,42 @@ void start_callback(const void *msgin)
     }
 }
 
-// Callback for strategy topic subscription
-void strategy_callback(const void *msgin)
+// Callback for crates_color topic subscription
+void crates_color_callback(const void *msgin)
 {
-    const std_msgs__msg__Float32MultiArray *msg = (const std_msgs__msg__Float32MultiArray *)msgin;
-    
-    Serial.println("Received float table:");
-    received_floats_count = msg->data.size;
-    
-    for (size_t i = 0; i < msg->data.size && i < 100; i++)
+    const std_msgs__msg__Int32 *msg = (const std_msgs__msg__Int32 *)msgin;
+    Serial.print("Received crates color data: ");
+    Serial.println(msg->data);
+
+    // Update the crate colors based on the received decimal number
+    update_crate_colors(msg->data);
+}
+
+// Convert decimal to binary and update crate colors array
+void update_crate_colors(int32_t decimal_value)
+{
+    Serial.print("Converting decimal ");
+    Serial.print(decimal_value);
+    Serial.print(" to binary: ");
+
+    // Convert decimal to binary and store in array
+    for (int i = 0; i < 8; i++)
     {
-        received_floats[i] = msg->data.data[i];
-        Serial.print("  [");
-        Serial.print(i);
-        Serial.print("]: ");
-        Serial.println(received_floats[i], 4);
+        crate_colors[i] = (decimal_value >> i) & 1;
+        Serial.print(crate_colors[i]);
     }
+    Serial.println();
+
+    // Print crate colors in human readable format
+    Serial.println("Crate colors (from crate 1 to 8):");
+    for (int i = 0; i < 8; i++)
+    {
+        Serial.print("Crate ");
+        Serial.print(i + 1);
+        Serial.print(": ");
+        Serial.println(crate_colors[i] ? "YELLOW" : "BLUE");
+    }
+    Serial.println("---");
 }
 
 // Send action done message
