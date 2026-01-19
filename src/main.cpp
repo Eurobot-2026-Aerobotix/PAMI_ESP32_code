@@ -91,7 +91,7 @@ void communicationTask(void *pvParameters)
   Serial.println("Communication task started");
   
   // Setup micro-ROS (will handle WiFi connection internally)
-  if (setup_micro_ros("eurobot", "eurobot2026", "10.42.0.1", 8888))
+  if (setup_micro_ros("harissa", "harissaharissa2026", "10.42.1.1", 8888))
   {
     Serial.println("micro-ROS setup successful");
   }
@@ -108,7 +108,7 @@ void communicationTask(void *pvParameters)
     } else {
       // If WiFi disconnected, try to reconnect
       Serial.println("WiFi disconnected in task, attempting reconnection...");
-      connect_wifi("eurobot", "eurobot2026");
+      connect_wifi("harissa", "harissaharissa2026");
       vTaskDelay(pdMS_TO_TICKS(5000)); // Wait 5 seconds before next attempt
     }
 
@@ -351,17 +351,17 @@ void setup()
   Serial.println("Creating tasks...");
 
   //Create tasks with lower stack sizes first
-  // xTaskCreatePinnedToCore(
-  //     communicationTask,
-  //     "communicationTask",
-  //     8192,
-  //     NULL,
-  //     1, // Lower priority
-  //     &communicationTaskHandle,
-  //     0); // Pin to core 0
+    xTaskCreatePinnedToCore(
+     communicationTask,
+      "communicationTask",
+      8192,
+      NULL,
+      1, // Lower priority
+       &communicationTaskHandle,
+       0); // Pin to core 0
 
-  // delay(500); // Delay between task creation
-  // Serial.println("Communication task created");
+   delay(500); // Delay between task creation
+   Serial.println("Communication task created");
 
   xTaskCreatePinnedToCore(
       commandExecutionTask,

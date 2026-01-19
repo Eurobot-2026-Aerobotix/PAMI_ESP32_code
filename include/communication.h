@@ -52,14 +52,11 @@ extern rclc_executor_t executor;
 extern rcl_allocator_t allocator;
 extern rcl_publisher_t action_done_publisher;
 extern rcl_subscription_t subscriber;
-extern rcl_subscription_t crates_color_subscriber;
+extern rcl_subscription_t strategy_subscriber;
 extern std_msgs__msg__Int32 start_msg;
-extern std_msgs__msg__Int32 crates_color_msg;
-extern std_msgs__msg__Int32 action_done_msg;
 extern std_msgs__msg__Int32 action_done_msg;
 extern bool micro_ros_init_successful;
 extern enum CommunicationState comm_state;
-extern bool crate_colors[8];
 extern bool strategy_waiting;
 // Core functions
 bool setup_micro_ros(const char *wifi_ssid, const char *wifi_password, const char *agent_ip, int agent_port);
@@ -72,10 +69,9 @@ void destroy_entities();
 
 // Callback functions
 void start_callback(const void *msgin);
-void crates_color_callback(const void *msgin);
+void strategy_callback(const void *msgin);
 
 // Utility functions
-void update_crate_colors(int32_t decimal_value);
 void send_action_done(int value);
 bool is_agent_connected();
 void check_wifi_connection(const char *ssid, const char *password);
