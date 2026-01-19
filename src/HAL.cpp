@@ -20,6 +20,13 @@ int motorLEN_channel;
 int trigger;
 int echo;
 
+//system pins
+int electrovalve_R_pin;
+int electrovalve_L_pin;
+int pump_pin;
+int servo_pin;
+Servo servo;
+
 // global constants
 int PWM_R_forward_min;
 int PWM_R_backward_min;
@@ -90,6 +97,8 @@ float kpP_L = 10;
 float kdP_L = 5;
 float kiP_L = 60;
 
+int servo_positions[6] = {90, 80, 50, 30, 20, 0};
+
 void set_motor_pins(int right_forward, int right_backward, int left_forward, int left_backward, int right_enable, int left_enable)
 {
     motorRa = right_forward;
@@ -99,10 +108,15 @@ void set_motor_pins(int right_forward, int right_backward, int left_forward, int
     motorREN = right_enable;
     motorLEN = left_enable;
 }
-
 void set_ultrasonic_pins(int trigger_pin, int echo_pin){
     trigger = trigger_pin;
     echo = echo_pin;
+}
+void set_system_pins(int right_electrovalve, int left_electrovalve, int pump, int servo){
+    electrovalve_R_pin = right_electrovalve;
+    electrovalve_L_pin = left_electrovalve;
+    pump_pin = pump;
+    servo_pin = servo;
 }
 void set_encoder_channels(int _encoderRA, int _encoderRB, int _encoderLA, int _encoderLB, int cpr)
 {
@@ -126,7 +140,6 @@ void set_wheel_diameter_and_spacing(float wheel__diameter_R, float wheel__diamet
     wheel_diameter_L = wheel__diameter_L;
     wheels_spacing = wheels__spacing;
 }
-
 void run_right_motor()
 {
     int pwm = (PWM_R > 0) ? ((PWM_R < PWM_R_forward_min) ? 0 : PWM_R) : ((PWM_R > PWM_R_backward_min) ? 0 : PWM_R);
@@ -162,7 +175,6 @@ void run_left_motor()
         digitalWrite(motorLb, 0);
     }
 }
-
 void set_target_speeds(float target__speed_R, float target__speed_L)
 {
     PWM_offset_R = (target__speed_R > 0) ? PWM_R_forward_min - 30 : PWM_R_backward_min + 30;
@@ -170,7 +182,6 @@ void set_target_speeds(float target__speed_R, float target__speed_L)
     PWM_offset_L = (target__speed_L > 0) ? PWM_L_forward_min - 30 : PWM_L_backward_min + 30;
     target_speed_L = target__speed_L;
 }
-
 void IRAM_ATTR encoderRISRA()
 {
     if (FAST_READ(encoderRB) == FAST_READ(encoderRA))
@@ -205,7 +216,6 @@ void IRAM_ATTR encoderLISRA()
     speedCalculationCurrentTimeL = micros();
     current_speed_L = (wheel_diameter_L * PI / CPR * directionL)*1000000 / (speedCalculationCurrentTimeL - speedCalculationPreviousTimeL);
 }
-
 void send_values_to_usart(float value1, float value2, float value3, float value4)
 {
     // temporary
@@ -218,7 +228,6 @@ void send_values_to_usart(float value1, float value2, float value3, float value4
     Serial.write((uint8_t)0xAD);
     Serial.write((uint8_t*)&value4, sizeof(value4));
 }
-
 float get_ultrasonic_distance(){
     long duration;
     float distance;
@@ -245,7 +254,6 @@ float get_ultrasonic_distance(){
 
     return distance;
 }
-
 void reset_position_control_variables(){
 	previous_position_control_time = micros()-999;
 	position_integral_L = 0;
@@ -257,7 +265,6 @@ void reset_position_control_variables(){
 	previous_position_error_L = 0;
 	previous_position_error_R = 0;
 }
-
 void stop_motors()
 {
     PWM_R = 0;
@@ -271,7 +278,33 @@ void stop_motors()
     }
     set_target_speeds(0, 0);
 }
-
+void move_servo(int position){
+    servo.write(servo_positions[position]);
+}
+void set_EV_states(int left_electrovalve_state, int right_electrovalve_state){
+    digitalWrite(electrovalve_R_pin, right_electrovalve_state);
+    digitalWrite(electrovalve_L_pin, left_electrovalve_state);
+}
+void set_pump_state(int pump_state){
+    digitalWrite(pump_pin, pump_state);
+}
+void pickup(int pick_right, int pick_left, int up_or_down){
+    set_pump_state(1);
+    set_EV_states(1 - pick_right, 1 - pick_left);
+    move_servo(up_or_down? 3 : 1);
+    custom_delay(2000);
+    move_servo(up_or_down? 4 : 2);
+    custom_delay(1000);
+}
+void putdown(){
+    set_pump_state(0);
+    set_EV_states(1, 1);
+    custom_delay(500);
+    move_servo(5);
+}
+void walking_position(){
+    move_servo(2);
+}
 void HAL_setup()
 {
     pinMode(motorRa, OUTPUT);
@@ -286,6 +319,14 @@ void HAL_setup()
 
     pinMode(trigger, OUTPUT);
     pinMode(echo, INPUT);
+
+    pinMode(electrovalve_R_pin, OUTPUT);
+    pinMode(electrovalve_L_pin, OUTPUT);
+    pinMode(pump_pin, OUTPUT);
+
+    servo.setPeriodHertz(50);
+    servo.attach(servo_pin);
+    move_servo(0);
 
     motorREN_channel = 8;
     motorLEN_channel = 9;

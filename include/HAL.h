@@ -17,6 +17,7 @@
  */
 
 #include <Arduino.h>
+#include <ESP32Servo.h>
 
 #define FAST_READ(pin) (((uint32_t)((pin) < 32 ? GPIO.in : GPIO.in1.val) >> ((pin) & 31)) & 0x1)
 #define PI 3.14159265358979323846
@@ -40,6 +41,13 @@ extern int encoderLB;
 // distance sensor pins
 extern int trigger;
 extern int echo;
+
+//system pins
+extern int electrovalve_R_pin;
+extern int electrovalve_L_pin;
+extern int pump_pin;
+extern int servo_pin;
+extern Servo servo;
 
 // global constants
 extern int PWM_R_forward_min;
@@ -111,8 +119,11 @@ extern float kpP_L;
 extern float kdP_L;
 extern float kiP_L;
 
+extern int servo_positions[6];
+
 void set_motor_pins(int right_forward, int right_backward, int left_forward, int left_backward, int right_enable, int left_enable);
 void set_ultrasonic_pins(int trigger_pin, int echo_pin);
+void set_system_pins(int right_electrovalve, int left_electrovalve, int pump, int servo);
 void set_encoder_channels(int _encoderRA, int _encoderRB, int _encoderLA, int _encoderLB, int cpr);
 void set_PWM_min_max(int PWM__max, int PWM__R_forward_min, int PWM__L_forward_min, int PWM__R_backward_min, int PWM__L_backward_min);
 void set_wheel_diameter_and_spacing(float wheel__diameter_R, float wheel__diameter_L, float wheel__spacing);
@@ -131,5 +142,11 @@ void send_values_to_usart(float value1, float value2, float value3, float value4
 float get_ultrasonic_distance();
 void reset_position_control_variables();
 
+void move_servo(int position);//0 means down position and so on till 5 means up position
+void set_EV_states(int left_electrovalve_state, int right_electrovalve_state);//0 means off means fantzing, 1 means no tfantiz
+void set_pump_state(int pump_state);
+void pickup(int pick_right, int pick_left, int up_or_down);
+void putdown();
+void walking_position();
 void HAL_setup();
 void custom_delay(int ms);

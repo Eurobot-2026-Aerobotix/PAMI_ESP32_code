@@ -29,11 +29,8 @@ int websocket=0;
 // Custom strategy implementation
 void strategy()
 {
-  /*
   Serial.println("PAMI Robot Strategy Started!");
 
-  // Example strategy implementation:
-  // 1. Check crate colors
   Serial.println("Current crate colors:");
   for (int i = 0; i < 8; i++)
   {
@@ -42,24 +39,21 @@ void strategy()
     Serial.print(": ");
     Serial.println(crate_colors[i] ? "YELLOW" : "BLUE");
   }
-  */
 
-  // 2. Execute some movement or action
-  // Example: move forward, rotate, etc.
-  // move_forward(100, 50); // Move 100mm at 50mm/s speed
-  //custom_delay(500);
-  int goto_cmd = 0, orientate_cmd = 1;
+  int goto_cmd = 0, orientate_cmd = 1, pickup_cmd = 3, putdown_cmd = 4, walking_position_cmd = 5;
   int commands[] = {goto_cmd, 0, 400, 500, // Go to (0, 300) at 500mm/s speed
                     goto_cmd, 0, 0, 500, // Go to (0, 0) at 500mm/s speed
-                    goto_cmd, 0, 0, 500,
-                    orientate_cmd, 0, 0}; // Orientate to 0 degrees
+                    goto_cmd, 0, 0, 500, // go to (0, 0) at 500mm/s speed
+                    orientate_cmd, 0, 0, // Orientate to 0 degrees
+                    pickup_cmd, (int)crate_colors[4], (int)crate_colors[5], 0, //pick up own color crate from down
+                    pickup_cmd, 1, 1, 1, // pick up right and left from up
+                    walking_position_cmd, // go to walking position if coming from up
+                    putdown_cmd}; // put_dowm
   int num_commands = sizeof(commands) / sizeof(commands[0]);
   int i = 0;
-  while (i < num_commands)
-  {
+  while (i < num_commands){
     int command_type = commands[i];
-    if (command_type == goto_cmd)
-    {
+    if (command_type == goto_cmd){
       int x = commands[i + 1];
       int y = commands[i + 2];
       int speed = commands[i + 3];
@@ -69,12 +63,20 @@ void strategy()
       }
       i += 4;
     }
-    else if (command_type == orientate_cmd)
-    {
+    else if (command_type == orientate_cmd){
       int angle = commands[i + 1];
       int is_radian = commands[i + 2];
       orientate(angle, is_radian);
       i += 3;
+    }else if (command_type == pickup_cmd){
+      pickup(commands[i + 1], commands[i + 2], commands[i + 3]);
+      i += 4;
+    }else if (command_type == putdown_cmd){
+      putdown();
+      i++;
+    }else if (command_type == walking_position_cmd){
+      walking_position();
+      i++;
     }
   }
   // 3. Send completion signal
@@ -328,6 +330,8 @@ void setup()
 
   set_ultrasonic_pins(14, 12);
 
+  set_system_pins(1, 2, 3, 4);// TODO : 7ott l pineet ess7a7
+
   Serial.println("Setting encoder channels...");
   set_encoder_channels(4, 16, 15, 2, 700);
 
@@ -351,7 +355,7 @@ void setup()
   Serial.println("Creating tasks...");
 
   //Create tasks with lower stack sizes first
-    xTaskCreatePinnedToCore(
+  xTaskCreatePinnedToCore(
      communicationTask,
       "communicationTask",
       8192,
@@ -360,8 +364,8 @@ void setup()
        &communicationTaskHandle,
        0); // Pin to core 0
 
-   delay(500); // Delay between task creation
-   Serial.println("Communication task created");
+  delay(500); // Delay between task creation
+  Serial.println("Communication task created");
 
   xTaskCreatePinnedToCore(
       commandExecutionTask,
@@ -409,7 +413,7 @@ void setup()
   }
 
   Serial.println("All tasks created successfully!");
-  strategy_waiting = true;
+  strategy_waiting = false;
 }
 
 void loop(){
