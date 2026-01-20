@@ -40,7 +40,7 @@ void strategy()
     Serial.println(crate_colors[i] ? "YELLOW" : "BLUE");
   }
 
-  int goto_cmd = 0, orientate_cmd = 1, pickup_cmd = 3, putdown_cmd = 4, walking_position_cmd = 5;
+  int goto_cmd = 0, orientate_cmd = 1, pickup_cmd = 3, putdown_cmd = 4, walking_position_cmd = 5, prepare_cmd = 6;
   int commands[] = {goto_cmd, 0, 400, 500, // Go to (0, 300) at 500mm/s speed
                     goto_cmd, 0, 0, 500, // Go to (0, 0) at 500mm/s speed
                     goto_cmd, 0, 0, 500, // go to (0, 0) at 500mm/s speed
@@ -48,7 +48,9 @@ void strategy()
                     pickup_cmd, (int)crate_colors[4], (int)crate_colors[5], 0, //pick up own color crate from down
                     pickup_cmd, 1, 1, 1, // pick up right and left from up
                     walking_position_cmd, // go to walking position if coming from up
-                    putdown_cmd}; // put_dowm
+                    putdown_cmd, // put_dowm
+                    prepare_cmd // prepare_servo_up
+                  };
   int num_commands = sizeof(commands) / sizeof(commands[0]);
   int i = 0;
   while (i < num_commands){
@@ -76,6 +78,9 @@ void strategy()
       i++;
     }else if (command_type == walking_position_cmd){
       walking_position();
+      i++;
+    }else if (command_type == prepare_cmd){
+      prepare_servo_up();
       i++;
     }
   }
@@ -125,7 +130,7 @@ void emergencyBreakTask(void *pvParameters)
   
   for (;;)
   {
-    if ((get_ultrasonic_distance() < min_distance && trajectory == STRAIGHT) ) 
+    if ((!ultrasonic_blocked) && (trajectory == STRAIGHT) && (get_ultrasonic_distance() < min_distance) ) 
     {
       custom_delay(10);
       if (get_ultrasonic_distance() < min_distance){ // berrasmi ?

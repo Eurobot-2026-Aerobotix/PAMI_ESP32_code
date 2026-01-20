@@ -120,6 +120,7 @@ extern float kdP_L;
 extern float kiP_L;
 
 extern int servo_positions[6];
+extern bool ultrasonic_blocked;
 
 void set_motor_pins(int right_forward, int right_backward, int left_forward, int left_backward, int right_enable, int left_enable);
 void set_ultrasonic_pins(int trigger_pin, int echo_pin);
@@ -148,5 +149,6 @@ void set_pump_state(int pump_state);
 void pickup(int pick_right, int pick_left, int up_or_down);
 void putdown();
 void walking_position();
+void prepare_servo_up();
 void HAL_setup();
 void custom_delay(int ms);
