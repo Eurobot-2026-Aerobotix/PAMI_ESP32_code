@@ -238,7 +238,7 @@ void start_callback(const void *msgin)
     {
         strategy_waiting=true;
         Serial.println("Start signal detected (value = 1)!");
-        strategy(); // Call the strategy function
+       // strategy(); // Call the strategy function
     }
 }
 

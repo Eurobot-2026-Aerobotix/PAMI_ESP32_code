@@ -48,33 +48,60 @@ void strategy()
   // Example: move forward, rotate, etc.
   // move_forward(100, 50); // Move 100mm at 50mm/s speed
   //custom_delay(500);
-  int goto_cmd = 0, orientate_cmd = 1;
-  int commands[] = {goto_cmd, 0, 400, 500, // Go to (0, 300) at 500mm/s speed
-                    goto_cmd, 0, 0, 500, // Go to (0, 0) at 500mm/s speed
-                    goto_cmd, 0, 0, 500,
-                    orientate_cmd, 0, 0}; // Orientate to 0 degrees
+ // int goto_cmd = 0, orientate_cmd = 0 , forward_cmd = 0, stop_cmd = 0;
+ enum {
+    CMD_GOTO = 0,
+    CMD_ORIENTATE = 1,
+    CMD_FORWARD = 2,
+    CMD_STOP = 3 ,
+    CMD_DIST = 4
+};
+
+  int commands[] = {//CMD_FORWARD, 300, 500,
+                    //CMD_DIST, 300, 500, 600, 1200,
+                    //CMD_ORIENTATE, 90, 0,
+                    //stop_cmd,0 ,0,
+                    //goto_cmd, 0, 500, 500,
+                    };
   int num_commands = sizeof(commands) / sizeof(commands[0]);
   int i = 0;
   while (i < num_commands)
   {
     int command_type = commands[i];
-    if (command_type == goto_cmd)
+    if (command_type == CMD_GOTO)
     {
       int x = commands[i + 1];
       int y = commands[i + 2];
       int speed = commands[i + 3];
-      while(go_to(x, y, speed)){
-        wait_for_obstacle_clearance();
-        Serial.println("obstacle cleared, resuming...");
-      }
+      go_to(x, y, speed);
+      //while(go_to(x, y, speed)){
+      // wait_for_obstacle_clearance();
+      // Serial.println("obstacle cleared, resuming...");
+      //}
       i += 4;
     }
-    else if (command_type == orientate_cmd)
+    else if (command_type == CMD_ORIENTATE)
     {
       int angle = commands[i + 1];
       int is_radian = commands[i + 2];
       orientate(angle, is_radian);
       i += 3;
+    }
+    else if (command_type == CMD_FORWARD)
+    {
+      int distance = commands[i + 1];
+      int speed = commands[i + 2];
+      move_forward(distance,speed);
+      i += 3;
+    }
+    else if (command_type == CMD_DIST)
+    {
+      int distance = commands[i + 1];
+      int speed = commands[i + 2];
+      int acc = commands[i + 3];
+      int jerk = commands[i + 4];
+      move_distance_2(distance,speed,acc,jerk);
+      i += 5;
     }
   }
   // 3. Send completion signal
@@ -253,7 +280,7 @@ void PIDTask(void *pvParameters)
   }
 }
 
-void commandExecutionTask(void *pvParameters)
+/*void commandExecutionTask(void *pvParameters)
 {
   const TickType_t xDelay = pdMS_TO_TICKS(50); // 50ms delay
   TickType_t xLastWakeTime = xTaskGetTickCount();
@@ -263,12 +290,34 @@ void commandExecutionTask(void *pvParameters)
   for (;;) // Infinite loop - CRITICAL!
   {
     if (strategy_waiting) {
-      strategy_waiting = 0;
+      strategy_waiting = false;//0
       strategy();
     }
     execute_command();
     vTaskDelayUntil(&xLastWakeTime, xDelay);
   }
+}*/
+void commandExecutionTask(void *pvParameters)
+{
+    const TickType_t xDelay = pdMS_TO_TICKS(50); // 50ms loop
+    TickType_t xLastWakeTime = xTaskGetTickCount();
+
+    Serial.println("Command execution task started");
+
+    for (;;) // Infinite loop
+    {
+        // Check if we need to run the strategy
+        if (strategy_waiting)
+        {
+            strategy_waiting = false;  // reset flag to avoid repeating
+            Serial.println("Executing strategy now...");
+            strategy();                // run once
+            Serial.println("Strategy finished!");
+        }
+
+        execute_command();            // continue controlling motors
+        vTaskDelayUntil(&xLastWakeTime, xDelay);
+    }
 }
 
 void websocketTask(void *pvParameters)
@@ -335,7 +384,8 @@ void setup()
   set_PWM_min_max(1023, 320, 320, -320, -320);
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(48.228770633907, 48.072690470043, 94.6);
+  //set_wheel_diameter_and_spacing(48.228770633907, 48.072690470043, 94.6);
+  set_wheel_diameter_and_spacing(50.5028770633907, 50.602690470043, 94.6);
   HAL_setup();
   
   // Initialize WebSocket if enabled
@@ -362,6 +412,13 @@ void setup()
 
   // delay(500); // Delay between task creation
   // Serial.println("Communication task created");
+// Stop both motors at startup
+  /*PWM_R = 0;
+  PWM_L = 0;
+  target_speed_R = 0;
+  target_speed_L = 0;
+  run_right_motor();
+  run_left_motor();*/
 
   xTaskCreatePinnedToCore(
       commandExecutionTask,
@@ -409,8 +466,11 @@ void setup()
   }
 
   Serial.println("All tasks created successfully!");
-  strategy_waiting = true;
+  //strategy(); 
+  strategy_waiting = false;
 }
 
 void loop(){
+  strategy();
+  while(1);   
 }

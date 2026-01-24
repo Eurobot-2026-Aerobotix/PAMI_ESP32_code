@@ -4,8 +4,8 @@ enum Control_loop control_loop_state = SPEED;
 enum Wheel_state wheel_state_R = DEAD_STOP;
 enum Wheel_state wheel_state_L = DEAD_STOP;
 enum Trajectory trajectory = STRAIGHT;
-float ramping_acceleration = 5;
-float breaking_acceleration = -5.5;
+float ramping_acceleration = 10;// 5;
+float breaking_acceleration = -2;//-5.5;
 float emergency_breaking_acceleration = -10;
 float rotating_speed = 300;
 
@@ -16,7 +16,126 @@ float turning_radius;
 int min_distance = 70;
 
 int32_t previous_speed_control_time = 0;
+static inline float d_acc_for_v(float v, float amax, float jerk) {
+    return 0.5f * v * (amax * amax + jerk * v) / (amax * jerk);
+}
+int move_distance_2(float distance, float vmax, float amax, float jerk) {
+	reset_speed_control_variables();
+	control_loop_state = SPEED;
+    const float eps = 1e-8f;
+    if (fabsf(distance) < eps) return 0;
 
+    float dir = (distance >= 0.0f) ? 1.0f : -1.0f;
+    float D = fabsf(distance);
+
+    if (amax <= eps || jerk <= eps) {
+        set_target_speeds(dir * vmax, dir * vmax);
+        return 0;
+    }
+    float v_thresh = (amax * amax) / jerk;
+    float dacc_vmax = d_acc_for_v(vmax, amax, jerk);
+    float dmin = 2.0f * dacc_vmax;
+
+    float v_peak = vmax;
+    float t_cruise = 0.0f;
+
+    if (D >= dmin) {
+        v_peak = vmax;
+        t_cruise = (D - dmin) / vmax;
+    } else {
+        float a_q = jerk;
+        float b_q = amax * amax;
+        float c_q = -amax * jerk * D;
+        float disc = b_q * b_q - 4.0f * a_q * c_q;
+        if (disc < 0.0f) disc = 0.0f;
+        float v_cand = (-b_q + sqrtf(disc)) / (2.0f * a_q);
+        if (v_cand >= v_thresh) {
+            v_peak = v_cand;
+            t_cruise = 0.0f;
+        } else {
+            v_peak = powf((D * sqrtf(jerk) / 2.0f), 2.0f / 3.0f);
+            t_cruise = 0.0f;
+        }
+    }
+    int branchA = (v_peak >= v_thresh) ? 1 : 0;
+
+    float dt = 0.00165f;
+    float T_total = 0.0f;
+    float ta = amax / jerk;
+    float t_const = 0.0f;
+    float t1=0,t2=0,t3=0,t4=0,t5=0,t6=0,t7=0;
+
+    if (branchA) {
+        t_const = v_peak / amax - ta;
+        if (t_const < 0.0f) t_const = 0.0f;
+        t1 = ta;
+        t2 = t1 + t_const;
+        t3 = t2 + ta;
+        t4 = t3 + t_cruise;
+        t5 = t4 + ta;
+        t6 = t5 + t_const;
+        t7 = t6 + ta;
+        T_total = t7;
+    } else {
+        ta = powf(v_peak / jerk, 0.5f);
+        t1 = ta;
+        t2 = t1;
+        t3 = 2*ta;
+        t4 = t3 + t_cruise;
+        t5 = t4 + ta;
+        t6 = t5;
+        t7 = t5 + ta;
+        T_total = t7;
+    }
+    float x = 0.0f;
+    float v = 0.0f;
+    float acc = 0.0f;
+    float Jerk = 0.0f;
+    int steps = (int)ceil(T_total / dt);
+
+    float target_phi = current_phi;
+
+    for (int i = 0; i < steps; ++i) {
+        float t = i * dt;
+        if (t < t1) {Jerk = jerk;
+        	acc = Jerk * t;}
+        else if (t < t2){Jerk = 0.0f;
+        	acc = amax; }
+        else if (t < t3){Jerk = - jerk ;
+        	acc = amax + Jerk * (t - t2);}
+        else if (t < t4) {Jerk = 0.0f;
+        	acc = 0.0f;}
+        else if (t < t5) {Jerk = - jerk;
+        	acc = Jerk * (t - t4);}
+        else if (t < t6) {Jerk = 0.0f;
+        	acc = -amax;}
+        else if (t < t7) {Jerk = jerk;
+        	acc = -amax + Jerk * (t - t6);}
+        else acc = 0.0f;
+
+        v += acc * dt;
+        if (v > v_peak) v = v_peak;
+        if (v < 0) v = 0 ;
+        x += v * dt;
+        if (x >= D) {
+            x = D;
+            v = 0.0f;
+            acc = 0.0f;
+            set_target_speeds(0.0f, 0.0f);
+            break;
+        }
+        //float corr = lane_PID(calculate_instant_target_phi(x, distance) - absolute_phi);
+        float vR = dir * v *(1);
+        float vL = dir * v *(1);
+        set_target_speeds(vR, vL);
+		send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
+
+    }
+    stop_motors();
+    delay(4);
+    return 0;
+
+}
 int move_forward(float distance, float speed){
 	while(!is_idle()){
 		custom_delay(10);
@@ -53,7 +172,7 @@ int move_forward(float distance, float speed){
 	control_loop_state = SPEED;
 	starting_phi = absolute_phi;
 	float lane_correction_term;
-	float phase_two_distance = 30;
+	float phase_two_distance = 20;
 	while (distance_to_target > phase_two_distance){
 		x = distance - distance_to_target;
 		if (wheel_state_R == ACCELERATING && x > x1){
@@ -66,7 +185,7 @@ int move_forward(float distance, float speed){
 			return 1;
 		}
 
-		lane_correction_term = MAX(MIN((calculate_instant_target_phi(x, distance) - absolute_phi) * 10, 1), -1); // the coefficient is tunable
+		lane_correction_term = MAX(MIN((calculate_instant_target_phi(x, distance) - absolute_phi) * 0, 0), 0); // the coefficient is tunable// 10 1 -1
 
 		set_target_speeds(fabs(calculate_instant_target_speed_R(x, distance)) * (1 + lane_correction_term), fabs(calculate_instant_target_speed_R(x, distance)) * (1 - lane_correction_term));
 		custom_delay(4);
@@ -74,21 +193,21 @@ int move_forward(float distance, float speed){
 		distance_to_target = get_distance_to(target_point_x, target_point_y);
 		distance_to_target = MIN(distance_to_target, distance);
 
-		//send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
+		send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
 	}
 	// completing the last part of distance separately, so the break happens on point
 	// calculating the distance to move that  results in the robot being the closest to target point, i can't explain the math in code unfortunately
 	float x_closest = (target_point_y - current_y + tan(current_phi) * current_x - tan(current_phi - PI / 2) * target_point_x) / (tan(current_phi) - tan(current_phi - PI / 2));
 	float y_closest = tan(current_phi) * (x_closest - current_x) + current_y;
 	speed = (target_speed_R + target_speed_L) / 2;
-	speed = MAX(speed, 100);
+	//speed = MAX(speed, 100);
 	distance_to_target = get_distance_to(x_closest, y_closest);
 	previous_distance_to_target = distance_to_target;
 	int32_t phase_two_start_time = micros();
 	while (distance_to_target > 0.1 && distance_to_target <= previous_distance_to_target){
-		lane_correction_term = MAX(MIN((calculate_instant_target_phi(x, distance) - absolute_phi) * 10, 1), -1); // the coefficient is tunable
+		lane_correction_term = MAX(MIN((calculate_instant_target_phi(x, distance) - absolute_phi) * 0, 0), 0); // the coefficient is tunable
 		set_target_speeds(speed * (1 + lane_correction_term), speed * (1 - lane_correction_term));
-		speed = MAX(speed * 0.995, 100);
+		//speed = MAX(speed * 0.995, 100);
 		previous_distance_to_target = distance_to_target;
 		custom_delay(2);
 		distance_to_target = get_distance_to(x_closest, y_closest);
@@ -100,12 +219,16 @@ int move_forward(float distance, float speed){
 		if (wheel_state_R == EMERGENCY_BREAK){
 			return 1;
 		}
-		//send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
+		send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
 	}
 	stop_motors();
-	set_target_encoder_counts(encoder_count_R, encoder_count_L - (calculate_instant_target_phi(distance, distance) - absolute_phi)*wheels_spacing*CPR / (wheel_diameter_L*PI) ); // the second part is there to fix any last minute fuck ups, concerning the phi
+	//set_target_encoder_counts(encoder_count_R, encoder_count_L - (calculate_instant_target_phi(distance, distance) - absolute_phi)*wheels_spacing*CPR / (wheel_diameter_L*PI) ); // the second part is there to fix any last minute fuck ups, concerning the phi
 	wheel_state_R = DEAD_STOP;
 	wheel_state_L = DEAD_STOP;
+	return 0;
+}
+int stop(float a ,float b){
+	stop_motors();
 	return 0;
 }
 int move_backward(float distance, float speed)
@@ -440,6 +563,7 @@ int orientate(float orientation, int8_t is_radian)
 		}
 		result = rotate(angle, 1);
 	}
+    send_values_to_usart(target_speed_R, target_speed_L, current_speed_R, current_speed_R );
 	return result;
 }
 int go_to(float x, float y, float speed)

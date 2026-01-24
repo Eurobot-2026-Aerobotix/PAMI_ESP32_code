@@ -58,3 +58,6 @@ void reset_speed_control_variables();
 bool is_idle();
 void set_target_encoder_counts(int32_t encoder__count_R, int32_t encoder__count_L);
 void wait_for_obstacle_clearance();
+int stop(float a, float b);
+static inline float d_acc_for_v(float v, float amax, float jerk);
+int move_distance_2(float distance, float vmax, float amax, float jerk);
