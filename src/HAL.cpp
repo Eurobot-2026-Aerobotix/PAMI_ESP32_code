@@ -56,14 +56,16 @@ float wheel_diameter_L;
 float wheels_spacing;
 
 // PID control parameters
-float kpS_R = 11;//20//18
+//float kpS_R = 11;//20//18
+float kpS_R = 11;
 float kdS_R = 0.000;
 float kiS_R = 4;//15
 float speed_integral_R = 0;
 float speed_derivative_R = 0;
 float previous_speed_error_R = 0;
 
-float kpS_L = 11.0;//0
+//float kpS_L = 11.0;//0
+float kpS_L = 11;
 float kdS_L = 0.000;
 float kiS_L = 4;//3
 float speed_integral_L = 0;

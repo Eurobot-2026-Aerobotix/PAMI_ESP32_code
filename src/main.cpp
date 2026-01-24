@@ -58,7 +58,7 @@ void strategy()
 };
 
   int commands[] = {//CMD_FORWARD, 300, 500,
-                    //CMD_DIST, 300, 500, 600, 1200,
+                    CMD_DIST, 300, 500, 600, 1200,
                     //CMD_ORIENTATE, 90, 0,
                     //stop_cmd,0 ,0,
                     //goto_cmd, 0, 500, 500,
