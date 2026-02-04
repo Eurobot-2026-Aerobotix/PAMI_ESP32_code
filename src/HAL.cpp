@@ -79,13 +79,13 @@ int32_t target_encoder_count_R = 0;
 int32_t target_encoder_count_L = 0;
 
 // position control parameters
-float kpP_R = 10;
+float kpP_R = 20;
 float kdP_R = 5;
-float kiP_R = 150;
+float kiP_R = 400;
 
-float kpP_L = 10;
+float kpP_L = 20;
 float kdP_L = 5;
-float kiP_L = 150;
+float kiP_L = 400;
 
 void set_motor_pins(int right_forward, int right_backward, int left_forward, int left_backward, int right_enable, int left_enable)
 {

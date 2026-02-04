@@ -14,7 +14,7 @@ import sys
 # ------------------------
 # FORCE SERVER IP + PORT
 # ------------------------
-HOST = "172.18.173.234"   # fixed IP
+HOST = "0.0.0.0"   # fixed IP
 PORT = 8765               # fixed port
 
 # Global: store client connection

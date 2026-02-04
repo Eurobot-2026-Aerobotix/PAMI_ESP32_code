@@ -49,10 +49,14 @@ void strategy()
   // move_forward(100, 50); // Move 100mm at 50mm/s speed
   //custom_delay(500);
   int goto_cmd = 0, orientate_cmd = 1;
-  int commands[] = {goto_cmd, 0, 400, 500, // Go to (0, 300) at 500mm/s speed
-                    goto_cmd, 0, 0, 500, // Go to (0, 0) at 500mm/s speed
-                    goto_cmd, 0, 0, 500,
-                    orientate_cmd, 0, 0}; // Orientate to 0 degrees
+  int commands[] = {goto_cmd, 500, 250, 300, // Go to (0, 300) at 500mm/s speed
+                    goto_cmd, 1100, 250, 300, // Go to (0, 0) at 500mm/s speed
+                    goto_cmd, 1540, -20, 300,
+                    goto_cmd, 1540, 310, 300,
+                    goto_cmd, 1540, 620, 300,
+                   // orientate_cmd, 90, 0,
+                    //goto_cmd, 600, 0, 300
+                    }; // Orientate to 0 degrees
   int num_commands = sizeof(commands) / sizeof(commands[0]);
   int i = 0;
   while (i < num_commands)
@@ -292,10 +296,10 @@ void websocketTask(void *pvParameters)
           websocket_send_data(0xAC, target_speed_R);
           websocket_send_data(0xAD, target_speed_L);
           */
-          websocket_send_data(0xAA, current_x);
-          websocket_send_data(0xAB, current_y);
-          websocket_send_data(0xAC, rad_to_deg(current_phi));
-          websocket_send_data(0xAD, rad_to_deg(absolute_phi));
+          websocket_send_data(0xAA, current_speed_L);
+          websocket_send_data(0xAB, current_speed_R);
+          websocket_send_data(0xAC, target_speed_L);
+          websocket_send_data(0xAD, target_speed_R);
         }
       }
     }
@@ -320,10 +324,10 @@ void setup()
   set_encoder_channels(4, 16, 15, 2, 700);
 
   Serial.println("Setting PWM parameters...");
-  set_PWM_min_max(1023, 200, 190, -200, -190);
+  set_PWM_min_max(1023, 240, 205, -240, -205);
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(48.228770633907, 48.072690470043, 94.6);
+  set_wheel_diameter_and_spacing(50.240568281545314560639744920298, 49.958950746334858761533019892718, 90.605406982844515038351780152031);
   HAL_setup();
   
   // Initialize WebSocket if enabled
@@ -358,7 +362,7 @@ void setup()
       NULL,
       1, // Lower priority
       &commandExecutionTaskHandle,
-      0); // Pin to core 0
+      1); // Pin to core 0
   Serial.println("Command execution task created");
 
   // Create PID task last (it might be causing issues)
@@ -397,13 +401,15 @@ void setup()
   }
 
   Serial.println("All tasks created successfully!");
-  strategy_waiting = false;
-  control_loop_state = DISACTIVATED;
+  control_loop_state = SPEED;
+  delay(1000);
+  strategy_waiting = true;
+  //prepare_go_to(400, -400, 300);
 }
 
 void loop(){
   // for(int i=0; i<100; i++){
-  //   set_target_speeds(i*2, 0);
+  //   set_target_speeds(i*2, i*2);
   //   send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
   //   delay(10);
   // }
@@ -416,4 +422,6 @@ void loop(){
   //   send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
   //   delay(10);
   // }
+  send_values_to_usart(encoder_count_R, encoder_count_L, absolute_phi*100, 0);
+  delay(10);
 }
