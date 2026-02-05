@@ -182,8 +182,7 @@ void PIDTask(void *pvParameters)
       float dt = (micros() - previous_speed_control_time) / 1000000.0; // in seconds
 
       // Prevent division by zero or very small numbers
-      if (dt < 0.001)
-      {
+      if (dt < 0.001){
         vTaskDelayUntil(&xLastWakeTime, xDelay);
         continue;
       }
@@ -253,11 +252,14 @@ void PIDTask(void *pvParameters)
       previous_position_error_L = error;
       previous_position_control_time = micros();
     }
-    run_right_motor();
-    run_left_motor();
-
-    vTaskDelayUntil(&xLastWakeTime, xDelay);
+PWM_L=500;// MIN =320temchi  319 temchich   min=-320 temchi -319temchich  
+PWM_R=500;//MIN =320temchi  319 temchich    min=-320 temchi -319temchich  
+  //run_right_motor();
+  // run_left_motor();
+send_values_to_usart(encoder_count_R,encoder_count_L, 0, 0); // send encoder counts for debugging
+   vTaskDelayUntil(&xLastWakeTime, xDelay);
   }
+  
 }
 
 void commandExecutionTask(void *pvParameters)
@@ -301,7 +303,7 @@ void websocketTask(void *pvParameters)
         if (websocket_has_new_string()) {
         String receivedMsg = websocket_get_last_string();
         Serial.println("Processing: " + receivedMsg);
-    // String is automatically processed by processReceivedString()
+        processReceivedString(receivedMsg);
 }
         if (websocket_is_connected()) {
           // Send current robot data
@@ -331,22 +333,24 @@ void setup()
   Serial.println("=== PAMI ESP32 Setup ===");
 
   Serial.println("Setting motor pins...");
-  set_motor_pins(22, 21, 18, 19, 23, 17);
+  set_motor_pins(21, 22, 19, 18, 23, 17);  // shah
 
-  set_ultrasonic_pins(14, 12);
-
-  set_system_pins(1, 2, 3, 4);// TODO : 7ott l pineet ess7a7
+  
+  set_system_pins(25, 26, 33, 27);// bdlthom
 
   Serial.println("Setting encoder channels...");
-  set_encoder_channels(4, 16, 15, 2, 700);
+  set_encoder_channels(16, 4, 15, 2, 1400); // badalthom
 
   Serial.println("Setting PWM parameters...");
-  set_PWM_min_max(1023, 320, 320, -320, -320);
+  set_ultrasonic_pins(12, 13); // badalthom
+
+  set_PWM_min_max(1023, 320, 320, -320, -320); //yess
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(48.228770633907, 48.072690470043, 94.6);
+  set_wheel_diameter_and_spacing(46.8, 46.8, 126);
   HAL_setup();
-  
+
+
   // Initialize WebSocket if enabled
   extern int websocket_enabled;
   websocket_enabled = websocket;  // Set from the main websocket variable
@@ -358,7 +362,7 @@ void setup()
 
 
   Serial.println("Creating tasks...");
-
+  /*
   //Create tasks with lower stack sizes first
   xTaskCreatePinnedToCore(
      communicationTask,
@@ -368,10 +372,12 @@ void setup()
       1, // Lower priority
        &communicationTaskHandle,
        0); // Pin to core 0
-
+ 
   delay(500); // Delay between task creation
-  Serial.println("Communication task created");
+  Serial.println("Communication task created");*/
 
+
+/*
   xTaskCreatePinnedToCore(
       commandExecutionTask,
       "commandExecutionTask",
@@ -381,7 +387,7 @@ void setup()
       &commandExecutionTaskHandle,
       0); // Pin to core 0
   Serial.println("Command execution task created");
-
+*/
   // Create PID task last (it might be causing issues)
   xTaskCreatePinnedToCore(
       PIDTask,
@@ -392,7 +398,7 @@ void setup()
       &PIDTaskHandle,
       1); // Pin to core 1
   Serial.println("PID task created");
-
+    /*
   xTaskCreatePinnedToCore(
       emergencyBreakTask,
       "emergencyBreakTask",
@@ -401,7 +407,7 @@ void setup()
       2, // High priority
       &emergencyBreakTaskHandle,
       1); // Pin to core 1
-
+*/
   // Create WebSocket task if enabled
   if (websocket_enabled == 1) {
     xTaskCreatePinnedToCore(
@@ -419,7 +425,9 @@ void setup()
 
   Serial.println("All tasks created successfully!");
   strategy_waiting = false;
+  control_loop_state = ACTIVATED;
 }
 
 void loop(){
+  
 }
