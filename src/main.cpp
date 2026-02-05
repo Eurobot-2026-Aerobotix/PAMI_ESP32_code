@@ -146,8 +146,7 @@ void emergencyBreakTask(void *pvParameters)
   }
 }
 
-void PIDTask(void *pvParameters)
-{
+void PIDTask(void *pvParameters){
   const TickType_t xDelay = pdMS_TO_TICKS(1); // Increased to 10ms delay for stability
   TickType_t xLastWakeTime = xTaskGetTickCount();
 
@@ -156,23 +155,12 @@ void PIDTask(void *pvParameters)
   // Initialize previous_speed_control_time
   previous_speed_control_time = micros();
 
-  for (;;)
-  {
+  for (;;){
     // Add error checking
-    if (previous_speed_control_time == 0)
-    {
+    if (previous_speed_control_time == 0){
       previous_speed_control_time = micros();
       vTaskDelayUntil(&xLastWakeTime, xDelay);
       continue;
-    }
-
-
-    // this is the compromise for calculating the speed in the tick count update ISR
-    if ((micros() - speedCalculationPreviousTimeR) > 18000){
-      current_speed_R = 0;
-    }
-    if ((micros() - speedCalculationPreviousTimeL) > 18000){
-      current_speed_L = 0;
     }
 
     update_position();
@@ -187,21 +175,21 @@ void PIDTask(void *pvParameters)
         continue;
       }
 
-      float error = target_speed_R - current_speed_R_filtered;
+      float error = target_speed_R - current_speed_R;
 
       speed_derivative_R = speed_derivative_R * 0.999 + 0.001 * (error - previous_speed_error_R) / dt; // unit = mm/s²
       speed_integral_R += error * dt;
 
       previous_speed_error_R = error;
 
-      PWM_R = PWM_R * 0.9 + 0.1 * (PWM_offset_R + kpS_R * error + kdS_R * speed_derivative_R + kiS_R * speed_integral_R); // the first part is a simple filter to reduce jitter
+      PWM_R = PWM_R * 0.0 + 1.0 * (PWM_offset_R + kpS_R * error + kdS_R * speed_derivative_R + kiS_R * speed_integral_R); // the first part is a simple filter to reduce jitter
       PWM_R = (PWM_R > PWM_max) ? PWM_max : (PWM_R < -PWM_max) ? -PWM_max : PWM_R;
       PWM_R = (target_speed_R == 0) ? 0 : PWM_R;
 
       speed_integral_R = ((PWM_R == PWM_max) || (PWM_R == -PWM_max)) ? (speed_integral_R - 2 * error * dt) : speed_integral_R;
 
       // left motor speed control
-      error = target_speed_L - current_speed_L_filtered;
+      error = target_speed_L - current_speed_L;
       speed_derivative_L = speed_derivative_L * 0.999 + 0.001 * (error - previous_speed_error_L) / dt; // unit = mm/s²
       speed_integral_L += error * dt;
 
@@ -313,10 +301,10 @@ void websocketTask(void *pvParameters)
           websocket_send_data(0xAC, target_speed_R);
           websocket_send_data(0xAD, target_speed_L);
           */
-          websocket_send_data(0xAA, current_x);
-          websocket_send_data(0xAB, current_y);
-          websocket_send_data(0xAC, rad_to_deg(current_phi));
-          websocket_send_data(0xAD, rad_to_deg(absolute_phi));
+          websocket_send_data(0xAA, current_speed_L);
+          websocket_send_data(0xAB, current_speed_R);
+          websocket_send_data(0xAC, target_speed_L);
+          websocket_send_data(0xAD, target_speed_R);
         }
       }
     }
@@ -364,18 +352,17 @@ void setup()
   Serial.println("Creating tasks...");
   /*
   //Create tasks with lower stack sizes first
-  xTaskCreatePinnedToCore(
-     communicationTask,
-      "communicationTask",
-      8192,
-      NULL,
-      1, // Lower priority
-       &communicationTaskHandle,
-       0); // Pin to core 0
- 
-  delay(500); // Delay between task creation
-  Serial.println("Communication task created");*/
+  //   xTaskCreatePinnedToCore(
+  //    communicationTask,
+  //     "communicationTask",
+  //     8192,
+  //     NULL,
+  //     1, // Lower priority
+  //      &communicationTaskHandle,
+  //      0); // Pin to core 0
 
+  //  delay(500); // Delay between task creation
+  //  Serial.println("Communication task created");
 
 /*
   xTaskCreatePinnedToCore(
@@ -385,7 +372,7 @@ void setup()
       NULL,
       1, // Lower priority
       &commandExecutionTaskHandle,
-      0); // Pin to core 0
+      1); // Pin to core 0
   Serial.println("Command execution task created");
 */
   // Create PID task last (it might be causing issues)
@@ -398,16 +385,16 @@ void setup()
       &PIDTaskHandle,
       1); // Pin to core 1
   Serial.println("PID task created");
-    /*
-  xTaskCreatePinnedToCore(
-      emergencyBreakTask,
-      "emergencyBreakTask",
-      2048, // Stack size
-      NULL,
-      2, // High priority
-      &emergencyBreakTaskHandle,
-      1); // Pin to core 1
-*/
+
+  // xTaskCreatePinnedToCore(
+  //     emergencyBreakTask,
+  //     "emergencyBreakTask",
+  //     2048, // Stack size
+  //     NULL,
+  //     2, // High priority
+  //     &emergencyBreakTaskHandle,
+  //     1); // Pin to core 1
+
   // Create WebSocket task if enabled
   if (websocket_enabled == 1) {
     xTaskCreatePinnedToCore(
@@ -424,10 +411,27 @@ void setup()
   }
 
   Serial.println("All tasks created successfully!");
-  strategy_waiting = false;
-  control_loop_state = ACTIVATED;
+  control_loop_state = SPEED;
+  delay(1000);
+  strategy_waiting = true;
+  //prepare_go_to(400, -400, 300);
 }
 
 void loop(){
-  
+  // for(int i=0; i<100; i++){
+  //   set_target_speeds(i*2, i*2);
+  //   send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
+  //   delay(10);
+  // }
+  // for(int i=0; i<200; i++){
+  //   send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
+  //   delay(10);
+  // }
+  // set_target_speeds(0, 0);
+  // for(int i=0; i<200; i++){
+  //   send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
+  //   delay(10);
+  // }
+  send_values_to_usart(encoder_count_R, encoder_count_L, absolute_phi*100, 0);
+  delay(10);
 }

@@ -38,10 +38,7 @@ int CPR;
 // global variables
 volatile int32_t encoder_count_R;
 volatile int32_t encoder_count_L;
-volatile int32_t speedCalculationPreviousTimeR;
-volatile int32_t speedCalculationCurrentTimeR;
-volatile int32_t speedCalculationPreviousTimeL;
-volatile int32_t speedCalculationCurrentTimeL;
+volatile int32_t speedCalculationPreviousTime;
 float direction_R;
 float direction_L;
 float directionR;
@@ -63,16 +60,16 @@ float wheel_diameter_L;
 float wheels_spacing;
 
 // PID control parameters
-float kpS_R = 6;
+float kpS_R = 0.5;
 float kdS_R = 0.0000;
-float kiS_R = 10;
+float kiS_R = 15;
 float speed_integral_R = 0;
 float speed_derivative_R = 0;
 float previous_speed_error_R = 0;
 
-float kpS_L = 6;//0
+float kpS_L = 0.5;
 float kdS_L = 0;
-float kiS_L = 10;//3
+float kiS_L = 15;
 float speed_integral_L = 0;
 float speed_derivative_L = 0;
 float previous_speed_error_L = 0;
@@ -80,7 +77,7 @@ float previous_speed_error_L = 0;
 float previous_position_error_R = 0;
 float previous_position_error_L = 0;
 int32_t previous_position_control_time = 0;
-float position_max_response = 100;
+float position_max_response = 50;
 float position_integral_R = 0;
 float position_derivative_R = 0;
 float position_integral_L = 0;
@@ -89,13 +86,13 @@ int32_t target_encoder_count_R = 0;
 int32_t target_encoder_count_L = 0;
 
 // position control parameters
-float kpP_R = 10;
+float kpP_R = 20;
 float kdP_R = 5;
-float kiP_R = 60;
+float kiP_R = 400;
 
-float kpP_L = 10;
+float kpP_L = 20;
 float kdP_L = 5;
-float kiP_L = 60;
+float kiP_L = 400;
 
 int servo_positions[6] = {90, 80, 50, 30, 20, 0};
 bool ultrasonic_blocked = true;
@@ -178,9 +175,9 @@ void run_left_motor()
 }
 void set_target_speeds(float target__speed_R, float target__speed_L)
 {
-    PWM_offset_R = (target__speed_R > 0) ? PWM_R_forward_min - 30 : PWM_R_backward_min + 30;
+    PWM_offset_R = (target__speed_R > 0) ? PWM_R_forward_min - 20 : PWM_R_backward_min + 20;
     target_speed_R = target__speed_R;
-    PWM_offset_L = (target__speed_L > 0) ? PWM_L_forward_min - 30 : PWM_L_backward_min + 30;
+    PWM_offset_L = (target__speed_L > 0) ? PWM_L_forward_min - 20 : PWM_L_backward_min + 20;
     target_speed_L = target__speed_L;
 }
 void IRAM_ATTR encoderRISRA()
@@ -188,34 +185,22 @@ void IRAM_ATTR encoderRISRA()
     if (FAST_READ(encoderRB) == FAST_READ(encoderRA))
     {
         encoder_count_R--;
-        directionR = -1;
     }
     else
     {
         encoder_count_R++;
-        directionR = 1;
     }
-    speedCalculationPreviousTimeR = speedCalculationCurrentTimeR;
-    speedCalculationCurrentTimeR = micros();
-
-    // optimise by replacing (wheel_diameter_R*PI/CPR * direction_R) by a constant factors
-    current_speed_R = (wheel_diameter_R * PI / CPR * directionR)*1000000 / (speedCalculationCurrentTimeR - speedCalculationPreviousTimeR);
 }
 void IRAM_ATTR encoderLISRA()
 {
     if (FAST_READ(encoderLB) == FAST_READ(encoderLA))
     {
         encoder_count_L++;
-        directionL = 1;
     }
     else
     {
         encoder_count_L--;
-        directionL = -1;
     }
-    speedCalculationPreviousTimeL = speedCalculationCurrentTimeL;
-    speedCalculationCurrentTimeL = micros();
-    current_speed_L = (wheel_diameter_L * PI / CPR * directionL)*1000000 / (speedCalculationCurrentTimeL - speedCalculationPreviousTimeL);
 }
 void send_values_to_usart(float value1, float value2, float value3, float value4)
 {
@@ -342,10 +327,7 @@ void HAL_setup()
     ledcAttachPin(motorLEN, motorLEN_channel);
 
     // Global variables
-    speedCalculationCurrentTimeR = micros();
-    speedCalculationPreviousTimeR = speedCalculationCurrentTimeR;
-    speedCalculationCurrentTimeL = speedCalculationCurrentTimeR;
-    speedCalculationPreviousTimeL = speedCalculationCurrentTimeR;
+    speedCalculationPreviousTime = micros() - 999;
     current_speed_L = 0;
     current_speed_R = 0;
     direction_R = 1;
