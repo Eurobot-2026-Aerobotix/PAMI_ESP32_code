@@ -17,6 +17,9 @@ void update_speed(){
 }
 
 void update_position(){
+	
+	encoder_count_L = encoder_get_L();
+	encoder_count_R = encoder_get_R();
 
 	update_speed();
 	float dR = ticks_to_distance(encoder_count_R - previous_encoder_count_R, wheel_diameter_R);

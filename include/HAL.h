@@ -17,9 +17,14 @@
  */
 
 #include <Arduino.h>
+#include "driver/pcnt.h"
 
 #define FAST_READ(pin) (((uint32_t)((pin) < 32 ? GPIO.in : GPIO.in1.val) >> ((pin) & 31)) & 0x1)
-#define PI 3.14159265358979323846
+
+#define PCNT_UNIT PCNT_UNIT_0
+#define PCNT_CH   PCNT_CHANNEL_0
+#define PCNT_UNIT PCNT_UNIT_1
+#define PCNT_CH   PCNT_CHANNEL_1
 
 // motor pins
 extern int motorLa;
@@ -107,6 +112,7 @@ extern float kiP_R;
 extern float kpP_L;
 extern float kdP_L;
 extern float kiP_L;
+extern float debugger;
 
 void set_motor_pins(int right_forward, int right_backward, int left_forward, int left_backward, int right_enable, int left_enable);
 void set_ultrasonic_pins(int trigger_pin, int echo_pin);
@@ -127,6 +133,10 @@ void send_values_to_usart(float value1, float value2, float value3, float value4
 
 float get_ultrasonic_distance();
 void reset_position_control_variables();
+
+void encoder_init();
+int16_t encoder_get_R();
+int16_t encoder_get_L();
 
 void HAL_setup();
 void custom_delay(int ms);

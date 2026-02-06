@@ -86,6 +86,7 @@ float kiP_R = 400;
 float kpP_L = 20;
 float kdP_L = 5;
 float kiP_L = 400;
+float debugger = 0;
 
 void set_motor_pins(int right_forward, int right_backward, int left_forward, int left_backward, int right_enable, int left_enable)
 {
@@ -257,6 +258,70 @@ void stop_motors()
     set_target_speeds(0, 0);
 }
 
+void encoder_init() {
+  pcnt_config_t pcnt_config_1 = {
+    .pulse_gpio_num = encoderRB,
+    .ctrl_gpio_num  = encoderRA,
+
+    .lctrl_mode = PCNT_MODE_REVERSE,
+    .hctrl_mode = PCNT_MODE_KEEP,
+
+    .pos_mode = PCNT_COUNT_INC,
+    .neg_mode = PCNT_COUNT_DIS,
+
+    .counter_h_lim = 32767,
+    .counter_l_lim = -32768,
+
+    .unit    = PCNT_UNIT_0,
+    .channel = PCNT_CHANNEL_0
+  };
+
+  pcnt_unit_config(&pcnt_config_1);
+  pcnt_set_filter_value(PCNT_UNIT_0, 100);
+  pcnt_filter_enable(PCNT_UNIT_0);
+
+  pcnt_counter_pause(PCNT_UNIT_0);
+  pcnt_counter_clear(PCNT_UNIT_0);
+  pcnt_counter_resume(PCNT_UNIT_0);
+
+  pcnt_config_t pcnt_config_2 = {
+    .pulse_gpio_num = encoderLA,
+    .ctrl_gpio_num  = encoderLB,
+
+    .lctrl_mode = PCNT_MODE_REVERSE,
+    .hctrl_mode = PCNT_MODE_KEEP,
+
+    .pos_mode = PCNT_COUNT_INC,
+    .neg_mode = PCNT_COUNT_DIS,
+
+    .counter_h_lim = 32767,
+    .counter_l_lim = -32768,
+
+    .unit    = PCNT_UNIT_1,
+    .channel = PCNT_CHANNEL_1
+  };
+
+  pcnt_unit_config(&pcnt_config_2);
+  pcnt_set_filter_value(PCNT_UNIT_1, 100);
+  pcnt_filter_enable(PCNT_UNIT_1);
+
+  pcnt_counter_pause(PCNT_UNIT_1);
+  pcnt_counter_clear(PCNT_UNIT_1);
+  pcnt_counter_resume(PCNT_UNIT_1);
+}
+
+int16_t encoder_get_R() {
+  int16_t count;
+  pcnt_get_counter_value(PCNT_UNIT_0, &count);
+  return count;
+}
+
+int16_t encoder_get_L() {
+  int16_t count;
+  pcnt_get_counter_value(PCNT_UNIT_1, &count);
+  return count;
+}
+
 void HAL_setup()
 {
     pinMode(motorRa, OUTPUT);
@@ -289,8 +354,9 @@ void HAL_setup()
     directionL = 1;
 
     // Interrupts
-    attachInterrupt(digitalPinToInterrupt(encoderRA), encoderRISRA, CHANGE);
-    attachInterrupt(digitalPinToInterrupt(encoderLA), encoderLISRA, CHANGE);
+    //attachInterrupt(digitalPinToInterrupt(encoderRA), encoderRISRA, CHANGE);
+    //attachInterrupt(digitalPinToInterrupt(encoderLA), encoderLISRA, CHANGE);
+    encoder_init();
 }
 void custom_delay(int ms)
 {

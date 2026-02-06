@@ -49,13 +49,13 @@ void strategy()
   // move_forward(100, 50); // Move 100mm at 50mm/s speed
   //custom_delay(500);
   int goto_cmd = 0, orientate_cmd = 1;
-  int commands[] = {goto_cmd, 500, 250, 300, // Go to (0, 300) at 500mm/s speed
+   int commands[] = {//goto_cmd, 500, 0, 300, // Go to (0, 300) at 500mm/s speed
+  //                   goto_cmd, 0, 0, 300,
+  //                   goto_cmd, 0, 0, 300,
+  //                   orientate_cmd, 0, 0,
                     goto_cmd, 1100, 250, 300, // Go to (0, 0) at 500mm/s speed
-                    goto_cmd, 1540, -20, 300,
-                    goto_cmd, 1540, 310, 300,
-                    goto_cmd, 1540, 620, 300,
-                   // orientate_cmd, 90, 0,
-                    //goto_cmd, 600, 0, 300
+                    goto_cmd, 1540, -70, 300,
+                    goto_cmd, 1595, 415, 200,
                     }; // Orientate to 0 degrees
   int num_commands = sizeof(commands) / sizeof(commands[0]);
   int i = 0;
@@ -209,7 +209,7 @@ void PIDTask(void *pvParameters){
         continue;
       }
       // right motor position control
-      float error = (target_encoder_count_R - encoder_count_R); 
+      float error = (target_encoder_count_R - encoder_count_R)*2; 
 
       position_derivative_R = (error - previous_position_error_R)*dt; // unit = tick/s²
 
@@ -321,13 +321,13 @@ void setup()
   set_ultrasonic_pins(14, 12);
 
   Serial.println("Setting encoder channels...");
-  set_encoder_channels(4, 16, 15, 2, 700);
+  set_encoder_channels(4, 16, 15, 2, 350);
 
   Serial.println("Setting PWM parameters...");
-  set_PWM_min_max(1023, 240, 205, -240, -205);
+  set_PWM_min_max(1023, 240, 210, -240, -210);
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(50.240568281545314560639744920298, 49.958950746334858761533019892718, 90.605406982844515038351780152031);
+  set_wheel_diameter_and_spacing(62.30898219481361020034599237179, 62.978213772937668195714321289293, 98.165824014911968931516725271506);
   HAL_setup();
   
   // Initialize WebSocket if enabled
@@ -401,10 +401,11 @@ void setup()
   }
 
   Serial.println("All tasks created successfully!");
-  control_loop_state = SPEED;
+  control_loop_state = DISACTIVATED;
   delay(1000);
-  strategy_waiting = true;
-  //prepare_go_to(400, -400, 300);
+  strategy_waiting = 1;
+  //prepare_go_to(500, 0, 300);
+  //set_target_encoder_counts(0, 0);
 }
 
 void loop(){
@@ -422,6 +423,6 @@ void loop(){
   //   send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
   //   delay(10);
   // }
-  send_values_to_usart(encoder_count_R, encoder_count_L, absolute_phi*100, 0);
+  send_values_to_usart(encoder_count_L, encoder_count_R, target_encoder_count_L, target_encoder_count_R);
   delay(10);
 }
