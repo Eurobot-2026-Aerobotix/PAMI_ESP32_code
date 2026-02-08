@@ -25,7 +25,7 @@ TaskHandle_t commandExecutionTaskHandle;
 TaskHandle_t websocketTaskHandle;
 TaskHandle_t emergencyBreakTaskHandle;
 int websocket=0;
-float debugger = 0;
+//float debugger = 0;
 // Custom strategy implementation
 void strategy()
 {
@@ -40,14 +40,16 @@ void strategy()
     Serial.println(crate_colors[i] ? "YELLOW" : "BLUE");
   }
 
-  int goto_cmd = 0, orientate_cmd = 1, pickup_cmd = 3, putdown_cmd = 4, walking_position_cmd = 5, prepare_cmd = 6;
+  int goto_cmd = 0, orientate_cmd = 1, pickup_cmd = 3, putdown_cmd = 4, walking_position_cmd = 5, prepare_cmd = 6 , letgo_cmd = 7, go_backward_cmd = 8; 
   int commands[] = {goto_cmd, 400, 0, 300, // Go to (0, 300) at 500mm/s speed
                     pickup_cmd,1,1, 1,
+                    go_backward_cmd, 350, 0, 300,
                     goto_cmd, 0, 0, 300,
-                    putdown_cmd,
+                    letgo_cmd,
                     
                     // goto_cmd, 0, 0, 500, // Go to (0, 0) at 500mm/s speed
                     // goto_cmd, 0, 0, 500, // go to (0, 0) at 500mm/s speed
+                    // goto_backward_cmd, 0, 0, 500, // go backward to (0, 0) at 500mm/s speed
                     // orientate_cmd, 0, 0, // Orientate to 0 degrees
                     // pickup_cmd, (int)crate_colors[4], (int)crate_colors[5], 0, //pick up own color crate from down
                     // pickup_cmd, 1, 1, 1, // pick up right and left from up
@@ -69,6 +71,20 @@ void strategy()
       }
       i += 4;
     }
+
+
+    else if (command_type == go_backward_cmd){
+      int x = commands[i + 1];
+      int y = commands[i + 2];
+      int speed = commands[i + 3];
+      while(go_backward_to(x, y, speed)){
+        wait_for_obstacle_clearance();
+        Serial.println("obstacle cleared, resuming...");
+      }
+      i += 4;
+    }
+
+
     else if (command_type == orientate_cmd){
       int angle = commands[i + 1];
       int is_radian = commands[i + 2];
@@ -85,6 +101,9 @@ void strategy()
       i++;
     }else if (command_type == prepare_cmd){
       prepare_servo_up();
+      i++;
+    }else if (command_type == letgo_cmd){
+      letgo();
       i++;
     }
   }
@@ -216,7 +235,7 @@ void PIDTask(void *pvParameters){
       }
       // right motor position control
       float error = (target_encoder_count_R - encoder_count_R); 
-      debugger = error;
+      //debugger = error;
       position_derivative_R = (error - previous_position_error_R)*dt; // unit = tick/s²
 
       position_integral_R = ( SGN(error) == SGN( previous_position_error_R ) )? position_integral_R + error*dt : 0;
@@ -343,7 +362,7 @@ void setup()
   set_PWM_min_max(1023, 100, 100, -100, -100); //yess    //130  120
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(48.010540902532529643705509312976,48.03641701598651936540633151267,122.84370983629917196470781680778); 
+  set_wheel_diameter_and_spacing(48.010540902532529643705509312976,48.03641701598651936540633151267,122.54952192008523873083120849792); //   122.84370983629917196470781680778
   HAL_setup();
 
 
@@ -423,7 +442,7 @@ void setup()
   delay(1000);
   strategy_waiting = true;
   //prepare_go_to(400, -0, 300);
- // prepare_rotate(360, 0);
+  //prepare_rotate(3600, 0);
   //set_target_encoder_counts(0, 0);
 }
 void loop(){
@@ -444,6 +463,6 @@ void loop(){
   //  }
   // send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
   // delay(10);
-  //  send_values_to_usart(encoder_count_R, encoder_count_L, 0, 0);
-  //  delay(10);
+//    send_values_to_usart(debugger, 0, 0, 0);
+//    delay(10);
 }

@@ -94,7 +94,7 @@ float kpP_L = 20;
 float kdP_L = 0;
 float kiP_L = 0;
 
-int servo_positions[6] = {0, 130, 60, 85, 60, 15};
+int servo_positions[6] = {0, 130, 55, 85, 55, 15};
 bool ultrasonic_blocked = true;
 
 void set_motor_pins(int right_forward, int right_backward, int left_forward, int left_backward, int right_enable, int left_enable)
@@ -351,6 +351,12 @@ void pickup(int pick_right, int pick_left, int up_or_down){
 void putdown(){
     set_pump_state(0);
     set_EV_states(1, 1);
+    custom_delay(500);
+}
+void letgo(){
+    set_pump_state(0);
+    //set_EV_states(1, 1);
+    move_servo(5);
     custom_delay(500);
 }
 void walking_position(){

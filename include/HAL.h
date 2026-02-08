@@ -161,5 +161,6 @@ void pickup(int pick_right, int pick_left, int up_or_down);
 void putdown();
 void walking_position();
 void prepare_servo_up();
+void letgo();
 void HAL_setup();
 void custom_delay(int ms);
