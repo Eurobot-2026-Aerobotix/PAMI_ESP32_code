@@ -25,7 +25,7 @@ TaskHandle_t commandExecutionTaskHandle;
 TaskHandle_t websocketTaskHandle;
 TaskHandle_t emergencyBreakTaskHandle;
 int websocket=0;
-
+float debugger = 0;
 // Custom strategy implementation
 void strategy()
 {
@@ -203,7 +203,7 @@ void PIDTask(void *pvParameters){
       speed_integral_L = ((PWM_L == PWM_max) || (PWM_L == -PWM_max)) ? (speed_integral_L - 2 * error * dt) : speed_integral_L;
     }
     else if (control_loop_state == POSITION){
-      float dt = (micros() - previous_position_control_time)/1000000.0;
+       float dt = (micros() - previous_position_control_time)/1000000.0;
 
       if (dt < 0.001)
       {
@@ -212,7 +212,7 @@ void PIDTask(void *pvParameters){
       }
       // right motor position control
       float error = (target_encoder_count_R - encoder_count_R); 
-
+      debugger = error;
       position_derivative_R = (error - previous_position_error_R)*dt; // unit = tick/s²
 
       position_integral_R = ( SGN(error) == SGN( previous_position_error_R ) )? position_integral_R + error*dt : 0;
@@ -240,11 +240,15 @@ void PIDTask(void *pvParameters){
       previous_position_error_L = error;
       previous_position_control_time = micros();
     }
-PWM_L=500;// MIN =320temchi  319 temchich   min=-320 temchi -319temchich  
-PWM_R=500;//MIN =320temchi  319 temchich    min=-320 temchi -319temchich  
-  //run_right_motor();
-  // run_left_motor();
-send_values_to_usart(encoder_count_R,encoder_count_L, 0, 0); // send encoder counts for debugging
+ //PWM_L= 0;// MIN =320temchi  319 temchich   min=-320 temchi -319temchich  
+ //PWM_R= 0;//MIN =320temchi  319 temchich    min=-320 temchi -319temchich  
+//set_target_speeds(600, 600); 
+
+  //  delay(10);
+    run_right_motor();
+    run_left_motor();
+  // update target speeds in case they were changed by the command execution task
+//send_values_to_usart(encoder_count_R,encoder_count_L, 0, 0); // send encoder counts for debugging
    vTaskDelayUntil(&xLastWakeTime, xDelay);
   }
   
@@ -321,21 +325,21 @@ void setup()
   Serial.println("=== PAMI ESP32 Setup ===");
 
   Serial.println("Setting motor pins...");
-  set_motor_pins(21, 22, 19, 18, 23, 17);  // shah
+  set_motor_pins(19, 18, 21, 22, 17, 23);  // shah
 
   
   set_system_pins(25, 26, 33, 27);// bdlthom
 
   Serial.println("Setting encoder channels...");
-  set_encoder_channels(16, 4, 15, 2, 1400); // badalthom
+  set_encoder_channels(2, 15, 4, 16, 1400); // badalthom
 
   Serial.println("Setting PWM parameters...");
   set_ultrasonic_pins(12, 13); // badalthom
 
-  set_PWM_min_max(1023, 320, 320, -320, -320); //yess
+  set_PWM_min_max(1023, 100, 100, -100, -100); //yess    //130  120
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(46.8, 46.8, 126);
+  set_wheel_diameter_and_spacing(48.010540902532529643705509312976,48.03641701598651936540633151267, 126); 
   HAL_setup();
 
 
@@ -363,8 +367,8 @@ void setup()
 
   //  delay(500); // Delay between task creation
   //  Serial.println("Communication task created");
+*/
 
-/*
   xTaskCreatePinnedToCore(
       commandExecutionTask,
       "commandExecutionTask",
@@ -374,7 +378,7 @@ void setup()
       &commandExecutionTaskHandle,
       1); // Pin to core 0
   Serial.println("Command execution task created");
-*/
+
   // Create PID task last (it might be causing issues)
   xTaskCreatePinnedToCore(
       PIDTask,
@@ -396,7 +400,7 @@ void setup()
   //     1); // Pin to core 1
 
   // Create WebSocket task if enabled
-  if (websocket_enabled == 1) {
+ /* if (websocket_enabled == 1) {
     xTaskCreatePinnedToCore(
         websocketTask,
         "websocketTask",
@@ -409,29 +413,32 @@ void setup()
     delay(500); // Delay between task creation
     Serial.println("WebSocket task created");
   }
-
+*/
   Serial.println("All tasks created successfully!");
-  control_loop_state = SPEED;
+  control_loop_state = DISACTIVATED;
   delay(1000);
-  strategy_waiting = true;
-  //prepare_go_to(400, -400, 300);
+  strategy_waiting = false;
+  prepare_go_to(400, -0, 300);
+  //set_target_encoder_counts(0, 0);
 }
-
 void loop(){
-  // for(int i=0; i<100; i++){
-  //   set_target_speeds(i*2, i*2);
-  //   send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
-  //   delay(10);
-  // }
-  // for(int i=0; i<200; i++){
-  //   send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
-  //   delay(10);
-  // }
-  // set_target_speeds(0, 0);
-  // for(int i=0; i<200; i++){
-  //   send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
-  //   delay(10);
-  // }
-  send_values_to_usart(encoder_count_R, encoder_count_L, absolute_phi*100, 0);
-  delay(10);
+  
+  //  for(int i=0; i<100; i++){
+  //    set_target_speeds(i*2, i*2);
+  //    send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
+  //    delay(10);
+  //  }
+  //  for(int i=0; i<200; i++){
+  //    send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
+  //    delay(10);
+  //    }
+  //  set_target_speeds(0, 0);
+  //  for(int i=0; i<200; i++){
+  //    send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
+  //  delay(10);
+  //  }
+  // send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
+  // delay(10);
+  //  send_values_to_usart(encoder_count_R, encoder_count_L, 0, 0);
+  //  delay(10);
 }

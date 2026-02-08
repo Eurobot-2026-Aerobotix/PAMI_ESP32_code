@@ -60,16 +60,16 @@ float wheel_diameter_L;
 float wheels_spacing;
 
 // PID control parameters
-float kpS_R = 0.5;
+float kpS_R =0.5;
 float kdS_R = 0.0000;
-float kiS_R = 15;
+float kiS_R = 20;
 float speed_integral_R = 0;
 float speed_derivative_R = 0;
 float previous_speed_error_R = 0;
 
 float kpS_L = 0.5;
 float kdS_L = 0;
-float kiS_L = 15;
+float kiS_L = 20;
 float speed_integral_L = 0;
 float speed_derivative_L = 0;
 float previous_speed_error_L = 0;
@@ -87,12 +87,12 @@ int32_t target_encoder_count_L = 0;
 
 // position control parameters
 float kpP_R = 20;
-float kdP_R = 5;
-float kiP_R = 400;
+float kdP_R = 0;
+float kiP_R = 0;
 
 float kpP_L = 20;
-float kdP_L = 5;
-float kiP_L = 400;
+float kdP_L = 0;
+float kiP_L = 0;
 
 int servo_positions[6] = {90, 80, 50, 30, 20, 0};
 bool ultrasonic_blocked = true;
@@ -162,6 +162,7 @@ void run_left_motor()
     pwm = constrain(pwm, -PWM_max, PWM_max);
     ledcWrite(motorLEN_channel, abs(pwm));
     if (pwm > 0){
+
         digitalWrite(motorLa, 1);
         digitalWrite(motorLb, 0);
     }

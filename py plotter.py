@@ -41,7 +41,6 @@ def update():
             raw = ser.read(4)
             if len(raw) < 4:
                 break  # incomplete packet
-
             value = struct.unpack('<f', raw)[0]
 
             # Debug once to see if we are decoding correctly
