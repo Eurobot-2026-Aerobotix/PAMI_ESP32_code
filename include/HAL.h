@@ -17,10 +17,15 @@
  */
 
 #include <Arduino.h>
+#include "driver/pcnt.h"
 #include <ESP32Servo.h>
 
 #define FAST_READ(pin) (((uint32_t)((pin) < 32 ? GPIO.in : GPIO.in1.val) >> ((pin) & 31)) & 0x1)
-#define PI 3.14159265358979323846
+
+#define PCNT_UNIT PCNT_UNIT_0
+#define PCNT_CH   PCNT_CHANNEL_0
+#define PCNT_UNIT PCNT_UNIT_1
+#define PCNT_CH   PCNT_CHANNEL_1
 
 // motor pins
 extern int motorLa;
@@ -115,6 +120,7 @@ extern float kiP_R;
 extern float kpP_L;
 extern float kdP_L;
 extern float kiP_L;
+extern float debugger;
 
 extern int servo_positions[6];
 extern bool ultrasonic_blocked;
@@ -139,6 +145,14 @@ void send_values_to_usart(float value1, float value2, float value3, float value4
 
 float get_ultrasonic_distance();
 void reset_position_control_variables();
+
+void encoder_init();
+int16_t encoder_get_R();
+int16_t encoder_get_L();
+
+void encoder_init();
+int16_t encoder_get_R();
+int16_t encoder_get_L();
 
 void move_servo(int position);//0 means down position and so on till 5 means up position
 void set_EV_states(int left_electrovalve_state, int right_electrovalve_state);//0 means off means fantzing, 1 means no tfantiz

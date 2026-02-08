@@ -416,6 +416,7 @@ void setup()
 */
   Serial.println("All tasks created successfully!");
   control_loop_state = DISACTIVATED;
+  control_loop_state = DISACTIVATED;
   delay(1000);
   strategy_waiting = false;
   prepare_go_to(400, -0, 300);
