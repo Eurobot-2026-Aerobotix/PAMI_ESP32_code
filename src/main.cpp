@@ -41,15 +41,19 @@ void strategy()
   }
 
   int goto_cmd = 0, orientate_cmd = 1, pickup_cmd = 3, putdown_cmd = 4, walking_position_cmd = 5, prepare_cmd = 6;
-  int commands[] = {goto_cmd, 0, 400, 500, // Go to (0, 300) at 500mm/s speed
-                    goto_cmd, 0, 0, 500, // Go to (0, 0) at 500mm/s speed
-                    goto_cmd, 0, 0, 500, // go to (0, 0) at 500mm/s speed
-                    orientate_cmd, 0, 0, // Orientate to 0 degrees
-                    pickup_cmd, (int)crate_colors[4], (int)crate_colors[5], 0, //pick up own color crate from down
-                    pickup_cmd, 1, 1, 1, // pick up right and left from up
-                    walking_position_cmd, // go to walking position if coming from up
-                    putdown_cmd, // put_dowm
-                    prepare_cmd // prepare_servo_up
+  int commands[] = {goto_cmd, 400, 0, 300, // Go to (0, 300) at 500mm/s speed
+                    pickup_cmd,1,1, 1,
+                    goto_cmd, 0, 0, 300,
+                    putdown_cmd,
+                    
+                    // goto_cmd, 0, 0, 500, // Go to (0, 0) at 500mm/s speed
+                    // goto_cmd, 0, 0, 500, // go to (0, 0) at 500mm/s speed
+                    // orientate_cmd, 0, 0, // Orientate to 0 degrees
+                    // pickup_cmd, (int)crate_colors[4], (int)crate_colors[5], 0, //pick up own color crate from down
+                    // pickup_cmd, 1, 1, 1, // pick up right and left from up
+                    // walking_position_cmd, // go to walking position if coming from up
+                    // putdown_cmd, // put_dowm
+                    // prepare_cmd // prepare_servo_up
                   };
   int num_commands = sizeof(commands) / sizeof(commands[0]);
   int i = 0;
@@ -331,7 +335,7 @@ void setup()
   set_system_pins(25, 26, 33, 27);// bdlthom
 
   Serial.println("Setting encoder channels...");
-  set_encoder_channels(2, 15, 4, 16, 1400); // badalthom
+  set_encoder_channels(2, 15, 4, 16, 700); // badalthom
 
   Serial.println("Setting PWM parameters...");
   set_ultrasonic_pins(12, 13); // badalthom
@@ -339,7 +343,7 @@ void setup()
   set_PWM_min_max(1023, 100, 100, -100, -100); //yess    //130  120
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(48.010540902532529643705509312976,48.03641701598651936540633151267, 126); 
+  set_wheel_diameter_and_spacing(48.010540902532529643705509312976,48.03641701598651936540633151267,122.84370983629917196470781680778); 
   HAL_setup();
 
 
@@ -416,10 +420,10 @@ void setup()
 */
   Serial.println("All tasks created successfully!");
   control_loop_state = DISACTIVATED;
-  control_loop_state = DISACTIVATED;
   delay(1000);
-  strategy_waiting = false;
-  prepare_go_to(400, -0, 300);
+  strategy_waiting = true;
+  //prepare_go_to(400, -0, 300);
+ // prepare_rotate(360, 0);
   //set_target_encoder_counts(0, 0);
 }
 void loop(){

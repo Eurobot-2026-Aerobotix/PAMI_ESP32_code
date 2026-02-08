@@ -94,7 +94,7 @@ float kpP_L = 20;
 float kdP_L = 0;
 float kiP_L = 0;
 
-int servo_positions[6] = {90, 80, 50, 30, 20, 0};
+int servo_positions[6] = {0, 130, 60, 85, 60, 15};
 bool ultrasonic_blocked = true;
 
 void set_motor_pins(int right_forward, int right_backward, int left_forward, int left_backward, int right_enable, int left_enable)
