@@ -53,9 +53,14 @@ void strategy()
   //                   goto_cmd, 0, 0, 300,
   //                   goto_cmd, 0, 0, 300,
   //                   orientate_cmd, 0, 0,
-                    goto_cmd, 1100, 250, 300, // Go to (0, 0) at 500mm/s speed
-                    goto_cmd, 1540, -70, 300,
-                    goto_cmd, 1595, 415, 200,
+                    // goto_cmd, 1100, 250, 300, // Go to (0, 0) at 500mm/s speed
+                    // goto_cmd, 1540, -70, 300,
+                    // goto_cmd, 1595, 415, 200,
+                    goto_cmd, 500, 0, 500,
+                    goto_cmd, 500, 500, 500,
+                    goto_cmd, 0, 500, 500,
+                    goto_cmd, 0, 0, 500,
+                    orientate_cmd, 0, 0
                     }; // Orientate to 0 degrees
   int num_commands = sizeof(commands) / sizeof(commands[0]);
   int i = 0;
@@ -316,7 +321,7 @@ void setup()
   Serial.println("=== PAMI ESP32 Setup ===");
 
   Serial.println("Setting motor pins...");
-  set_motor_pins(22, 21, 18, 19, 23, 17);
+  set_motor_pins(26, 21, 18, 19, 23, 17);
 
   set_ultrasonic_pins(14, 12);
 
@@ -327,7 +332,7 @@ void setup()
   set_PWM_min_max(1023, 240, 210, -240, -210);
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(62.30898219481361020034599237179, 62.978213772937668195714321289293, 98.165824014911968931516725271506);
+  set_wheel_diameter_and_spacing(57.342589790462290093200767685685, 57.342589790462290093200767685685, 94.002206253063886580011109075663);
   HAL_setup();
   
   // Initialize WebSocket if enabled
@@ -403,14 +408,19 @@ void setup()
   Serial.println("All tasks created successfully!");
   control_loop_state = DISACTIVATED;
   delay(1000);
-  strategy_waiting = 1;
+  strategy_waiting = 0;
+  //prepare_rotate(180, 0);
+  prepare_go_to(1000, 0, 500);
+  // while(1){
+  //   digitalWrite(21, HIGH);
+  // }
   //prepare_go_to(500, 0, 300);
   //set_target_encoder_counts(0, 0);
 }
 
 void loop(){
   // for(int i=0; i<100; i++){
-  //   set_target_speeds(i*2, i*2);
+  //   set_target_speeds(i*2, 0);
   //   send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
   //   delay(10);
   // }
@@ -423,6 +433,20 @@ void loop(){
   //   send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
   //   delay(10);
   // }
-  send_values_to_usart(encoder_count_L, encoder_count_R, target_encoder_count_L, target_encoder_count_R);
+  // for(int i=0; i<100; i++){
+  //   set_target_speeds(0, i*2);
+  //   send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
+  //   delay(10);
+  // }
+  // for(int i=0; i<200; i++){
+  //   send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
+  //   delay(10);
+  // }
+  // set_target_speeds(0, 0);
+  // for(int i=0; i<200; i++){
+  //   send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
+  //   delay(10);
+  // }
+  send_values_to_usart(current_speed_R, target_speed_R, current_speed_L, target_speed_L);
   delay(10);
 }
