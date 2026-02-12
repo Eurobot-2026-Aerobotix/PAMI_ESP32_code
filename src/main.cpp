@@ -133,16 +133,9 @@ void emergencyBreakTask(void *pvParameters)
   
   for (;;)
   {
-    if ((get_ultrasonic_distance() < min_distance && trajectory == STRAIGHT) ) 
+    if ((get_ultrasonic_distance() < min_distance && trajectory == STRAIGHT && wheel_state_R != EMERGENCY_BREAK && wheel_state_L != EMERGENCY_BREAK) ) 
     {
-      custom_delay(10);
-      if (get_ultrasonic_distance() < min_distance){ // berrasmi ?
-        custom_delay(10);
-        if (get_ultrasonic_distance() < min_distance){ // gouwallah
-          emergency_break();
-          Serial.println("Emergency break activated due to obstacle!");
-        }
-      }
+      prepare_emergency_break();
     }
 
     vTaskDelayUntil(&xLastWakeTime, xDelay);
@@ -333,7 +326,7 @@ void setup()
   set_PWM_min_max(1023, 240, 210, -240, -210);
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(57.342589790462290093200767685685, 57.342589790462290093200767685685, 94.002206253063886580011109075663);
+  set_wheel_diameter_and_spacing(57.342589790462290093200767685685, 57.342589790462290093200767685685, 92.938153961874487863117321276497);
   HAL_setup();
   
   // Initialize WebSocket if enabled
@@ -410,7 +403,7 @@ void setup()
   control_loop_state = DISACTIVATED;
   delay(1000);
   strategy_waiting = 1;
-  //prepare_rotate(180, 0);
+  // prepare_rotate(1800, 0);
   //prepare_go_to(1000, 0, 500);
   // while(1){
   //   digitalWrite(21, HIGH);
@@ -448,6 +441,6 @@ void loop(){
   //   send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
   //   delay(10);
   // }
-  send_values_to_usart(current_x, current_y, current_phi*100, debugger);
-  delay(10);
+  // send_values_to_usart(0, 0, 0, debugger*100);
+  // delay(10);
 }

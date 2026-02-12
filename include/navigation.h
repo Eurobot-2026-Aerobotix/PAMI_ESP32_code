@@ -58,3 +58,4 @@ bool is_idle();
 void set_target_encoder_counts(int32_t encoder__count_R, int32_t encoder__count_L);
 void wait_for_obstacle_clearance();
 void wait_for_idle();
+void prepare_emergency_break();
