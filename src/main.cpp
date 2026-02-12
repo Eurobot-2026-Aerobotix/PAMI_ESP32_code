@@ -48,7 +48,7 @@ void strategy()
   // Example: move forward, rotate, etc.
   // move_forward(100, 50); // Move 100mm at 50mm/s speed
   //custom_delay(500);
-  int goto_cmd = 0, orientate_cmd = 1;
+  int goto_cmd = 0, orientate_cmd = 1, set_position_cmd = 2;
    int commands[] = {//goto_cmd, 500, 0, 300, // Go to (0, 300) at 500mm/s speed
   //                   goto_cmd, 0, 0, 300,
   //                   goto_cmd, 0, 0, 300,
@@ -57,11 +57,10 @@ void strategy()
                     // goto_cmd, 1540, -70, 300,
                     // goto_cmd, 1595, 415, 200,
                     ////////
-                    goto_cmd, 150, 0, 500,
-                    goto_cmd, 150, 150, 500,
-                    goto_cmd, 0, 150, 500,
-                    goto_cmd, 0, 0, 500,
-                    orientate_cmd, 0, 0
+                    set_position_cmd, 337, 149, 0,
+                    goto_cmd, 1200, 350, 600,
+                    goto_cmd, 1955, 140, 500,
+                    goto_cmd, 1935, 635, 300,
                     }; // Orientate to 0 degrees
   int num_commands = sizeof(commands) / sizeof(commands[0]);
   int i = 0;
@@ -85,6 +84,13 @@ void strategy()
       int is_radian = commands[i + 2];
       orientate(angle, is_radian);
       i += 3;
+    }
+    else if (command_type == set_position_cmd) { 
+      int x = commands[i + 1]; 
+      int y = commands[i + 2]; 
+      int phi = commands[i + 3]; 
+      set_position(x, y, phi, phi); 
+      i += 4; 
     }
   }
   // 3. Send completion signal
@@ -375,14 +381,14 @@ void setup()
       1); // Pin to core 1
   Serial.println("PID task created");
 
-  // xTaskCreatePinnedToCore(
-  //     emergencyBreakTask,
-  //     "emergencyBreakTask",
-  //     2048, // Stack size
-  //     NULL,
-  //     2, // High priority
-  //     &emergencyBreakTaskHandle,
-  //     1); // Pin to core 1
+  xTaskCreatePinnedToCore(
+      emergencyBreakTask,
+      "emergencyBreakTask",
+      2048, // Stack size
+      NULL,
+      2, // High priority
+      &emergencyBreakTaskHandle,
+      1); // Pin to core 1
 
   // Create WebSocket task if enabled
   if (websocket_enabled == 1) {
@@ -404,7 +410,7 @@ void setup()
   delay(1000);
   strategy_waiting = 1;
   // prepare_rotate(1800, 0);
-  //prepare_go_to(1000, 0, 500);
+  //prepare_go_to(1000, 0, 300);
   // while(1){
   //   digitalWrite(21, HIGH);
   // }
@@ -441,6 +447,6 @@ void loop(){
   //   send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
   //   delay(10);
   // }
-  // send_values_to_usart(0, 0, 0, debugger*100);
-  // delay(10);
+  send_values_to_usart(is_idle()*100, target_encoder_count_L, encoder_count_L, 0);
+  delay(10);
 }
