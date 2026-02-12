@@ -60,14 +60,14 @@ float wheel_diameter_L;
 float wheels_spacing;
 
 // PID control parameters
-float kpS_R =0.5;
+float kpS_R = 0.6;
 float kdS_R = 0.0000;
 float kiS_R = 20;
 float speed_integral_R = 0;
 float speed_derivative_R = 0;
 float previous_speed_error_R = 0;
 
-float kpS_L = 0.5;
+float kpS_L = 0.6;
 float kdS_L = 0;
 float kiS_L = 20;
 float speed_integral_L = 0;
@@ -139,7 +139,8 @@ void set_wheel_diameter_and_spacing(float wheel__diameter_R, float wheel__diamet
     wheels_spacing = wheels__spacing;
 }
 void run_right_motor()
-{
+{   
+    
     int pwm = (PWM_R > 0) ? ((PWM_R < PWM_R_forward_min) ? 0 : PWM_R) : ((PWM_R > PWM_R_backward_min) ? 0 : PWM_R);
     pwm = constrain(pwm, -PWM_max, PWM_max);
     
@@ -180,6 +181,7 @@ void set_target_speeds(float target__speed_R, float target__speed_L)
     target_speed_R = target__speed_R;
     PWM_offset_L = (target__speed_L > 0) ? PWM_L_forward_min - 20 : PWM_L_backward_min + 20;
     target_speed_L = target__speed_L;
+    
 }
 void IRAM_ATTR encoderRISRA()
 {

@@ -39,14 +39,13 @@ void strategy()
     Serial.print(": ");
     Serial.println(crate_colors[i] ? "YELLOW" : "BLUE");
   }
+  
 
-  int goto_cmd = 0, orientate_cmd = 1, pickup_cmd = 3, putdown_cmd = 4, walking_position_cmd = 5, prepare_cmd = 6 , letgo_cmd = 7, go_backward_cmd = 8; 
-  int commands[] = {goto_cmd, 400, 0, 300, // Go to (0, 300) at 500mm/s speed
-                    pickup_cmd,1,1, 1,
-                    go_backward_cmd, 350, 0, 300,
-                    goto_cmd, 0, 0, 300,
-                    letgo_cmd,
-                    
+  int goto_cmd = 0, orientate_cmd = 1, pickup_cmd = 3, putdown_cmd = 4, walking_position_cmd = 5, prepare_cmd = 6 , letgo_cmd = 7, go_backward_cmd = 8, forward_cmd = 9, move_linear_cmd=10  ; 
+  int commands[] = { goto_cmd, 500, 0, 400, 1,
+                     //goto_cmd, 0, 0, 300, 1,
+                     //goto_cmd,0, -400, 300, -1, // Go to (0, 300) at 500mm/s speed
+                  
                     // goto_cmd, 0, 0, 500, // Go to (0, 0) at 500mm/s speed
                     // goto_cmd, 0, 0, 500, // go to (0, 0) at 500mm/s speed
                     // goto_backward_cmd, 0, 0, 500, // go backward to (0, 0) at 500mm/s speed
@@ -56,6 +55,37 @@ void strategy()
                     // walking_position_cmd, // go to walking position if coming from up
                     // putdown_cmd, // put_dowm
                     // prepare_cmd // prepare_servo_up
+
+                    //strategy yellow   :safe no electrovanne :
+                    //  goto_cmd, 425, 0, 400, 1,
+                    //  goto_cmd, 425, -45, 400, 1,
+                    //  pickup_cmd,1,1, 0,
+                    //  goto_cmd, 425, 20, 400,-1,
+                    //  goto_cmd, 0, -20, 400,1,
+                    //  letgo_cmd,
+                    // goto_cmd, 710,- 0, 500,
+                    // goto_cmd, 710, 25, 500,
+                    // pickup_cmd,1,1, 1,
+                    // goto_cmd, 710, 75, 500,
+                    // goto_cmd, -10, 75, 500,
+                    // letgo_cmd,
+                    // backward 200,75,100,
+                    // orientate_cmd, 90, 0,     angle ?
+                    // pickup_cmd, 1, 1, 1,
+                    // oriantate_cmd, 180, 0, // orientate to 90 degrees
+                    //letgo_cmd,
+                    //oriantate_cmd, -180, 0, // orientate to 90 degrees
+                    //pickup_cmd, 1, 1, 0, // pick up right and
+                    //goto_cmd, 400, 75, 500, // go to (0, 0) at 500mm/s speed
+                    //goto_cmd, 400, 275, 500, // go to (0, 0) at 500mm/s speed
+                    //letgo_cmd,
+
+
+
+
+
+
+
                   };
   int num_commands = sizeof(commands) / sizeof(commands[0]);
   int i = 0;
@@ -65,26 +95,13 @@ void strategy()
       int x = commands[i + 1];
       int y = commands[i + 2];
       int speed = commands[i + 3];
-      while(go_to(x, y, speed)){
+      int direction = commands[i + 4];
+      while(go_to(x, y, speed, direction)){
         wait_for_obstacle_clearance();
         Serial.println("obstacle cleared, resuming...");
       }
-      i += 4;
+      i += 5;
     }
-
-
-    else if (command_type == go_backward_cmd){
-      int x = commands[i + 1];
-      int y = commands[i + 2];
-      int speed = commands[i + 3];
-      while(go_backward_to(x, y, speed)){
-        wait_for_obstacle_clearance();
-        Serial.println("obstacle cleared, resuming...");
-      }
-      i += 4;
-    }
-
-
     else if (command_type == orientate_cmd){
       int angle = commands[i + 1];
       int is_radian = commands[i + 2];
@@ -105,6 +122,39 @@ void strategy()
     }else if (command_type == letgo_cmd){
       letgo();
       i++;
+    }
+    else if(command_type == forward_cmd){
+      int distance = commands[i + 1];
+      int speed = commands[i + 2];
+      int x = commands[i + 3];
+      int y = commands[i + 4];
+      int direction = commands[i + 5];
+      // while(go_backward_to(x, y, speed)){
+      //   wait_for_obstacle_clearance();
+      //   Serial.println("obstacle cleared, resuming...");
+      //   }
+      move_forward(distance,speed, x, y,direction);
+      i += 6;
+    }
+    
+    // else if(command_type == move_linear_cmd){
+    //   int distance = commands[i + 1];
+    //   int speed = commands[i + 2];
+    //   int x = commands[i + 3];
+    //   int y = commands[i + 4];
+    //   int direction = commands[i + 5];
+    //   // while(go_backward_to(x, y, speed)){
+    //   //   wait_for_obstacle_clearance();
+    //   //   Serial.println("obstacle cleared, resuming...");
+    //   //   }
+    //   int result = move_linear(distance, speed, x, y, 1); // direction = 1 for forward
+    //   i += 6;
+    // }
+
+    else{
+      Serial.print("Unknown command type: ");
+      Serial.println(command_type);
+      break; // Exit the loop on unknown command
     }
   }
   // 3. Send completion signal
@@ -270,6 +320,8 @@ void PIDTask(void *pvParameters){
   //  delay(10);
     run_right_motor();
     run_left_motor();
+   //send_values_to_usart(current_speed_R, current_speed_L, target_speed_R, target_speed_L);
+  // delay(10);
   // update target speeds in case they were changed by the command execution task
 //send_values_to_usart(encoder_count_R,encoder_count_L, 0, 0); // send encoder counts for debugging
    vTaskDelayUntil(&xLastWakeTime, xDelay);
@@ -362,7 +414,7 @@ void setup()
   set_PWM_min_max(1023, 100, 100, -100, -100); //yess    //130  120
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(48.010540902532529643705509312976,48.03641701598651936540633151267,122.54952192008523873083120849792); //   122.84370983629917196470781680778
+  set_wheel_diameter_and_spacing(47.317247893109677230077992933005,47.417944313397205804732340651526,120.5181194805959281481467603); //   122.84370983629917196470781680778
   HAL_setup();
 
 
@@ -440,9 +492,10 @@ void setup()
   Serial.println("All tasks created successfully!");
   control_loop_state = DISACTIVATED;
   delay(1000);
-  strategy_waiting = true;
+  strategy_waiting = 1;
   //prepare_go_to(400, -0, 300);
-  //prepare_rotate(3600, 0);
+  //prepare_rotate(180, 0);
+  //prepare_orientate(360, 0);
   //set_target_encoder_counts(0, 0);
 }
 void loop(){
@@ -463,6 +516,8 @@ void loop(){
   //  }
   // send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
   // delay(10);
-//    send_values_to_usart(debugger, 0, 0, 0);
-//    delay(10);
+  // send_values_to_usart(current_speed_R, current_speed_L, target_speed_R, target_speed_L);
+  // delay(10);
+ // send_values_to_usart(encoder_count_R, encoder_count_L, current_x, current_y); // send encoder counts and position for debugging
+  //delay(10);
 }
