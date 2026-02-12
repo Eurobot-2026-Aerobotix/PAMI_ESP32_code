@@ -56,9 +56,10 @@ void strategy()
                     // goto_cmd, 1100, 250, 300, // Go to (0, 0) at 500mm/s speed
                     // goto_cmd, 1540, -70, 300,
                     // goto_cmd, 1595, 415, 200,
-                    goto_cmd, 500, 0, 500,
-                    goto_cmd, 500, 500, 500,
-                    goto_cmd, 0, 500, 500,
+                    ////////
+                    goto_cmd, 150, 0, 500,
+                    goto_cmd, 150, 150, 500,
+                    goto_cmd, 0, 150, 500,
                     goto_cmd, 0, 0, 500,
                     orientate_cmd, 0, 0
                     }; // Orientate to 0 degrees
@@ -408,9 +409,9 @@ void setup()
   Serial.println("All tasks created successfully!");
   control_loop_state = DISACTIVATED;
   delay(1000);
-  strategy_waiting = 0;
+  strategy_waiting = 1;
   //prepare_rotate(180, 0);
-  prepare_go_to(1000, 0, 500);
+  //prepare_go_to(1000, 0, 500);
   // while(1){
   //   digitalWrite(21, HIGH);
   // }
@@ -447,6 +448,6 @@ void loop(){
   //   send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
   //   delay(10);
   // }
-  send_values_to_usart(current_speed_R, target_speed_R, current_speed_L, target_speed_L);
+  send_values_to_usart(current_x, current_y, current_phi*100, debugger);
   delay(10);
 }

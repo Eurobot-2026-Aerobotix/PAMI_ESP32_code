@@ -18,10 +18,7 @@ int min_distance = 70;
 int32_t previous_speed_control_time = 0;
 
 int move_forward(float distance, float speed, float target_point_x, float target_point_y){
-	while(!is_idle()){
-		custom_delay(10);
-		Serial.println("Waiting for idle before moving forward");
-	};
+	wait_for_idle();
 	custom_delay(200);
 	reset_speed_control_variables();
 	direction_R = 1;
@@ -70,7 +67,7 @@ int move_forward(float distance, float speed, float target_point_x, float target
 		float deviation_angle = normalize_angle(atan2(current_y - starting_y, current_x - starting_x) - atan2(target_point_y - starting_y, target_point_x - starting_x) );
 		float deviation_distance = (-1) * sqrt(SQR(current_y - starting_y) + SQR(current_x - starting_x)) * sin(deviation_angle); // positive to the left and negative to the right
 		float phi_correction_term = (phi_error) * ( 2 / ( MAX( ( abs(target_speed_R) + abs(target_speed_L) )/2, 100.0) /500.0) ); // the first coefficient is tunable
-		lane_correction_term = (deviation_distance) * ( 0.00 / ( MAX( ( abs(target_speed_R) + abs(target_speed_L) )/2, 100.0) /500.0)) + phi_correction_term; // the first coefficient is tunable
+		lane_correction_term = (deviation_distance) * ( 0.0 / ( MAX( ( abs(target_speed_R) + abs(target_speed_L) )/2, 100.0) /500.0)) + phi_correction_term; // the first coefficient is tunable
 		lane_correction_term = MIN(MAX(lane_correction_term, -0.2), 0.2); // the coefficient is tunable
 		debugger = deviation_distance;
 
@@ -81,12 +78,8 @@ int move_forward(float distance, float speed, float target_point_x, float target
 	}
 	// completing the last part of distance separately, so the break happens on point
 	// calculating the distance to move that  results in the robot being the closest to target point, i can't explain the math in code unfortunately
-	float x_closest = (target_point_y - current_y + tan(current_phi) * current_x - tan(current_phi - PI / 2) * target_point_x) / (tan(current_phi) - tan(current_phi - PI / 2));
-	float y_closest = tan(current_phi) * (x_closest - current_x) + current_y;
 	speed = (target_speed_R + target_speed_L) / 2;
 	speed = MAX(speed, 50);
-	distance_to_target = get_distance_to(x_closest, y_closest);
-	previous_distance_to_target = distance_to_target;
 	int32_t phase_two_start_time = micros();
 	while (distance_to_target > 1 && distance_to_target <= previous_distance_to_target){
 		float phi_error = normalize_angle(calculate_instant_target_phi(x, distance) - current_phi);
@@ -113,7 +106,8 @@ int move_forward(float distance, float speed, float target_point_x, float target
 		}
 	}
 	stop_motors();
-	set_target_encoder_counts(encoder_count_R, encoder_count_L - (calculate_instant_target_phi(distance, distance) - absolute_phi)*wheels_spacing*CPR / (wheel_diameter_L*PI) ); // the second part is there to fix any last minute fuck ups, concerning the phi
+	float phi_error = normalize_angle(calculate_instant_target_phi(x, distance) - current_phi);
+	set_target_encoder_counts(encoder_count_R, encoder_count_L - (phi_error)*wheels_spacing*CPR / (wheel_diameter_L*PI) ); // the second part is there to fix any last minute fuck ups, concerning the phi
 	wheel_state_R = DEAD_STOP;
 	wheel_state_L = DEAD_STOP;
 	return 0;
@@ -219,10 +213,7 @@ float calculate_instant_target_phi(float x, float distance)
 	return 0;
 }
 int rotate(float angle, int8_t is_radian){
-	while(!is_idle()){
-		custom_delay(10);
-		Serial.println("Waiting for idle before rotating");
-	};
+	wait_for_idle();
 	custom_delay(200);
 	reset_speed_control_variables();
 	float rotating_breaking_acceleration = breaking_acceleration;
@@ -333,6 +324,7 @@ int orientate(float orientation, int8_t is_radian)
 {
 	orientation = (is_radian) ? orientation : deg_to_rad(orientation);
 	int result = 0;
+	wait_for_idle();
 	if (abs(orientation - current_phi) > deg_to_rad(0.5)){
 		float angle = orientation - current_phi;
 		if (angle > PI){
@@ -348,12 +340,13 @@ int orientate(float orientation, int8_t is_radian)
 int go_to(float x, float y, float speed)
 {
 	float target_angle = get_angle_to(x, y);
+	wait_for_idle();
 	while (fabs(target_angle - current_phi) > deg_to_rad(0.5))
 	{
 		if (orientate(target_angle, 1)){
 			return 1;
 		}
-		custom_delay(10);
+		wait_for_idle();
 	}
 	
 	int result = move_forward(get_distance_to(x, y), speed, x, y) * 2; // why *2 ? cause fuck you
@@ -398,5 +391,14 @@ void set_target_encoder_counts(int32_t encoder__count_R, int32_t encoder__count_
 void wait_for_obstacle_clearance() {
 	while (get_ultrasonic_distance() < min_distance) {
 		custom_delay(100); // wait for 100 ms before checking again
+	}
+}
+void wait_for_idle(){
+	int start_time = millis();
+	while(!is_idle()){
+		custom_delay(10);
+		if (millis() - start_time > 1000){
+			break;
+		}
 	}
 }
