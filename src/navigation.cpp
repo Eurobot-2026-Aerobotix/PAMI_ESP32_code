@@ -275,6 +275,10 @@ int rotate(float angle, int8_t is_radian){
 			wheel_state_R = CONTROLLED_BREAK;
 			wheel_state_L = CONTROLLED_BREAK;
 		}
+		if (millis() - strategy_start_time >= max_running_time){
+			emergency_break();
+			return 1;
+		}
 
 		distance_traveled_R = fabs(encoder_count_R - starting_encoder_count_R) * wheel_diameter_R * PI / CPR;
 		distance_traveled_L = fabs(encoder_count_L - starting_encoder_count_L) * wheel_diameter_L * PI / CPR;
@@ -312,7 +316,11 @@ int rotate(float angle, int8_t is_radian){
 		custom_delay(2);
 		distance_to_target = (wheels_spacing/2) * fabs(target_phi - absolute_phi);
 		distance_to_target = MIN(distance_to_target, distance);
-
+		if (millis() - strategy_start_time >= max_running_time){
+			emergency_break();
+			return 1;
+		}
+		
 		if (micros() - phase_two_start_time > 3000000)
 		{
 			break;
@@ -396,6 +404,7 @@ void wait_for_obstacle_clearance() {
 	while (get_ultrasonic_distance() < min_distance) {
 		custom_delay(100); // wait for 100 ms before checking again
 	}
+	while(millis() - strategy_start_time >= max_running_time);
 }
 void wait_for_idle(){
 	int start_time = millis();

@@ -87,6 +87,7 @@ float kpP_L = 200;
 float kdP_L = 5;
 float kiP_L = 1000;
 float debugger = 0;
+int strategy_start_time = 1000000;
 
 void set_motor_pins(int right_forward, int right_backward, int left_forward, int left_backward, int right_enable, int left_enable)
 {

@@ -113,6 +113,8 @@ extern float kpP_L;
 extern float kdP_L;
 extern float kiP_L;
 extern float debugger;
+extern int strategy_start_time;
+const int max_running_time = 15000; // 10 seconds
 
 void set_motor_pins(int right_forward, int right_backward, int left_forward, int left_backward, int right_enable, int left_enable);
 void set_ultrasonic_pins(int trigger_pin, int echo_pin);
