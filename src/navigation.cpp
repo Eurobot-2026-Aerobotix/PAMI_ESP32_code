@@ -63,6 +63,13 @@ int move_forward(float distance, float speed, float target_point_x, float target
 			emergency_break();
 			return 1;
 		}
+		if (wheel_state_R == CRUISING && x > distance/2 && (PWM_R/MAX(fabs(current_speed_R), 10)>3) && (PWM_L/MAX(fabs(current_speed_L), 10)>3)){
+			emergency_break();
+			while(1){
+				delay(100);
+			}
+			return 1;
+		}
 		float phi_error = normalize_angle(calculate_instant_target_phi(x, distance) - current_phi);
 		float deviation_angle = normalize_angle(atan2(current_y - starting_y, current_x - starting_x) - atan2(target_point_y - starting_y, target_point_x - starting_x) );
 		float deviation_distance = (-1) * sqrt(SQR(current_y - starting_y) + SQR(current_x - starting_x)) * sin(deviation_angle); // positive to the left and negative to the right
