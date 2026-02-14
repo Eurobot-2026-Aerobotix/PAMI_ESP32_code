@@ -48,11 +48,9 @@ void strategy()
   // Example: move forward, rotate, etc.
   // move_forward(100, 50); // Move 100mm at 50mm/s speed
   //custom_delay(500);
-  int goto_cmd = 0, orientate_cmd = 1, set_position_cmd = 2;
-  int commands[] = {goto_cmd, 0, 400, 600,
-                    goto_cmd, -100, 400, 600,
-                    goto_cmd, 0, 0, 600,
-                    orientate_cmd, 0, 0,
+  int goto_cmd = 0, orientate_cmd = 1, set_position_cmd = 2, rotate_cmd = 3;
+  int commands[] = {set_position_cmd, 230, 110, 0,
+                    goto_cmd, 1070, 110, 500
                     }; // Orientate to 0 degrees
   int num_commands = sizeof(commands) / sizeof(commands[0]);
   int i = 0;
@@ -84,6 +82,12 @@ void strategy()
       int phi = commands[i + 3]; 
       set_position(x, y, phi, phi); 
       i += 4; 
+    }
+    else if (command_type == rotate_cmd) {
+      int angle = commands[i + 1];
+      int is_radian = commands[i + 2];
+      rotate(angle, is_radian);
+      i += 3;
     }
   }
   // 3. Send completion signal
@@ -271,7 +275,7 @@ void setup()
   Serial.println("=== PAMI ESP32 Setup ===");
 
   Serial.println("Setting motor pins...");
-  set_motor_pins(26, 21, 18, 19, 23, 17);
+  set_motor_pins(22, 21, 18, 19, 23, 17);
 
   set_ultrasonic_pins(14, 12);
 
@@ -282,7 +286,7 @@ void setup()
   set_PWM_min_max(1023, 240, 210, -240, -210);
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(57.342589790462290093200767685685, 57.342589790462290093200767685685, 92.938153961874487863117321276497);
+  set_wheel_diameter_and_spacing(57.342589790462290093200767685685, 57.342589790462290093200767685685, 96.159094571885845534577947027197);
   HAL_setup();
   
   // Initialize WebSocket if enabled
@@ -388,11 +392,6 @@ void loop(){
   //   send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
   //   delay(10);
   // }
-  if (millis() < 5000){
-    send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, debugger*100);
-    delay(10);
-  }else{
-    send_values_to_usart(current_x, current_y, current_phi*100, 0);
-    delay(10);
-  }
+  send_values_to_usart(current_x, current_y, current_phi*100, 0);
+  delay(10);
 }
