@@ -63,7 +63,14 @@ int move_forward(float distance, float speed, float target_point_x, float target
 			emergency_break();
 			return 1;
 		}
-		if (wheel_state_R == CRUISING && x > distance/2 && (PWM_R/MAX(fabs(current_speed_R), 10)>3) && (PWM_L/MAX(fabs(current_speed_L), 10)>3)){
+		if (wheel_state_R == CRUISING && x > distance/2 && (PWM_R/MAX(fabs(current_speed_R), 10)>3) && (PWM_L/MAX(fabs(current_speed_L), 10)>3) && ( (current_y > 550 && current_phi > deg_to_rad(50)) || (current_y < (3000 - 550) && current_phi < deg_to_rad(-50)))){
+			emergency_break();
+			while(1){
+				delay(100);
+			}
+			return 1;
+		}
+		if (wheel_state_R == CRUISING && (current_x > 1700) && ( (current_y > 610 && current_phi > deg_to_rad(50)) || (current_y < (3000 - 610) && current_phi < deg_to_rad(-50))) ){ // if the robot is going to cross the line y=600 with a wrong orientation, it means that it is going to crash into the wall, so we will make an emergency break
 			emergency_break();
 			while(1){
 				delay(100);
