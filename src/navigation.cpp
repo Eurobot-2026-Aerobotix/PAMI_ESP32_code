@@ -5,7 +5,7 @@ enum Wheel_state wheel_state_R = DEAD_STOP;
 enum Wheel_state wheel_state_L = DEAD_STOP;
 enum Trajectory trajectory = STRAIGHT;
 float ramping_acceleration = 2;
-float breaking_acceleration = -2;
+float breaking_acceleration = -4;
 float emergency_breaking_acceleration = -10;
 float rotating_speed = 200;
 
@@ -285,7 +285,8 @@ int rotate(float angle, int8_t is_radian){
 			yaw_centering_term = 0;
 		}
 		speed = calculate_instant_target_speed_R_full(x, distance, rotating_ramping_acceleration, rotating_breaking_acceleration);
-		speed = fabs(speed) * direction_R;
+		speed = MAX(fabs(speed), 100);
+		speed = speed * direction_R;
 		set_target_speeds(speed * (1 - yaw_centering_term), -speed * (1 + yaw_centering_term));
 		custom_delay(4);
 		previous_distance_to_target = distance_to_target;

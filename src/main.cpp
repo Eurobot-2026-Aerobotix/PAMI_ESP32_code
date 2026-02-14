@@ -49,7 +49,10 @@ void strategy()
   // move_forward(100, 50); // Move 100mm at 50mm/s speed
   //custom_delay(500);
   int goto_cmd = 0, orientate_cmd = 1, set_position_cmd = 2;
-  int commands[] = {goto_cmd, 500, 0, 500
+  int commands[] = {goto_cmd, 0, 400, 600,
+                    goto_cmd, -100, 400, 600,
+                    goto_cmd, 0, 0, 600,
+                    orientate_cmd, 0, 0,
                     }; // Orientate to 0 degrees
   int num_commands = sizeof(commands) / sizeof(commands[0]);
   int i = 0;
@@ -385,6 +388,11 @@ void loop(){
   //   send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
   //   delay(10);
   // }
-  send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, debugger*100);
-  delay(10);
+  if (millis() < 5000){
+    send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, debugger*100);
+    delay(10);
+  }else{
+    send_values_to_usart(current_x, current_y, current_phi*100, 0);
+    delay(10);
+  }
 }
