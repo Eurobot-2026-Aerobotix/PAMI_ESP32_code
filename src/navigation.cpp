@@ -350,7 +350,7 @@ int go_to(float x, float y, float speed)
 {
 	float target_angle = get_angle_to(x, y);
 	wait_for_idle();
-	while (fabs(target_angle - current_phi) > deg_to_rad(2))
+	while (fabs(normalize_angle(target_angle - current_phi)) > deg_to_rad(2))
 	{
 		if (orientate(target_angle, 1)){
 			return 1;
