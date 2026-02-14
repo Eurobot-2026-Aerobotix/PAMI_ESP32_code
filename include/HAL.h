@@ -112,7 +112,7 @@ extern float kiP_R;
 extern float kpP_L;
 extern float kdP_L;
 extern float kiP_L;
-extern float debugger;
+extern volatile float debugger;
 extern int strategy_start_time;
 const int max_running_time = 15000; // 10 seconds
 

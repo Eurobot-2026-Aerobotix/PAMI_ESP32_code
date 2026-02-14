@@ -9,19 +9,18 @@ float absolute_phi = 0;
 int32_t previous_encoder_count_R = 0;
 int32_t previous_encoder_count_L = 0;
 
-void update_speed(){
-	float dt = (micros() - speedCalculationPreviousTime);
-    current_speed_L = current_speed_L*0.95 + 0.05*(encoder_count_L - previous_encoder_count_L)*(wheel_diameter_L * PI / CPR * directionL)*1000000 / dt;
-	current_speed_R = current_speed_R*0.95 + 0.05*(encoder_count_R - previous_encoder_count_R)*(wheel_diameter_R * PI / CPR * directionR)*1000000 / dt;
+void update_speed(float dt){
+    current_speed_L = current_speed_L*0.95 + 0.05*(encoder_count_L - previous_encoder_count_L)*(wheel_diameter_L * PI / CPR * directionL) / dt;
+	current_speed_R = current_speed_R*0.95 + 0.05*(encoder_count_R - previous_encoder_count_R)*(wheel_diameter_R * PI / CPR * directionR) / dt;
 	speedCalculationPreviousTime = micros();
 }
 
-void update_position(){
+void update_position(float dt){
 	
 	encoder_count_L = encoder_get_L();
 	encoder_count_R = encoder_get_R();
 
-	update_speed();
+	update_speed(dt);
 	float dR = ticks_to_distance(encoder_count_R - previous_encoder_count_R, wheel_diameter_R);
 	float dL = ticks_to_distance(encoder_count_L - previous_encoder_count_L, wheel_diameter_L);
 	float dC = (dR+dL)/2;
