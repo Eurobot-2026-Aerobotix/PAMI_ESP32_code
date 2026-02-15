@@ -6,6 +6,7 @@ float current_x = 63;
 float current_y = 675;
 float current_phi = deg_to_rad(90);    
 float absolute_phi = deg_to_rad(90);
+float phi_offset = 0;  // Offset to align encoder frame with world frame
 int32_t previous_encoder_count_R = 0;
 int32_t previous_encoder_count_L = 0;
 
@@ -29,7 +30,8 @@ void update_position(){
 	previous_encoder_count_L = encoder_count_L;
 
 	float previous_absolute_phi = absolute_phi;
-	absolute_phi = ( ticks_to_distance(encoder_count_R, wheel_diameter_R) - ticks_to_distance(encoder_count_L, wheel_diameter_L) )/wheels_spacing;
+	float encoder_phi = ( ticks_to_distance(encoder_count_R, wheel_diameter_R) - ticks_to_distance(encoder_count_L, wheel_diameter_L) )/wheels_spacing;
+	absolute_phi = encoder_phi + phi_offset;
 
 	current_x += dC*cos( ( previous_absolute_phi + absolute_phi ) / 2 );
 	current_y += dC*sin( ( previous_absolute_phi + absolute_phi ) / 2 );
@@ -47,12 +49,16 @@ void reset_position(){
 	current_y = 0;
 	current_phi = 0;
 	absolute_phi = 0;
+	phi_offset = 0;
 }
 void set_position(float current__x, float current__y, float current__phi, float absolute__phi){
 	current_x = current__x;
 	current_y = current__y;
 	current_phi = current__phi;
 	absolute_phi = absolute__phi;
+	// Calculate offset between desired angle and current encoder angle
+	float encoder_phi = ( ticks_to_distance(encoder_get_R(), wheel_diameter_R) - ticks_to_distance(encoder_get_L(), wheel_diameter_L) )/wheels_spacing;
+	phi_offset = absolute__phi - encoder_phi;
 }
 float get_distance_to(float x, float y){
 	return sqrt(SQR(current_x - x) + SQR(current_y - y));
