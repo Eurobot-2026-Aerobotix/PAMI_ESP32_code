@@ -57,10 +57,10 @@ void strategy()
                     // goto_cmd, 1540, -70, 300,
                     // goto_cmd, 1595, 415, 200,
                     ////////
-                    set_position_cmd, 337, 149, 0,
-                    goto_cmd, 1200, 350, 600,
-                    goto_cmd, 1955, 140, 500,
-                    goto_cmd, 1935, 635, 300,
+                    // set_position_cmd, 337, 149, 0,
+                    // goto_cmd, 1200, 350, 600,
+                    // goto_cmd, 1955, 140, 500,
+                    // goto_cmd, 1935, 635, 300,
                     }; // Orientate to 0 degrees
   int num_commands = sizeof(commands) / sizeof(commands[0]);
   int i = 0;
@@ -244,6 +244,8 @@ void PIDTask(void *pvParameters){
       previous_position_error_L = error;
       previous_position_control_time = micros();
     }
+    // PWM_R = 300;
+    // PWM_L = 300;
     run_right_motor();
     run_left_motor();
 
@@ -322,7 +324,7 @@ void setup()
   Serial.println("=== PAMI ESP32 Setup ===");
 
   Serial.println("Setting motor pins...");
-  set_motor_pins(26, 21, 18, 19, 23, 17);
+  set_motor_pins(22, 26, 19, 18, 23, 17);
 
   set_ultrasonic_pins(14, 12);
 
@@ -333,7 +335,7 @@ void setup()
   set_PWM_min_max(1023, 240, 210, -240, -210);
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(57.342589790462290093200767685685, 57.342589790462290093200767685685, 92.938153961874487863117321276497);
+  set_wheel_diameter_and_spacing(57.844475682412635014651419709637, 57.784471039588555517748254336494, 92.938153961874487863117321276497);
   HAL_setup();
   
   // Initialize WebSocket if enabled
@@ -409,7 +411,8 @@ void setup()
   Serial.println("All tasks created successfully!");
   control_loop_state = DISACTIVATED;
   delay(1000);
-  strategy_waiting = 1;
+  strategy_waiting = 0;
+  prepare_go_to(300, 0, 300);
   // prepare_rotate(1800, 0);
   //prepare_go_to(1000, 0, 300);
   // while(1){
@@ -448,6 +451,6 @@ void loop(){
   //   send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
   //   delay(10);
   // }
-  send_values_to_usart(is_idle()*100, target_encoder_count_L, encoder_count_L, 0);
+  send_values_to_usart(encoder_count_R, encoder_count_L, 0, 0);
   delay(10);
 }
