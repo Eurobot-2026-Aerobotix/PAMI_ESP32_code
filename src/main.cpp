@@ -49,12 +49,11 @@ void strategy()
   // move_forward(100, 50); // Move 100mm at 50mm/s speed
   //custom_delay(500);
   int goto_cmd = 0, orientate_cmd = 1, set_position_cmd = 2;
-  int commands[] = {set_position_cmd, 337, 149, 0,
-                    goto_cmd, 1200, 350, 600,
-                    goto_cmd, 1955, 140, 600,
-                    goto_cmd, 1910, 1000, 400,
-                    }; // Orientate to 0 degrees
-  int num_commands = sizeof(commands) / sizeof(commands[0]);
+  
+  // Use global commands array received from ROS2
+  extern int commands[];
+  extern size_t commands_count;
+  int num_commands = commands_count;
   int i = 0;
   strategy_start_time = millis();
   while (i < num_commands)
@@ -298,17 +297,17 @@ void setup()
   Serial.println("Creating tasks...");
 
   //Create tasks with lower stack sizes first
-  //   xTaskCreatePinnedToCore(
-  //    communicationTask,
-  //     "communicationTask",
-  //     8192,
-  //     NULL,
-  //     1, // Lower priority
-  //      &communicationTaskHandle,
-  //      0); // Pin to core 0
+    xTaskCreatePinnedToCore(
+     communicationTask,
+      "communicationTask",
+      8192,
+      NULL,
+      1, // Lower priority
+       &communicationTaskHandle,
+       0); // Pin to core 0
 
-  //  delay(500); // Delay between task creation
-  //  Serial.println("Communication task created");
+   delay(500); // Delay between task creation
+   Serial.println("Communication task created");
 
   xTaskCreatePinnedToCore(
       commandExecutionTask,
@@ -356,7 +355,7 @@ void setup()
   Serial.println("All tasks created successfully!");
   control_loop_state = DISACTIVATED;
   delay(1000);
-  strategy_waiting = 1;
+  strategy_waiting = 0;
 }
 
 void loop(){
@@ -388,6 +387,6 @@ void loop(){
   //   send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
   //   delay(10);
   // }
-  send_values_to_usart(current_speed_L, current_speed_R, PWM_L*100/current_speed_L, PWM_R*100/current_speed_R);
-  delay(10);
+  //send_values_to_usart(current_speed_L, current_speed_R, PWM_L*100/current_speed_L, PWM_R*100/current_speed_R);
+  vTaskDelay(pdMS_TO_TICKS(10));
 }

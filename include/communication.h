@@ -58,6 +58,12 @@ extern std_msgs__msg__Int32 action_done_msg;
 extern bool micro_ros_init_successful;
 extern enum CommunicationState comm_state;
 extern bool strategy_waiting;
+
+// Strategy data arrays
+extern float received_floats[100];
+extern size_t received_floats_count;
+extern int commands[100];
+extern size_t commands_count;
 // Core functions
 bool setup_micro_ros(const char *wifi_ssid, const char *wifi_password, const char *agent_ip, int agent_port);
 void communication_loop();
