@@ -27,13 +27,11 @@ TaskHandle_t emergencyBreakTaskHandle;
 int websocket=0;
 
 // Custom strategy implementation
-void strategy()
-{
+void strategy(){
   Serial.println("PAMI Robot Strategy Started!");
 
   Serial.println("Current crate colors:");
-  for (int i = 0; i < 8; i++)
-  {
+  for (int i = 0; i < 8; i++){
     Serial.print("Crate ");
     Serial.print(i + 1);
     Serial.print(": ");
@@ -54,8 +52,6 @@ void strategy()
   int num_commands = sizeof(commands) / sizeof(commands[0]);
   int i = 0;
   strategy_start_time = millis();
-  while (i < num_commands)
-  {
   while (i < num_commands){
     int command_type = commands[i];
     if (command_type == goto_cmd){

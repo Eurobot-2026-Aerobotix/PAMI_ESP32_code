@@ -1,5 +1,3 @@
-#pragma once
-
 #include "odometry.h"
 
 float current_x = 0;
