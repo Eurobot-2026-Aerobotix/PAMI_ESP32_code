@@ -61,19 +61,28 @@ void strategy()
                     // prepare_cmd // prepare_servo_up
 
                     //strategy yellow   :safe no electrovanne :
-                     goto_cmd, 425, 0, 400, 1,
-                    goto_cmd, 425, -45, 400, 1,
+                    goto_cmd, 700, 0, 400, 1,
+                    goto_cmd, 700, -70, 400, 1,
                      pickup_cmd,1,1, 0,
-                     goto_cmd, 425, 20, 400,-1,
-                     goto_cmd, 0, -20, 400,1,
+                     goto_cmd, 700, 0, 400,-1,
+                     goto_cmd, 0, 0, 400,1,
                      putdown_cmd,
-                      goto_cmd, 175,-20, 400,-1,
-                      goto_cmd, 175,-90, 400,1,
+
+                      goto_cmd, 450,0, 400,-1,
+                      goto_cmd, 450,-100, 400,1,
                      pickup_cmd,1,1, 0,
-                     goto_cmd, 175, -30, 400,-1,
-                     goto_cmd, 0, -30, 400,1,
+                     goto_cmd, 450, -80, 400,-1,
+                     goto_cmd, 0, -80, 400,1,
                     putdown_cmd,
-                     goto_cmd, 200,75,100,
+                     
+                     goto_cmd, 200,-80,400,-1,
+                     goto_cmd, 200,-130,400,1,
+                     pickup_cmd,1,1, 1,
+                    goto_cmd, 250,0,400,-1,
+                    goto_cmd, 150,0,400,1,
+                    putdown_cmd,
+
+
                     // orientate_cmd, 90, 0,     angle ?
                     // pickup_cmd, 1, 1, 1,
                     // oriantate_cmd, 180, 0, // orientate to 90 degrees
