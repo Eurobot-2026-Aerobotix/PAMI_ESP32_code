@@ -48,11 +48,11 @@ void strategy()
   // Example: move forward, rotate, etc.
   // move_forward(100, 50); // Move 100mm at 50mm/s speed
   //custom_delay(500);
-  int goto_cmd = 0, orientate_cmd = 1, set_position_cmd = 2;
-  int commands[] = {goto_cmd, 0, 400, 600,
-                    goto_cmd, -100, 400, 600,
-                    goto_cmd, 0, 0, 600,
-                    orientate_cmd, 0, 0,
+  int goto_cmd = 0, orientate_cmd = 1, set_position_cmd = 2, rotate_cmd = 3;
+  int commands[] = {set_position_cmd, 337, 149, 0,
+                    goto_cmd, 1200, 350, 600,
+                    goto_cmd, 1955, 140, 600,
+                    goto_cmd, 1910, 1000, 400,
                     }; // Orientate to 0 degrees
   int num_commands = sizeof(commands) / sizeof(commands[0]);
   int i = 0;
@@ -84,6 +84,12 @@ void strategy()
       int phi = commands[i + 3]; 
       set_position(x, y, phi, phi); 
       i += 4; 
+    }
+    else if (command_type == rotate_cmd) {
+      int angle = commands[i + 1];
+      int is_radian = commands[i + 2];
+      rotate(angle, is_radian);
+      i += 3;
     }
   }
   // 3. Send completion signal
@@ -282,7 +288,7 @@ void setup()
   set_PWM_min_max(1023, 240, 210, -240, -210);
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(57.342589790462290093200767685685, 57.342589790462290093200767685685, 92.938153961874487863117321276497);
+  set_wheel_diameter_and_spacing(57.342589790462290093200767685685, 57.342589790462290093200767685685, 96.10775735864049319703153010137);
   HAL_setup();
   
   // Initialize WebSocket if enabled
@@ -360,18 +366,6 @@ void setup()
 }
 
 void loop(){
-  PWM_L = 500;
-  PWM_R = 500;
-  delay(1000);
-  PWM_L = -500;
-  PWM_R = -500;
-  delay(1000);
-  PWM_L = 0;
-  PWM_R = 500;
-  delay(1000);
-  PWM_L = 500;
-  PWM_R = 0;
-  delay(1000);
   // for(int i=0; i<100; i++){
   //   set_target_speeds(i*2, 0);
   //   send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
