@@ -271,7 +271,7 @@ void setup()
   Serial.println("=== PAMI ESP32 Setup ===");
 
   Serial.println("Setting motor pins...");
-  set_motor_pins(26, 21, 18, 19, 23, 17);
+  set_motor_pins(22, 21, 18, 19, 23, 17);
 
   set_ultrasonic_pins(14, 12);
 
@@ -360,6 +360,18 @@ void setup()
 }
 
 void loop(){
+  PWM_L = 500;
+  PWM_R = 500;
+  delay(1000);
+  PWM_L = -500;
+  PWM_R = -500;
+  delay(1000);
+  PWM_L = 0;
+  PWM_R = 500;
+  delay(1000);
+  PWM_L = 500;
+  PWM_R = 0;
+  delay(1000);
   // for(int i=0; i<100; i++){
   //   set_target_speeds(i*2, 0);
   //   send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
@@ -388,11 +400,11 @@ void loop(){
   //   send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
   //   delay(10);
   // }
-  if (millis() < 5000){
-    send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, debugger*100);
-    delay(10);
-  }else{
-    send_values_to_usart(current_x, current_y, current_phi*100, 0);
-    delay(10);
-  }
+  // if (millis() < 5000){
+  //   send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, debugger*100);
+  //   delay(10);
+  // }else{
+  //   send_values_to_usart(current_x, current_y, current_phi*100, 0);
+  //   delay(10);
+  // }
 }
