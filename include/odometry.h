@@ -16,8 +16,8 @@ extern float absolute_phi; // phi without modulo 2PI
 extern int32_t previous_encoder_count_R;
 extern int32_t previous_encoder_count_L;
 
-void update_speed();
-void update_position();
+void update_speed(float dt);
+void update_position(float dt);
 void reset_position();
 void set_position(float current__x, float current__y, float current__phi, float absolute__phi);
 float get_distance_to(float x, float y);

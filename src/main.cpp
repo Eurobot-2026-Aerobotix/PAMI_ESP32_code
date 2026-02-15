@@ -48,11 +48,12 @@ void strategy()
   // Example: move forward, rotate, etc.
   // move_forward(100, 50); // Move 100mm at 50mm/s speed
   //custom_delay(500);
-  int goto_cmd = 0, orientate_cmd = 1, set_position_cmd = 2;
-   int commands[] = {//goto_cmd, 500, 0, 300, // Go to (0, 300) at 500mm/s speed
-  //                   goto_cmd, 0, 0, 300,
-  //                   goto_cmd, 0, 0, 300,
-  //                   orientate_cmd, 0, 0,
+  int goto_cmd = 0, orientate_cmd = 1, set_position_cmd = 2, rotate_cmd = 3;
+   int commands[] = {  goto_cmd, 500, 0, 300, // Go to (0, 300) at 500mm/s speed
+                       //rotate_cmd, 90, 0,
+  //                   goto_cmd, 0, 0, 300,                  
+                      //  orientate_cmd, 180, 0,
+                      //  goto_cmd, 0, 0, 300,
                     // goto_cmd, 1100, 250, 300, // Go to (0, 0) at 500mm/s speed
                     // goto_cmd, 1540, -70, 300,
                     // goto_cmd, 1595, 415, 200,
@@ -92,6 +93,11 @@ void strategy()
       int phi = commands[i + 3]; 
       set_position(x, y, phi, phi); 
       i += 4; 
+    }
+    else if (command_type == rotate_cmd){
+      int angle = commands[i + 1];
+      int is_radian = commands[i + 2];
+      rotate(angle, is_radian);
     }
   }
   // 3. Send completion signal
@@ -166,7 +172,9 @@ void PIDTask(void *pvParameters){
       continue;
     }
 
-    update_position();
+    float dt = 0.001;
+    update_position(dt);
+
 
     // right motor speed control
     if (control_loop_state == SPEED){
@@ -217,7 +225,7 @@ void PIDTask(void *pvParameters){
       // right motor position control
       float error = (target_encoder_count_R - encoder_count_R)*2; 
 
-      position_derivative_R = (error - previous_position_error_R)*dt; // unit = tick/s²
+      position_derivative_R = (error - previous_position_error_R) / dt; // unit = tick/s²
 
       position_integral_R = ( SGN(error) == SGN( previous_position_error_R ) )? position_integral_R + error*dt : 0;
 
@@ -231,7 +239,7 @@ void PIDTask(void *pvParameters){
       // left motor position control
       error = (target_encoder_count_L - encoder_count_L);
 
-      position_derivative_L = (error - previous_position_error_L)*dt; // unit = mm/s²
+      position_derivative_L = (error - previous_position_error_L) / dt; // unit = mm/s²
       position_integral_L = ( SGN(error) == SGN( previous_position_error_L) )? position_integral_L + error*dt : 0;
 
       previous_position_error_L = error;
@@ -335,7 +343,8 @@ void setup()
   set_PWM_min_max(1023, 240, 210, -240, -210);
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(57.844475682412635014651419709637, 57.784471039588555517748254336494, 92.938153961874487863117321276497);
+  set_wheel_diameter_and_spacing(57.515983564443332492627069881652, 57.515983564443332492627069881652, 92.9958153961874487863117321276497);
+  //set_wheel_diameter_and_spacing(57.767349714836084834631884483357, 58.416421059946602641762579814631, 92.938153961874487863117321276497);
   HAL_setup();
   
   // Initialize WebSocket if enabled
@@ -411,8 +420,8 @@ void setup()
   Serial.println("All tasks created successfully!");
   control_loop_state = DISACTIVATED;
   delay(1000);
-  strategy_waiting = 0;
-  prepare_go_to(300, 0, 300);
+  strategy_waiting = 1;
+  // prepare_go_to(300, 0, 300);
   // prepare_rotate(1800, 0);
   //prepare_go_to(1000, 0, 300);
   // while(1){
