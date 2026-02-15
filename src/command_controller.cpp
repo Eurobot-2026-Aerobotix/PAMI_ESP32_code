@@ -4,30 +4,6 @@ std::unordered_map<std::string, float> arguments;
 enum Command current_command = NONE;
 std::mutex robot_state_mutex;
 
-void prepare_move_forward(float distance, float speed)
-{
-    /*
-    while (!robot_state_mutex.try_lock())
-    {
-        vTaskDelay(1);
-    }
-    */
-    arguments["distance"] = distance;
-    arguments["speed"] = speed;
-    current_command = MOVIN_FORWARD;
-}
-void prepare_move_backward(float distance, float speed)
-{
-    /*
-    while (!robot_state_mutex.try_lock())
-    {
-        vTaskDelay(1);
-    }
-    */
-    arguments["distance"] = distance;
-    arguments["speed"] = speed;
-    current_command = MOVIN_BACKWARD;
-}
 void prepare_rotate(float angle, int8_t is_radian)
 {
     /*
@@ -69,12 +45,6 @@ void execute_command()
 {
     switch (current_command)
     {
-    case MOVIN_FORWARD:
-        move_forward(arguments["distance"], arguments["speed"]);
-        break;
-    case MOVIN_BACKWARD:
-        move_backward(arguments["distance"], arguments["speed"]);
-        break;
     case ROTATIN:
         rotate(arguments["angle"], (int8_t)arguments["is_radian"]);
         break;

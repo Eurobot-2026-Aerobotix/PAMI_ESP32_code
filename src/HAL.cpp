@@ -38,10 +38,7 @@ int CPR;
 // global variables
 volatile int32_t encoder_count_R;
 volatile int32_t encoder_count_L;
-volatile int32_t speedCalculationPreviousTimeR;
-volatile int32_t speedCalculationCurrentTimeR;
-volatile int32_t speedCalculationPreviousTimeL;
-volatile int32_t speedCalculationCurrentTimeL;
+volatile int32_t speedCalculationPreviousTime;
 float direction_R;
 float direction_L;
 float directionR;
@@ -63,16 +60,16 @@ float wheel_diameter_L;
 float wheels_spacing;
 
 // PID control parameters
-float kpS_R = 6;
+float kpS_R = 3;
 float kdS_R = 0.0000;
-float kiS_R = 10;
+float kiS_R = 40;
 float speed_integral_R = 0;
 float speed_derivative_R = 0;
 float previous_speed_error_R = 0;
 
-float kpS_L = 6;//0
+float kpS_L = 3;
 float kdS_L = 0;
-float kiS_L = 10;//3
+float kiS_L = 40;
 float speed_integral_L = 0;
 float speed_derivative_L = 0;
 float previous_speed_error_L = 0;
@@ -80,7 +77,7 @@ float previous_speed_error_L = 0;
 float previous_position_error_R = 0;
 float previous_position_error_L = 0;
 int32_t previous_position_control_time = 0;
-float position_max_response = 100;
+float position_max_response = 150;
 float position_integral_R = 0;
 float position_derivative_R = 0;
 float position_integral_L = 0;
@@ -89,13 +86,15 @@ int32_t target_encoder_count_R = 0;
 int32_t target_encoder_count_L = 0;
 
 // position control parameters
-float kpP_R = 10;
+float kpP_R = 200;
 float kdP_R = 5;
-float kiP_R = 60;
+float kiP_R = 1000;
 
-float kpP_L = 10;
+float kpP_L = 200;
 float kdP_L = 5;
 float kiP_L = 60;
+volatile float debugger = 0;
+int strategy_start_time = 1000000;
 
 int servo_positions[6] = {90, 80, 50, 30, 20, 0};
 bool ultrasonic_blocked = true;
@@ -178,9 +177,9 @@ void run_left_motor()
 }
 void set_target_speeds(float target__speed_R, float target__speed_L)
 {
-    PWM_offset_R = (target__speed_R > 0) ? PWM_R_forward_min - 30 : PWM_R_backward_min + 30;
+    PWM_offset_R = (target__speed_R > 0) ? PWM_R_forward_min - 20 : PWM_R_backward_min + 20;
     target_speed_R = target__speed_R;
-    PWM_offset_L = (target__speed_L > 0) ? PWM_L_forward_min - 30 : PWM_L_backward_min + 30;
+    PWM_offset_L = (target__speed_L > 0) ? PWM_L_forward_min - 20 : PWM_L_backward_min + 20;
     target_speed_L = target__speed_L;
 }
 void IRAM_ATTR encoderRISRA()
@@ -188,34 +187,22 @@ void IRAM_ATTR encoderRISRA()
     if (FAST_READ(encoderRB) == FAST_READ(encoderRA))
     {
         encoder_count_R--;
-        directionR = -1;
     }
     else
     {
         encoder_count_R++;
-        directionR = 1;
     }
-    speedCalculationPreviousTimeR = speedCalculationCurrentTimeR;
-    speedCalculationCurrentTimeR = micros();
-
-    // optimise by replacing (wheel_diameter_R*PI/CPR * direction_R) by a constant factors
-    current_speed_R = (wheel_diameter_R * PI / CPR * directionR)*1000000 / (speedCalculationCurrentTimeR - speedCalculationPreviousTimeR);
 }
 void IRAM_ATTR encoderLISRA()
 {
     if (FAST_READ(encoderLB) == FAST_READ(encoderLA))
     {
         encoder_count_L++;
-        directionL = 1;
     }
     else
     {
         encoder_count_L--;
-        directionL = -1;
     }
-    speedCalculationPreviousTimeL = speedCalculationCurrentTimeL;
-    speedCalculationCurrentTimeL = micros();
-    current_speed_L = (wheel_diameter_L * PI / CPR * directionL)*1000000 / (speedCalculationCurrentTimeL - speedCalculationPreviousTimeL);
 }
 void send_values_to_usart(float value1, float value2, float value3, float value4)
 {
@@ -278,6 +265,70 @@ void stop_motors()
         custom_delay(10);
     }
     set_target_speeds(0, 0);
+}
+
+void encoder_init() {
+  pcnt_config_t pcnt_config_1 = {
+    .pulse_gpio_num = encoderRB,
+    .ctrl_gpio_num  = encoderRA,
+
+    .lctrl_mode = PCNT_MODE_REVERSE,
+    .hctrl_mode = PCNT_MODE_KEEP,
+
+    .pos_mode = PCNT_COUNT_INC,
+    .neg_mode = PCNT_COUNT_DIS,
+
+    .counter_h_lim = 32767,
+    .counter_l_lim = -32768,
+
+    .unit    = PCNT_UNIT_0,
+    .channel = PCNT_CHANNEL_0
+  };
+
+  pcnt_unit_config(&pcnt_config_1);
+  pcnt_set_filter_value(PCNT_UNIT_0, 100);
+  pcnt_filter_enable(PCNT_UNIT_0);
+
+  pcnt_counter_pause(PCNT_UNIT_0);
+  pcnt_counter_clear(PCNT_UNIT_0);
+  pcnt_counter_resume(PCNT_UNIT_0);
+
+  pcnt_config_t pcnt_config_2 = {
+    .pulse_gpio_num = encoderLA,
+    .ctrl_gpio_num  = encoderLB,
+
+    .lctrl_mode = PCNT_MODE_REVERSE,
+    .hctrl_mode = PCNT_MODE_KEEP,
+
+    .pos_mode = PCNT_COUNT_INC,
+    .neg_mode = PCNT_COUNT_DIS,
+
+    .counter_h_lim = 32767,
+    .counter_l_lim = -32768,
+
+    .unit    = PCNT_UNIT_1,
+    .channel = PCNT_CHANNEL_1
+  };
+
+  pcnt_unit_config(&pcnt_config_2);
+  pcnt_set_filter_value(PCNT_UNIT_1, 100);
+  pcnt_filter_enable(PCNT_UNIT_1);
+
+  pcnt_counter_pause(PCNT_UNIT_1);
+  pcnt_counter_clear(PCNT_UNIT_1);
+  pcnt_counter_resume(PCNT_UNIT_1);
+}
+
+int16_t encoder_get_R() {
+  int16_t count;
+  pcnt_get_counter_value(PCNT_UNIT_0, &count);
+  return count;
+}
+
+int16_t encoder_get_L() {
+  int16_t count;
+  pcnt_get_counter_value(PCNT_UNIT_1, &count);
+  return count;
 }
 void move_servo(int position){
     servo.write(servo_positions[position]);
@@ -342,10 +393,7 @@ void HAL_setup()
     ledcAttachPin(motorLEN, motorLEN_channel);
 
     // Global variables
-    speedCalculationCurrentTimeR = micros();
-    speedCalculationPreviousTimeR = speedCalculationCurrentTimeR;
-    speedCalculationCurrentTimeL = speedCalculationCurrentTimeR;
-    speedCalculationPreviousTimeL = speedCalculationCurrentTimeR;
+    speedCalculationPreviousTime = micros() - 999;
     current_speed_L = 0;
     current_speed_R = 0;
     direction_R = 1;
@@ -354,8 +402,9 @@ void HAL_setup()
     directionL = 1;
 
     // Interrupts
-    attachInterrupt(digitalPinToInterrupt(encoderRA), encoderRISRA, CHANGE);
-    attachInterrupt(digitalPinToInterrupt(encoderLA), encoderLISRA, CHANGE);
+    //attachInterrupt(digitalPinToInterrupt(encoderRA), encoderRISRA, CHANGE);
+    //attachInterrupt(digitalPinToInterrupt(encoderLA), encoderLISRA, CHANGE);
+    encoder_init();
 }
 void custom_delay(int ms)
 {

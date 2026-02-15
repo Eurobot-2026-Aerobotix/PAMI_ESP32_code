@@ -16,7 +16,8 @@ extern float absolute_phi; // phi without modulo 2PI
 extern int32_t previous_encoder_count_R;
 extern int32_t previous_encoder_count_L;
 
-void update_position();
+void update_speed(float dt);
+void update_position(float dt);
 void reset_position();
 void set_position(float current__x, float current__y, float current__phi, float absolute__phi);
 float get_distance_to(float x, float y);
@@ -26,3 +27,4 @@ float ticks_to_distance(int32_t ticks, float wheel_diameter);
 float distance_to_ticks(int32_t distance, float wheel_diameter);
 float rad_to_deg(float radian);
 float deg_to_rad(float degrees);
+float normalize_angle(float angle);

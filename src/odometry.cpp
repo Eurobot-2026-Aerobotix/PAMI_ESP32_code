@@ -9,8 +9,18 @@ float absolute_phi = 0;
 int32_t previous_encoder_count_R = 0;
 int32_t previous_encoder_count_L = 0;
 
-void update_position(){
+void update_speed(float dt){
+    current_speed_L = current_speed_L*0.95 + 0.05*(encoder_count_L - previous_encoder_count_L)*(wheel_diameter_L * PI / CPR * directionL) / dt;
+	current_speed_R = current_speed_R*0.95 + 0.05*(encoder_count_R - previous_encoder_count_R)*(wheel_diameter_R * PI / CPR * directionR) / dt;
+	speedCalculationPreviousTime = micros();
+}
 
+void update_position(float dt){
+	
+	encoder_count_L = encoder_get_L();
+	encoder_count_R = encoder_get_R();
+
+	update_speed(dt);
 	float dR = ticks_to_distance(encoder_count_R - previous_encoder_count_R, wheel_diameter_R);
 	float dL = ticks_to_distance(encoder_count_L - previous_encoder_count_L, wheel_diameter_L);
 	float dC = (dR+dL)/2;
@@ -30,8 +40,6 @@ void update_position(){
 	while (current_phi <= -PI){
 		current_phi += 2*PI;
 	}
-    current_speed_R_filtered = current_speed_R_filtered * 0.5 + 0.5 * current_speed_R;
-    current_speed_L_filtered = current_speed_L_filtered * 0.5 + 0.5 * current_speed_L;
 }
 void reset_position(){
 	current_x = 0;
@@ -67,4 +75,14 @@ float rad_to_deg(float radian){
 }
 float deg_to_rad(float degrees){
 	return ((degrees*PI)/180);
+}
+float normalize_angle(float angle){
+	float a = angle;
+	while (a > PI){
+		a -= 2*PI;
+	}
+	while (a <= -PI){
+		a += 2*PI;
+	}
+	return a;
 }
