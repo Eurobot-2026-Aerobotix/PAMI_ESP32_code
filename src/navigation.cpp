@@ -4,40 +4,53 @@ enum Control_loop control_loop_state = SPEED;
 enum Wheel_state wheel_state_R = DEAD_STOP;
 enum Wheel_state wheel_state_L = DEAD_STOP;
 enum Trajectory trajectory = STRAIGHT;
-float ramping_acceleration = 2;
-float breaking_acceleration = -4;
+float ramping_acceleration = 3; // tzid acc tzid fl ramping meloul 
+float breaking_acceleration = -1; // tzid break tzid flkher 
 float emergency_breaking_acceleration = -10;
-float rotating_speed = 200;
+float rotating_speed = 350;
 
 float cruise_speed_R;
 float cruise_speed_L;
 float starting_phi;
 float turning_radius;
 int min_distance = 70;
-
+float debugger = 0;
 int32_t previous_speed_control_time = 0;
-
-int move_forward(float distance, float speed, float target_point_x, float target_point_y){
+float speed_offset = 50;
+float deceleration_offset = 10;// eli ybda menou deceleratiuon //40
+float deceleration_offset_fast = 40;
+float acc_linearization_coef = 15;
+int8_t reached_destination = 1;
+int move_forward(float distance, float speed, float target_x, float target_y, float direction){
+	
+	distance = fabs(distance);
+	if (distance < 900){
+		breaking_acceleration = -2;
+	}
+	speed = fabs(speed);
 	wait_for_idle();
 	reset_speed_control_variables();
 	direction_R = 1;
 	direction_L = 1;
 
+	float starting_x = current_x;
+	float starting_y = current_y;
+
 	// all of these formulas are derived from a ramp graph: speed = f(distance)
-	float x1 = speed / ramping_acceleration;
-	float x2 = speed / breaking_acceleration + distance;
+	float x1 = speed/ramping_acceleration;
+	float x2 = speed/breaking_acceleration + distance + deceleration_offset;
 
 	if (x2 <= x1){ // correcting the cruising speed if it is too high to reach using the current ramp and break
-		float intersection_x = (breaking_acceleration * distance) / (breaking_acceleration - ramping_acceleration);
+		float intersection_x = (breaking_acceleration*(distance+deceleration_offset))/(breaking_acceleration - ramping_acceleration);
 		float intersection_speed = ramping_acceleration * intersection_x;
-		speed = 0.9 * intersection_speed;
-		x1 = speed / ramping_acceleration;
-		x2 = speed / breaking_acceleration + distance;
+		speed = intersection_speed*0.9;
+		x1 = speed/ramping_acceleration;
+		x2 = speed/breaking_acceleration + distance + deceleration_offset;
 	}
+	acc_linearization_coef = sqrt(x1);
 
 	cruise_speed_R = speed;
 	cruise_speed_L = speed;
-	
 	float distance_to_target = distance;
 	float previous_distance_to_target = distance;
 	float x = 0;
@@ -46,14 +59,13 @@ int move_forward(float distance, float speed, float target_point_x, float target
 	wheel_state_L = ACCELERATING;
 	trajectory = STRAIGHT;
 	control_loop_state = SPEED;
-	starting_phi = atan2(target_point_y - current_y, target_point_x - current_x);
-	float starting_x = current_x;
-	float starting_y = current_y;
+	starting_phi = absolute_phi;
 	float lane_correction_term;
-	float phase_two_distance = 30;
-	while (distance_to_target > phase_two_distance){
-		x = distance - distance_to_target;
-		if (wheel_state_R == ACCELERATING && x > x1){
+	float phase_two_distance = 10 * (distance/300.0);
+	while (distance_to_target > phase_two_distance && !(distance_to_target > previous_distance_to_target && distance_to_target< distance/2) ){
+		
+		x = MAX(distance - distance_to_target, 0);
+		if (wheel_state_R == ACCELERATING && x > x1 ){
 			wheel_state_R = CRUISING;
 			wheel_state_L = CRUISING;
 		}else if (wheel_state_R == CRUISING && x > x2){
@@ -61,48 +73,63 @@ int move_forward(float distance, float speed, float target_point_x, float target
 			wheel_state_L = CONTROLLED_BREAK;
 		}else if (wheel_state_R == EMERGENCY_BREAK){
 			emergency_break();
-			return 1;
+			return 0;
 		}
-		float phi_error = normalize_angle(calculate_instant_target_phi(x, distance) - current_phi);
-		float deviation_angle = normalize_angle(atan2(current_y - starting_y, current_x - starting_x) - atan2(target_point_y - starting_y, target_point_x - starting_x) );
-		float deviation_distance = (-1) * sqrt(SQR(current_y - starting_y) + SQR(current_x - starting_x)) * sin(deviation_angle); // positive to the left and negative to the right
-		float phi_correction_term = (phi_error) * ( 1.5 / ( MAX( ( abs(target_speed_R) + abs(target_speed_L) )/2, 100.0) /500.0) ); // the first coefficient is tunable
-		lane_correction_term = (deviation_distance) * ( 0.04 / ( MAX( ( abs(target_speed_R) + abs(target_speed_L) )/2, 100.0) /500.0)) + phi_correction_term; // the first coefficient is tunable
-		lane_correction_term = MIN(MAX(lane_correction_term, -0.1), 0.1); // the coefficient is tunable
-		debugger = deviation_distance;
 
-		set_target_speeds(fabs(calculate_instant_target_speed_R(x, distance)) * (1 + lane_correction_term), fabs(calculate_instant_target_speed_R(x, distance)) * (1 - lane_correction_term));
-		custom_delay(4);
+		float deviation_angle = normalize_angle(atan2(current_y - starting_y, current_x - starting_x) - atan2(target_y - starting_y, target_x - starting_x) );
+		float deviation_distance = -direction * sqrt(SQR(current_y - starting_y) + SQR(current_x - starting_x)) * sin(deviation_angle); // positive to the left and negative to the right
+		//deviation_distance=0;
+		float phi_correction_term = direction * (calculate_instant_target_phi(x, distance) - absolute_phi) * ( 0.9 / ( MAX( ( abs(target_speed_R) + abs(target_speed_L) )/2, 100.0) /500.0) ); // the first coefficient is tunable
+		lane_correction_term = (deviation_distance) * ( 0.001 / ( MAX( ( abs(target_speed_R) + abs(target_speed_L) )/2, 100.0) /500.0)) + phi_correction_term; // the first coefficient is tunable
+		lane_correction_term = MIN(MAX(lane_correction_term, -0.2), 0.2);
+	    //lane_correction_term = 0;
+
+		set_target_speeds(direction*calculate_instant_target_speed_R(x, distance)*(1 + lane_correction_term) ,direction*calculate_instant_target_speed_L(x, distance)* (1 - lane_correction_term));
+		vTaskDelay(pdMS_TO_TICKS(4)); 
 		previous_distance_to_target = distance_to_target;
-		distance_to_target = distance - get_distance_to(starting_x, starting_y);
+		distance_to_target = get_distance_to(target_x, target_y);
+		if (distance_to_target < 100){
+			reached_destination = 1;
+		}
+
+		//send_values_to_usart(current_speed_R, current_speed_L, target_speed_R, lane_correction_term * 100);
 	}
 	// completing the last part of distance separately, so the break happens on point
 	// calculating the distance to move that  results in the robot being the closest to target point, i can't explain the math in code unfortunately
-	speed = (target_speed_R + target_speed_L) / 2;
-	speed = MAX(speed, 50);
+	float backwards_offset = PI*(1 - direction)/2;
+	float x_closest = ( target_y - current_y + tan(current_phi + backwards_offset)*current_x - tan(current_phi + backwards_offset - PI/2)*target_x ) / ( tan(current_phi + backwards_offset) - tan(current_phi + backwards_offset - PI/2) );
+	float y_closest = tan(current_phi)*(x_closest - current_x) + current_y;
+	speed = (target_speed_R + target_speed_L)/ 2;
+	speed = direction*MAX(fabs(speed), speed_offset);// handling the case where the robot skips the first while loop, being too close to target_distance
+	
+	distance_to_target = get_distance_to(x_closest, y_closest);
+	previous_distance_to_target = distance_to_target;
 	int32_t phase_two_start_time = micros();
 	while (distance_to_target > 1 && distance_to_target <= previous_distance_to_target){
-		float phi_error = normalize_angle(calculate_instant_target_phi(x, distance) - current_phi);
-		float deviation_angle = normalize_angle(atan2(current_y - starting_y, current_x - starting_x) - atan2(target_point_y - starting_y, target_point_x - starting_x) );
-		float deviation_distance = (-1) * sqrt(SQR(current_y - starting_y) + SQR(current_x - starting_x)) * sin(deviation_angle); // positive to the left and negative to the right
-		float phi_correction_term = (phi_error) * ( 1.5 / ( MAX( ( abs(target_speed_R) + abs(target_speed_L) )/2, 100.0) /500.0) ); // the first coefficient is tunable
-		lane_correction_term = (deviation_distance) * ( 0.04 / ( MAX( ( abs(target_speed_R) + abs(target_speed_L) )/2, 100.0) /500.0)) + phi_correction_term; // the first coefficient is tunable
-		lane_correction_term = MIN(MAX(lane_correction_term, -0.1), 0.1); // the coefficient is tunable
-		debugger = deviation_distance;
-
-		set_target_speeds(speed * (1 + lane_correction_term), speed * (1 - lane_correction_term));
-		speed = MAX(speed * 0.995, 50);
+		
+		float deviation_angle = normalize_angle(atan2(current_y - starting_y, current_x - starting_x) - atan2(target_y - starting_y, target_x - starting_x) );
+		float deviation_distance = -direction * sqrt(SQR(current_y - starting_y) + SQR(current_x - starting_x)) * sin(deviation_angle);
+		//deviation_distance=0;
+		float phi_correction_term = direction * (calculate_instant_target_phi(x, distance) - absolute_phi) * ( 1 / ( MAX( ( abs(target_speed_R) + abs(target_speed_L) )/2, 100.0) /500.0) ); // the first coefficient is tunable
+		lane_correction_term = (deviation_distance) * ( 0.001 / ( MAX( ( abs(target_speed_R) + abs(target_speed_L) )/2, 100.0) /500.0) ) + phi_correction_term;
+		lane_correction_term = MIN(MAX(lane_correction_term, -0.2), 0.2);
+		//lane_correction_term = 0;
+		//lane_correction_term = (calculate_instant_target_phi(x, distance) - absolute_phi) * ( 0.7 / ( MAX( ( abs(target_speed_R) + abs(target_speed_L) )/2, 100.0) /500.0) ); // the coefficient is tunable
+		set_target_speeds(speed*(1 + lane_correction_term) ,speed* (1 - lane_correction_term));
+		speed = MAX(fabs(speed)*0.99, speed_offset) * direction;
 		previous_distance_to_target = distance_to_target;
 		custom_delay(2);
 		distance_to_target = distance - get_distance_to(starting_x, starting_y);
 
-		if (micros() - phase_two_start_time > 4000000)
-		{
+		if(micros() - phase_two_start_time> 4000000){
 			break;
+		}
+		if (distance_to_target < 100){
+			reached_destination = 1;
 		}
 		if (wheel_state_R == EMERGENCY_BREAK){
 			emergency_break();
-			return 1;
+			return 0;
 		}
 	}
 	stop_motors();
@@ -112,6 +139,9 @@ int move_forward(float distance, float speed, float target_point_x, float target
 	wheel_state_L = DEAD_STOP;
 	return 0;
 }
+
+
+
 float calculate_instant_target_speed_R_full(float x, float distance, float ramping__acceleration, float breaking__acceleration)
 {
 	if (wheel_state_R == ACCELERATING){
@@ -305,8 +335,7 @@ int rotate(float angle, int8_t is_radian){
 		distance_traveled_L = (encoder_count_L - starting_encoder_count_L) * wheel_diameter_L * PI / CPR;
 		yaw_centering_term = MIN((fabs(distance_traveled_R) - fabs(distance_traveled_L)) * 0.1, 1);
 		yaw_centering_term = MAX(yaw_centering_term, -1);
-		yaw_centering_term = 0;
-
+       
 		set_target_speeds(speed * (1 - yaw_centering_term), -speed * (1 + yaw_centering_term));
 		speed = MAX(fabs(speed) * 0.985, 100) * direction_R;
 		previous_distance_to_target = distance_to_target;
@@ -346,21 +375,26 @@ int orientate(float orientation, int8_t is_radian)
 	}
 	return result;
 }
-int go_to(float x, float y, float speed)
-{
+int go_to(float x, float y, float speed, float direction)
+{   
 	float target_angle = get_angle_to(x, y);
-	wait_for_idle();
-	while (fabs(normalize_angle(target_angle - current_phi)) > deg_to_rad(2))
+    wait_for_idle();
+	if(direction == -1){
+		target_angle = normalize_angle(target_angle - PI);
+	}
+    while (fabs(target_angle - current_phi) > deg_to_rad(0.5))
 	{
 		if (orientate(target_angle, 1)){
 			return 1;
 		}
 		wait_for_idle();
 	}
-	
-	int result = move_forward(get_distance_to(x, y), speed, x, y) * 2; // why *2 ? cause fuck you
+	int result = move_forward(fabs(get_distance_to(x, y)), speed, x, y, direction) * 2; // why *2 ? cause fuck you
+
 	return result;
 }
+
+
 void emergency_break()
 {
 	wheel_state_R = EMERGENCY_BREAK;
@@ -386,6 +420,15 @@ bool is_idle(){
 	bool right_wheel_idle = (fabs(target_encoder_count_R - encoder_count_R) < encoder_tolerance) && (fabs(PWM_R) < pwm_tolerance) && (fabs(previous_position_error_R) < encoder_tolerance);
 	bool left_wheel_idle = (fabs(target_encoder_count_L - encoder_count_L) < encoder_tolerance) && (fabs(PWM_L) < pwm_tolerance) && (fabs(previous_position_error_L) < encoder_tolerance);
 	return right_wheel_idle && left_wheel_idle;
+}
+void wait_for_idle(){
+	int start_time = millis();
+	while(!is_idle() && !(current_speed_L == 0 && current_speed_R == 0) && (wheel_state_R != EMERGENCY_BREAK) && (wheel_state_L != EMERGENCY_BREAK) ){
+		custom_delay(10);
+		if (millis() - start_time > 700){
+			break;
+		}
+	}
 }
 void set_target_encoder_counts(int32_t encoder__count_R, int32_t encoder__count_L){
 	reset_position_control_variables();

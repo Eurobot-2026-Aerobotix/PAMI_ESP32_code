@@ -60,16 +60,16 @@ float wheel_diameter_L;
 float wheels_spacing;
 
 // PID control parameters
-float kpS_R = 3;
+float kpS_R = 0.6;
 float kdS_R = 0.0000;
-float kiS_R = 40;
+float kiS_R = 20;
 float speed_integral_R = 0;
 float speed_derivative_R = 0;
 float previous_speed_error_R = 0;
 
-float kpS_L = 3;
+float kpS_L = 0.6;
 float kdS_L = 0;
-float kiS_L = 40;
+float kiS_L = 20;
 float speed_integral_L = 0;
 float speed_derivative_L = 0;
 float previous_speed_error_L = 0;
@@ -86,17 +86,17 @@ int32_t target_encoder_count_R = 0;
 int32_t target_encoder_count_L = 0;
 
 // position control parameters
-float kpP_R = 200;
-float kdP_R = 5;
-float kiP_R = 1000;
+float kpP_R = 20;
+float kdP_R = 0;
+float kiP_R = 0;
 
-float kpP_L = 200;
-float kdP_L = 5;
-float kiP_L = 60;
+float kpP_L = 20;
+float kdP_L = 0;
+float kiP_L = 0;
 volatile float debugger = 0;
 int strategy_start_time = 1000000;
 
-int servo_positions[6] = {90, 80, 50, 30, 20, 0};
+int servo_positions[6] = {0, 130, 55, 85, 55, 15};
 bool ultrasonic_blocked = true;
 
 void set_motor_pins(int right_forward, int right_backward, int left_forward, int left_backward, int right_enable, int left_enable)
@@ -141,7 +141,8 @@ void set_wheel_diameter_and_spacing(float wheel__diameter_R, float wheel__diamet
     wheels_spacing = wheels__spacing;
 }
 void run_right_motor()
-{
+{   
+    
     int pwm = (PWM_R > 0) ? ((PWM_R < PWM_R_forward_min) ? 0 : PWM_R) : ((PWM_R > PWM_R_backward_min) ? 0 : PWM_R);
     pwm = constrain(pwm, -PWM_max, PWM_max);
     
@@ -164,6 +165,7 @@ void run_left_motor()
     pwm = constrain(pwm, -PWM_max, PWM_max);
     ledcWrite(motorLEN_channel, abs(pwm));
     if (pwm > 0){
+
         digitalWrite(motorLa, 1);
         digitalWrite(motorLb, 0);
     }
@@ -181,6 +183,7 @@ void set_target_speeds(float target__speed_R, float target__speed_L)
     target_speed_R = target__speed_R;
     PWM_offset_L = (target__speed_L > 0) ? PWM_L_forward_min - 20 : PWM_L_backward_min + 20;
     target_speed_L = target__speed_L;
+    
 }
 void IRAM_ATTR encoderRISRA()
 {
@@ -345,13 +348,19 @@ void pickup(int pick_right, int pick_left, int up_or_down){
     set_EV_states(1 - pick_right, 1 - pick_left);
     ultrasonic_blocked = up_or_down;
     move_servo(up_or_down? 3 : 1);
-    custom_delay(2000);
+    custom_delay(3000);
     move_servo(up_or_down? 4 : 2);
-    custom_delay(1000);
+    custom_delay(2000);
 }
 void putdown(){
     set_pump_state(0);
     set_EV_states(1, 1);
+    custom_delay(4000);
+}
+void letgo(){
+    set_pump_state(0);
+    //set_EV_states(1, 1);
+    move_servo(5);
     custom_delay(500);
 }
 void walking_position(){

@@ -19,6 +19,7 @@
 #include <Arduino.h>
 #include "driver/pcnt.h"
 #include <ESP32Servo.h>
+#include <ESP32Servo.h>
 
 #define FAST_READ(pin) (((uint32_t)((pin) < 32 ? GPIO.in : GPIO.in1.val) >> ((pin) & 31)) & 0x1)
 
@@ -156,6 +157,14 @@ void encoder_init();
 int16_t encoder_get_R();
 int16_t encoder_get_L();
 
+void encoder_init();
+int16_t encoder_get_R();
+int16_t encoder_get_L();
+
+void encoder_init();
+int16_t encoder_get_R();
+int16_t encoder_get_L();
+
 void move_servo(int position);//0 means down position and so on till 5 means up position
 void set_EV_states(int left_electrovalve_state, int right_electrovalve_state);//0 means off means fantzing, 1 means no tfantiz
 void set_pump_state(int pump_state);
@@ -163,5 +172,6 @@ void pickup(int pick_right, int pick_left, int up_or_down);
 void putdown();
 void walking_position();
 void prepare_servo_up();
+void letgo();
 void HAL_setup();
 void custom_delay(int ms);

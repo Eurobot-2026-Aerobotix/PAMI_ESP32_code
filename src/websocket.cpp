@@ -5,14 +5,14 @@
 using namespace websockets;
 
 // === WebSocket Control Variable ===
-int websocket_enabled = 0;  // Set to 1 to enable WebSocket functionality
+int websocket_enabled = 1;  // Set to 1 to enable WebSocket functionality
 
 // === WiFi Configuration ===
 const char* WIFI_SSID = "IEEE";      // Your WiFi network name
 const char* WIFI_PASSWORD = "";  // Your WiFi password
 
 // === Server Configuration ===
-const char* SERVER_IP = "172.18.173.51";  // Your PC's IP address - Change this!
+const char* SERVER_IP = " 172.18.173.31";  // Your PC's IP address - Change this!
 const int SERVER_PORT = 8765;
 
 // === WebSocket Client ===

@@ -1,0 +1,23 @@
+{
+	"folders": [
+		{
+			"name": "test servo slide",
+			"path": "../../../../Documents/PlatformIO/Projects/test servo slide"
+		},
+		{
+			"name": "PAMI_ESP32_code-NINJA",
+			"path": "."
+		},
+		{
+			"name": "testtt",
+			"path": "../../../../Documents/PlatformIO/Projects/testtt"
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"random": "cpp",
+			"cmath": "cpp",
+			"ensizgaf": "c"
+		}
+	}
+}

@@ -18,6 +18,10 @@
 #include "communication.h"
 #include "websocket.h"
 
+// External variables from communication
+extern bool strategy_waiting;
+extern bool crate_colors[8];
+
 /// tasks
 TaskHandle_t communicationTaskHandle;
 TaskHandle_t PIDTaskHandle;
@@ -25,7 +29,7 @@ TaskHandle_t commandExecutionTaskHandle;
 TaskHandle_t websocketTaskHandle;
 TaskHandle_t emergencyBreakTaskHandle;
 int websocket=0;
-
+//float debugger = 0;
 // Custom strategy implementation
 void strategy(){
   Serial.println("PAMI Robot Strategy Started!");
@@ -37,19 +41,14 @@ void strategy(){
     Serial.print(": ");
     Serial.println(crate_colors[i] ? "YELLOW" : "BLUE");
   }
+  
 
-  int goto_cmd = 0, orientate_cmd = 1, set_position_cmd = 2, pickup_cmd = 3, putdown_cmd = 4, walking_position_cmd = 5, prepare_cmd = 6;
-  int commands[] = {goto_cmd, 0, 400, 500, // Go to (0, 300) at 500mm/s speed
-                    goto_cmd, 0, 0, 500, // Go to (0, 0) at 500mm/s speed
-                    goto_cmd, 0, 0, 500, // go to (0, 0) at 500mm/s speed
-                    orientate_cmd, 0, 0, // Orientate to 0 degrees
-                    pickup_cmd, (int)crate_colors[4], (int)crate_colors[5], 0, //pick up own color crate from down
-                    pickup_cmd, 1, 1, 1, // pick up right and left from up
-                    walking_position_cmd, // go to walking position if coming from up
-                    putdown_cmd, // put_dowm
-                    prepare_cmd // prepare_servo_up
-                  };
-  int num_commands = sizeof(commands) / sizeof(commands[0]);
+  int goto_cmd = 0, orientate_cmd = 1, set_position_cmd = 2, pickup_cmd = 3, putdown_cmd = 4, walking_position_cmd = 5, prepare_cmd = 6 , letgo_cmd = 7, go_backward_cmd = 8, forward_cmd = 9, move_linear_cmd=10  ; 
+  
+  // Use global commands array received from ROS2
+  extern int commands[];
+  extern size_t commands_count;
+  int num_commands = commands_count;
   int i = 0;
   strategy_start_time = millis();
   while (i < num_commands){
@@ -58,36 +57,92 @@ void strategy(){
       int x = commands[i + 1];
       int y = commands[i + 2];
       int speed = commands[i + 3];
-      while(go_to(x, y, speed)){
+      int direction = commands[i + 4];
+      Serial.printf("[CMD] goto_cmd: x=%d, y=%d, speed=%d, direction=%d\n", x, y, speed, direction);
+      while(go_to(x, y, speed, direction)){
         wait_for_obstacle_clearance();
         Serial.println("obstacle cleared, resuming...");
       }
-      i += 4;
+      Serial.printf("[POS] After goto: robot_x=%.1f, robot_y=%.1f, robot_phi=%.1f deg\n", current_x, current_y, rad_to_deg(current_phi));
+      i += 5;
     }
     else if (command_type == orientate_cmd){
       int angle = commands[i + 1];
       int is_radian = commands[i + 2];
+      Serial.printf("[CMD] orientate_cmd: angle=%d, is_radian=%d\n", angle, is_radian);
       orientate(angle, is_radian);
+      Serial.printf("[POS] After orientate: robot_x=%.1f, robot_y=%.1f, robot_phi=%.1f deg\n", current_x, current_y, rad_to_deg(current_phi));
       i += 3;
-    }else if (command_type == pickup_cmd){
-      pickup(commands[i + 1], commands[i + 2], commands[i + 3]);
+    }
+    else if (command_type == set_position_cmd){
+      int x = commands[i + 1];
+      int y = commands[i + 2];
+      int phi_degrees = commands[i + 3];
+      Serial.printf("[CMD] set_position_cmd: x=%d, y=%d, phi=%d degrees\n", x, y, phi_degrees);
+      float phi_radians = deg_to_rad(phi_degrees);
+      set_position(x, y, phi_radians, phi_radians);
+      Serial.printf("[POS] After set_position: robot_x=%.1f, robot_y=%.1f, robot_phi=%.1f deg\n", current_x, current_y, rad_to_deg(current_phi));
       i += 4;
-    }else if (command_type == putdown_cmd){
+    }
+    else if (command_type == pickup_cmd){
+      Serial.printf("[CMD] pickup_cmd: arg1=%d, arg2=%d, arg3=%d\n", commands[i + 1], commands[i + 2], commands[i + 3]);
+      pickup(commands[i + 1], commands[i + 2], commands[i + 3]);
+      Serial.printf("[POS] After pickup: robot_x=%.1f, robot_y=%.1f, robot_phi=%.1f deg\n", current_x, current_y, rad_to_deg(current_phi));
+      i += 4;
+    }
+    else if (command_type == putdown_cmd){
+      Serial.println("[CMD] putdown_cmd");
       putdown();
       i++;
-    }else if (command_type == walking_position_cmd){
+    }
+    else if (command_type == walking_position_cmd){
+      Serial.println("[CMD] walking_position_cmd");
       walking_position();
       i++;
-    }else if (command_type == prepare_cmd){
+    }
+    else if (command_type == prepare_cmd){
+      Serial.println("[CMD] prepare_cmd");
       prepare_servo_up();
       i++;
     }
-    else if (command_type == set_position_cmd) { 
-      int x = commands[i + 1]; 
-      int y = commands[i + 2]; 
-      int phi = commands[i + 3]; 
-      set_position(x, y, phi, phi); 
-      i += 4; 
+    else if (command_type == letgo_cmd){
+      Serial.println("[CMD] letgo_cmd");
+      letgo();
+      i++;
+    }
+    else if(command_type == forward_cmd){
+      int distance = commands[i + 1];
+      int speed = commands[i + 2];
+      int x = commands[i + 3];
+      int y = commands[i + 4];
+      int direction = commands[i + 5];
+      Serial.printf("[CMD] forward_cmd: distance=%d, speed=%d, x=%d, y=%d, direction=%d\n", distance, speed, x, y, direction);
+      // while(go_backward_to(x, y, speed)){
+      //   wait_for_obstacle_clearance();
+      //   Serial.println("obstacle cleared, resuming...");
+      //   }
+      move_forward(distance,speed, x, y,direction);
+      i += 6;
+    }
+    
+    // else if(command_type == move_linear_cmd){
+    //   int distance = commands[i + 1];
+    //   int speed = commands[i + 2];
+    //   int x = commands[i + 3];
+    //   int y = commands[i + 4];
+    //   int direction = commands[i + 5];
+    //   // while(go_backward_to(x, y, speed)){
+    //   //   wait_for_obstacle_clearance();
+    //   //   Serial.println("obstacle cleared, resuming...");
+    //   //   }
+    //   int result = move_linear(distance, speed, x, y, 1); // direction = 1 for forward
+    //   i += 6;
+    // }
+
+    else{
+      Serial.print("Unknown command type: ");
+      Serial.println(command_type);
+      break; // Exit the loop on unknown command
     }
   }
   // 3. Send completion signal
@@ -197,7 +252,7 @@ void PIDTask(void *pvParameters){
     }
     else if (control_loop_state == POSITION){
       // right motor position control
-      float error = (target_encoder_count_R - encoder_count_R)*2; 
+      float error = (target_encoder_count_R - encoder_count_R); 
 
       position_derivative_R = (error - previous_position_error_R)/dt; // unit = tick/s²
 
@@ -225,11 +280,20 @@ void PIDTask(void *pvParameters){
 
       previous_position_error_L = error;
     }
+ //PWM_L= 0;// MIN =320temchi  319 temchich   min=-320 temchi -319temchich  
+ //PWM_R= 0;//MIN =320temchi  319 temchich    min=-320 temchi -319temchich  
+//set_target_speeds(600, 600); 
+
+  //  delay(10);
     run_right_motor();
     run_left_motor();
-
-    vTaskDelayUntil(&xLastWakeTime, xDelay);
+   //send_values_to_usart(current_speed_R, current_speed_L, target_speed_R, target_speed_L);
+  // delay(10);
+  // update target speeds in case they were changed by the command execution task
+//send_values_to_usart(encoder_count_R,encoder_count_L, 0, 0); // send encoder counts for debugging
+   vTaskDelayUntil(&xLastWakeTime, xDelay);
   }
+  
 }
 
 void commandExecutionTask(void *pvParameters)
@@ -261,7 +325,35 @@ void websocketTask(void *pvParameters)
   
   for (;;) // Infinite loop - CRITICAL!
   {
-    //send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, debugger);
+    if (websocket == 1) {
+      // Handle reconnections and polling
+      websocket_reconnect_if_needed();
+      websocket_poll();
+    
+      // Send robot data via WebSocket at 10Hz (every 100ms)
+      static TickType_t last_data_send = 0;
+      if ((xTaskGetTickCount() - last_data_send) >= pdMS_TO_TICKS(100)) {
+        last_data_send = xTaskGetTickCount();
+        if (websocket_has_new_string()) {
+        String receivedMsg = websocket_get_last_string();
+        Serial.println("Processing: " + receivedMsg);
+        processReceivedString(receivedMsg);
+}
+        if (websocket_is_connected()) {
+          // Send current robot data
+          /*
+          websocket_send_data(0xAA, current_speed_R_filtered);
+          websocket_send_data(0xAB, current_speed_L_filtered);
+          websocket_send_data(0xAC, target_speed_R);
+          websocket_send_data(0xAD, target_speed_L);
+          */
+          websocket_send_data(0xAA, current_speed_L);
+          websocket_send_data(0xAB, current_speed_R);
+          websocket_send_data(0xAC, target_speed_L);
+          websocket_send_data(0xAD, target_speed_R);
+        }
+      }
+    }
     
     vTaskDelayUntil(&xLastWakeTime, xDelay);
   }
@@ -275,27 +367,38 @@ void setup()
   Serial.println("=== PAMI ESP32 Setup ===");
 
   Serial.println("Setting motor pins...");
-  set_motor_pins(26, 21, 18, 19, 23, 17);
+  set_motor_pins(19, 18, 21, 22, 17, 23);  // shah
 
-  set_ultrasonic_pins(14, 12);
-
-  set_system_pins(1, 2, 3, 4);// TODO : 7ott l pineet ess7a7
+  
+  set_system_pins(25, 26, 33, 27);// bdlthom
 
   Serial.println("Setting encoder channels...");
-  set_encoder_channels(4, 16, 15, 2, 350);
+  set_encoder_channels(2, 15, 4, 16, 700); // badalthom
 
   Serial.println("Setting PWM parameters...");
-  set_PWM_min_max(1023, 240, 210, -240, -210);
+  set_ultrasonic_pins(12, 13); // badalthom
+
+  set_PWM_min_max(1023, 100, 100, -100, -100); //yess    //130  120
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(57.342589790462290093200767685685, 57.342589790462290093200767685685, 92.938153961874487863117321276497);
+  set_wheel_diameter_and_spacing(47.317247893109677230077992933005,47.417944313397205804732340651526,120.5181194805959281481467603); //   122.84370983629917196470781680778
   HAL_setup();
 
 
-  Serial.println("Creating tasks...");
+  // Initialize WebSocket if enabled
+  extern int websocket_enabled;
+  websocket_enabled = websocket;  // Set from the main websocket variable
+  if (websocket_enabled == 1) {
+    Serial.println("Initializing WebSocket...");
+    websocket_init();
+    delay(1000);
+  }
 
+
+  Serial.println("Creating tasks...");
+  
   //Create tasks with lower stack sizes first
-  xTaskCreatePinnedToCore(
+    xTaskCreatePinnedToCore(
      communicationTask,
       "communicationTask",
       8192,
@@ -304,8 +407,9 @@ void setup()
        &communicationTaskHandle,
        0); // Pin to core 0
 
-  delay(500); // Delay between task creation
-  Serial.println("Communication task created");
+   delay(500); // Delay between task creation
+   Serial.println("Communication task created");
+
 
   xTaskCreatePinnedToCore(
       commandExecutionTask,
@@ -338,58 +442,45 @@ void setup()
       1); // Pin to core 1
 
   // Create WebSocket task if enabled
-  xTaskCreatePinnedToCore(
-      websocketTask,
-      "websocketTask",
-      8192, // Larger stack for WebSocket operations
-      NULL,
-      1, // Lower priority than PID
-      &websocketTaskHandle,
-      0); // Pin to core 0 (same as other communication tasks)
-  
-  delay(500); // Delay between task creation
-  Serial.println("WebSocket task created");
-
+ /* if (websocket_enabled == 1) {
+    xTaskCreatePinnedToCore(
+        websocketTask,
+        "websocketTask",
+        8192, // Larger stack for WebSocket operations
+        NULL,
+        1, // Lower priority than PID
+        &websocketTaskHandle,
+        0); // Pin to core 0 (same as other communication tasks)
+    
+    delay(500); // Delay between task creation
+    Serial.println("WebSocket task created");
+  }
+*/
   Serial.println("All tasks created successfully!");
   control_loop_state = DISACTIVATED;
   delay(1000);
   strategy_waiting = 0;
 }
-
 void loop(){
-  // for(int i=0; i<100; i++){
-  //   set_target_speeds(i*2, 0);
-  //   send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
-  //   delay(10);
-  // }
-  // for(int i=0; i<200; i++){
-  //   send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
-  //   delay(10);
-  // }
-  // set_target_speeds(0, 0);
-  // for(int i=0; i<200; i++){
-  //   send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
-  //   delay(10);
-  // }
-  // for(int i=0; i<100; i++){
-  //   set_target_speeds(0, i*2);
-  //   send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
-  //   delay(10);
-  // }
-  // for(int i=0; i<200; i++){
-  //   send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
-  //   delay(10);
-  // }
-  // set_target_speeds(0, 0);
-  // for(int i=0; i<200; i++){
-  //   send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
-  //   delay(10);
-  // }
-  if (millis() < 5000){
-    send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, debugger*100);
-    delay(10);
-  }else{
-    send_values_to_usart(current_x, current_y, current_phi*100, 0);
-    delay(10);
-  }
+  
+  //  for(int i=0; i<100; i++){
+  //    set_target_speeds(i*2, i*2);
+  //    send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
+  //    delay(10);
+  //  }
+  //  for(int i=0; i<200; i++){
+  //    send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
+  //    delay(10);
+  //    }
+  //  set_target_speeds(0, 0);
+  //  for(int i=0; i<200; i++){
+  //    send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
+  //  delay(10);
+  //  }
+  // send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
+  // delay(10);
+  // send_values_to_usart(current_speed_R, current_speed_L, target_speed_R, target_speed_L);
+  // delay(10);
+ // send_values_to_usart(encoder_count_R, encoder_count_L, current_x, current_y); // send encoder counts and position for debugging
+  //delay(10);
 }
