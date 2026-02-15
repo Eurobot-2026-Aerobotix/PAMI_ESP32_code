@@ -7,7 +7,7 @@ enum Trajectory trajectory = STRAIGHT;
 float ramping_acceleration = 3; // tzid acc tzid fl ramping meloul 
 float breaking_acceleration = -1; // tzid break tzid flkher 
 float emergency_breaking_acceleration = -10;
-float rotating_speed = 200;
+float rotating_speed = 350;
 
 float cruise_speed_R;
 float cruise_speed_L;
@@ -92,7 +92,7 @@ int move_forward(float distance, float speed, float target_x, float target_y, fl
 			reached_destination = 1;
 		}
 
-		send_values_to_usart(current_speed_R, current_speed_L, target_speed_R, lane_correction_term * 100);
+		//send_values_to_usart(current_speed_R, current_speed_L, target_speed_R, lane_correction_term * 100);
 	}
 	// completing the last part of distance separately, so the break happens on point
 	// calculating the distance to move that  results in the robot being the closest to target point, i can't explain the math in code unfortunately
@@ -346,7 +346,7 @@ int rotate(float angle, int8_t is_radian){
 		{
 			break;
 		}
-		//send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
+		send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
 	}
 	stop_motors();
 	set_target_encoder_counts(encoder_count_R, encoder_count_L - (target_phi - absolute_phi)*wheels_spacing*CPR / (wheel_diameter_L*PI) ); // the second part is there to fix any last minute fuck ups, concerning phi

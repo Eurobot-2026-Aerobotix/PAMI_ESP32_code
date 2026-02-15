@@ -346,14 +346,14 @@ void pickup(int pick_right, int pick_left, int up_or_down){
     set_EV_states(1 - pick_right, 1 - pick_left);
     ultrasonic_blocked = up_or_down;
     move_servo(up_or_down? 3 : 1);
-    custom_delay(2000);
+    custom_delay(3000);
     move_servo(up_or_down? 4 : 2);
-    custom_delay(1000);
+    custom_delay(2000);
 }
 void putdown(){
     set_pump_state(0);
     set_EV_states(1, 1);
-    custom_delay(500);
+    custom_delay(4000);
 }
 void letgo(){
     set_pump_state(0);

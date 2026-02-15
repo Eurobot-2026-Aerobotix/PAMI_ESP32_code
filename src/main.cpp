@@ -42,34 +42,38 @@ void strategy()
   
 
   int goto_cmd = 0, orientate_cmd = 1, pickup_cmd = 3, putdown_cmd = 4, walking_position_cmd = 5, prepare_cmd = 6 , letgo_cmd = 7, go_backward_cmd = 8, forward_cmd = 9, move_linear_cmd=10  ; 
-  int commands[] = { goto_cmd, 500, 0, 400, 1,
+  int commands[] = { //goto_cmd, 500, 0, 500, 1,
                      //goto_cmd, 0, 0, 300, 1,
                      //goto_cmd,0, -400, 300, -1, // Go to (0, 300) at 500mm/s speed
-                  
+                    // orientate_cmd, 90, 0,
+                   // orientate_cmd, 90, 0,
+                   //pickup_cmd,1,1, 0,
+
+
                     // goto_cmd, 0, 0, 500, // Go to (0, 0) at 500mm/s speed
                     // goto_cmd, 0, 0, 500, // go to (0, 0) at 500mm/s speed
                     // goto_backward_cmd, 0, 0, 500, // go backward to (0, 0) at 500mm/s speed
-                    // orientate_cmd, 0, 0, // Orientate to 0 degrees
-                    // pickup_cmd, (int)crate_colors[4], (int)crate_colors[5], 0, //pick up own color crate from down
+                     //orientate_cmd, 0, 0, // Orientate to 0 degrees
+                    //pickup_cmd, (int)crate_colors[4], (int)crate_colors[5], 0, //pick up own color crate from down
                     // pickup_cmd, 1, 1, 1, // pick up right and left from up
                     // walking_position_cmd, // go to walking position if coming from up
                     // putdown_cmd, // put_dowm
                     // prepare_cmd // prepare_servo_up
 
                     //strategy yellow   :safe no electrovanne :
-                    //  goto_cmd, 425, 0, 400, 1,
-                    //  goto_cmd, 425, -45, 400, 1,
-                    //  pickup_cmd,1,1, 0,
-                    //  goto_cmd, 425, 20, 400,-1,
-                    //  goto_cmd, 0, -20, 400,1,
-                    //  letgo_cmd,
-                    // goto_cmd, 710,- 0, 500,
-                    // goto_cmd, 710, 25, 500,
-                    // pickup_cmd,1,1, 1,
-                    // goto_cmd, 710, 75, 500,
-                    // goto_cmd, -10, 75, 500,
-                    // letgo_cmd,
-                    // backward 200,75,100,
+                     goto_cmd, 425, 0, 400, 1,
+                    goto_cmd, 425, -45, 400, 1,
+                     pickup_cmd,1,1, 0,
+                     goto_cmd, 425, 20, 400,-1,
+                     goto_cmd, 0, -20, 400,1,
+                     putdown_cmd,
+                      goto_cmd, 175,-20, 400,-1,
+                      goto_cmd, 175,-90, 400,1,
+                     pickup_cmd,1,1, 0,
+                     goto_cmd, 175, -30, 400,-1,
+                     goto_cmd, 0, -30, 400,1,
+                    putdown_cmd,
+                     goto_cmd, 200,75,100,
                     // orientate_cmd, 90, 0,     angle ?
                     // pickup_cmd, 1, 1, 1,
                     // oriantate_cmd, 180, 0, // orientate to 90 degrees
@@ -492,7 +496,7 @@ void setup()
   Serial.println("All tasks created successfully!");
   control_loop_state = DISACTIVATED;
   delay(1000);
-  strategy_waiting = 1;
+  strategy_waiting = true;
   //prepare_go_to(400, -0, 300);
   //prepare_rotate(180, 0);
   //prepare_orientate(360, 0);
