@@ -43,8 +43,6 @@ extern float turning_radius;
 extern int32_t previous_speed_control_time;
 extern int min_distance;
 
-extern float debugger;
-
 int move_forward(float distance, float speed, float target_x, float target_y, float direction);	// will return 0 if target has been reached successfully or 1 if it could not be reached
 float calculate_instant_target_speed_R_full(float x, float distance, float ramping__acceleration, float breaking__acceleration);
 float calculate_instant_target_speed_L_full(float x, float distance, float ramping__acceleration, float breaking__acceleration);

@@ -14,13 +14,13 @@ float cruise_speed_L;
 float starting_phi;
 float turning_radius;
 int min_distance = 70;
-float debugger = 0;
 int32_t previous_speed_control_time = 0;
 float speed_offset = 50;
 float deceleration_offset = 10;// eli ybda menou deceleratiuon //40
 float deceleration_offset_fast = 40;
 float acc_linearization_coef = 15;
 int8_t reached_destination = 1;
+
 int move_forward(float distance, float speed, float target_x, float target_y, float direction){
 	
 	distance = fabs(distance);
@@ -445,15 +445,6 @@ void wait_for_obstacle_clearance() {
 		custom_delay(100); // wait for 100 ms before checking again
 	}
 	while(millis() - strategy_start_time >= max_running_time);
-}
-void wait_for_idle(){
-	int start_time = millis();
-	while(!is_idle() && !(current_speed_L == 0 && current_speed_R == 0) && (wheel_state_R != EMERGENCY_BREAK) && (wheel_state_L != EMERGENCY_BREAK) ){
-		custom_delay(10);
-		if (millis() - start_time > 700){
-			break;
-		}
-	}
 }
 void prepare_emergency_break(){
 	wheel_state_R = EMERGENCY_BREAK;
