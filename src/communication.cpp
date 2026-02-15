@@ -3,11 +3,12 @@
 
 // Micro-ROS name constant
 
-const char* micro_ros_name = "ninja";
+const char* micro_ros_name = "pami7";
 // Dynamic topic names (constructed from micro_ros_name)
 char topic_action_done[50];
 char topic_start[50];
 char topic_crates_color[50];
+char topic_strategy[50];
 
 // Global variable definitions
 rclc_support_t support;
@@ -17,9 +18,15 @@ rcl_allocator_t allocator;
 rcl_publisher_t action_done_publisher;
 rcl_subscription_t subscriber;
 rcl_subscription_t crates_color_subscriber;
+rcl_subscription_t strategy_subscriber;
 std_msgs__msg__Int32 start_msg;
 std_msgs__msg__Int32 crates_color_msg;
 std_msgs__msg__Int32 action_done_msg;
+std_msgs__msg__Float32MultiArray strategy_msg;
+float received_floats[200];
+size_t received_floats_count = 0;
+int commands[200];
+size_t commands_count = 0;
 bool micro_ros_init_successful = false;
 enum CommunicationState comm_state = WAITING_AGENT;
 bool strategy_waiting=false ;
@@ -190,6 +197,7 @@ bool create_entities()
     snprintf(topic_action_done, sizeof(topic_action_done), "%s/action_done", micro_ros_name);
     snprintf(topic_start, sizeof(topic_start), "%s/start", micro_ros_name);
     snprintf(topic_crates_color, sizeof(topic_crates_color), "%s/crates_color", micro_ros_name);
+    snprintf(topic_strategy, sizeof(topic_strategy), "%s/strategy", micro_ros_name);
 
     // Create init_options
     RCCHECK(rclc_support_init(&support, 0, NULL, &allocator));
@@ -218,11 +226,23 @@ bool create_entities()
         ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32),
         topic_crates_color));
 
+    // Create strategy subscriber
+    RCCHECK(rclc_subscription_init_default(
+        &strategy_subscriber,
+        &node,
+        ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32MultiArray),
+        topic_strategy));
+    // Allocate memory for incoming array
+    strategy_msg.data.data = (float *)malloc(200 * sizeof(float));
+    strategy_msg.data.size = 0;
+    strategy_msg.data.capacity = 200;
+
     // Create executor
     executor = rclc_executor_get_zero_initialized_executor();
-    RCCHECK(rclc_executor_init(&executor, &support.context, 2, &allocator));
+    RCCHECK(rclc_executor_init(&executor, &support.context, 3, &allocator));
     RCCHECK(rclc_executor_add_subscription(&executor, &subscriber, &start_msg, &start_callback, ON_NEW_DATA));
     RCCHECK(rclc_executor_add_subscription(&executor, &crates_color_subscriber, &crates_color_msg, &crates_color_callback, ON_NEW_DATA));
+    RCCHECK(rclc_executor_add_subscription(&executor, &strategy_subscriber, &strategy_msg, &strategy_callback, ON_NEW_DATA));
 
     return true;
 }
@@ -236,6 +256,7 @@ void destroy_entities()
     rcl_publisher_fini(&action_done_publisher, &node);
     rcl_subscription_fini(&subscriber, &node);
     rcl_subscription_fini(&crates_color_subscriber, &node);
+    rcl_subscription_fini(&strategy_subscriber, &node);
     rclc_executor_fini(&executor);
     rcl_node_fini(&node);
     rclc_support_fini(&support);
@@ -251,8 +272,7 @@ void start_callback(const void *msgin)
     if (msg->data == 1)
     {
         strategy_waiting=true;
-        Serial.println("Start signal detected (value = 1)!");
-        strategy(); // Call the strategy function
+        Serial.println("Start signal detected (value = 1)! Strategy will execute in main.");
     }
 }
 
@@ -265,6 +285,29 @@ void crates_color_callback(const void *msgin)
 
     // Update the crate colors based on the received decimal number
     update_crate_colors(msg->data);
+}
+
+// Callback for strategy topic subscription
+void strategy_callback(const void *msgin)
+{
+    const std_msgs__msg__Float32MultiArray *msg = (const std_msgs__msg__Float32MultiArray *)msgin;
+    
+    Serial.println("Received float table:");
+    received_floats_count = msg->data.size;
+    commands_count = msg->data.size;
+    
+    for (size_t i = 0; i < msg->data.size && i < 200; i++)
+    {
+        received_floats[i] = msg->data.data[i];
+        commands[i] = (int)msg->data.data[i]; // Convert float to int
+        
+        Serial.print("  [");
+        Serial.print(i);
+        Serial.print("]: ");
+        Serial.print(received_floats[i], 4);
+        Serial.print(" -> command: ");
+        Serial.println(commands[i]);
+    }
 }
 
 // Convert decimal to binary and update crate colors array

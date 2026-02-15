@@ -85,7 +85,7 @@ int move_forward(float distance, float speed, float target_x, float target_y, fl
 	    //lane_correction_term = 0;
 
 		set_target_speeds(direction*calculate_instant_target_speed_R(x, distance)*(1 + lane_correction_term) ,direction*calculate_instant_target_speed_L(x, distance)* (1 - lane_correction_term));
-		delay(4);
+		vTaskDelay(pdMS_TO_TICKS(4)); 
 		previous_distance_to_target = distance_to_target;
 		distance_to_target = get_distance_to(target_x, target_y);
 		if (distance_to_target < 100){
@@ -119,7 +119,7 @@ int move_forward(float distance, float speed, float target_x, float target_y, fl
 		speed = MAX(fabs(speed)*0.99, speed_offset) * direction;
 		previous_distance_to_target = distance_to_target;
 		distance_to_target = get_distance_to(x_closest, y_closest);
-		delay(2);
+		vTaskDelay(pdMS_TO_TICKS(2));
 
 		if(micros() - phase_two_start_time> 4000000){
 			break;
@@ -131,7 +131,7 @@ int move_forward(float distance, float speed, float target_x, float target_y, fl
 			emergency_break();
 			return 0;
 		}
-		send_values_to_usart(current_speed_R, current_speed_L, target_speed_R, lane_correction_term * 100);
+		//send_values_to_usart(current_speed_R, current_speed_L, target_speed_R, lane_correction_term * 100);
 	}
 	stop_motors();
 	reached_destination = 1;
@@ -346,7 +346,7 @@ int rotate(float angle, int8_t is_radian){
 		{
 			break;
 		}
-		send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
+		//send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
 	}
 	stop_motors();
 	set_target_encoder_counts(encoder_count_R, encoder_count_L - (target_phi - absolute_phi)*wheels_spacing*CPR / (wheel_diameter_L*PI) ); // the second part is there to fix any last minute fuck ups, concerning phi

@@ -2,10 +2,10 @@
 
 #include "odometry.h"
 
-float current_x = 0;
-float current_y = 0;
-float current_phi = 0;
-float absolute_phi = 0;
+float current_x = 63;
+float current_y = 675;
+float current_phi = deg_to_rad(90);    
+float absolute_phi = deg_to_rad(90);
 int32_t previous_encoder_count_R = 0;
 int32_t previous_encoder_count_L = 0;
 

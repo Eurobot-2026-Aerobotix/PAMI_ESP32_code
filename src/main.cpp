@@ -18,6 +18,10 @@
 #include "communication.h"
 #include "websocket.h"
 
+// External variables from communication
+extern bool strategy_waiting;
+extern bool crate_colors[8];
+
 /// tasks
 TaskHandle_t communicationTaskHandle;
 TaskHandle_t PIDTaskHandle;
@@ -41,66 +45,12 @@ void strategy()
   }
   
 
-  int goto_cmd = 0, orientate_cmd = 1, pickup_cmd = 3, putdown_cmd = 4, walking_position_cmd = 5, prepare_cmd = 6 , letgo_cmd = 7, go_backward_cmd = 8, forward_cmd = 9, move_linear_cmd=10  ; 
-  int commands[] = { //goto_cmd, 500, 0, 500, 1,
-                     //goto_cmd, 0, 0, 300, 1,
-                     //goto_cmd,0, -400, 300, -1, // Go to (0, 300) at 500mm/s speed
-                    // orientate_cmd, 90, 0,
-                   // orientate_cmd, 90, 0,
-                   //pickup_cmd,1,1, 0,
-
-
-                    // goto_cmd, 0, 0, 500, // Go to (0, 0) at 500mm/s speed
-                    // goto_cmd, 0, 0, 500, // go to (0, 0) at 500mm/s speed
-                    // goto_backward_cmd, 0, 0, 500, // go backward to (0, 0) at 500mm/s speed
-                     //orientate_cmd, 0, 0, // Orientate to 0 degrees
-                    //pickup_cmd, (int)crate_colors[4], (int)crate_colors[5], 0, //pick up own color crate from down
-                    // pickup_cmd, 1, 1, 1, // pick up right and left from up
-                    // walking_position_cmd, // go to walking position if coming from up
-                    // putdown_cmd, // put_dowm
-                    // prepare_cmd // prepare_servo_up
-
-                    //strategy yellow   :safe no electrovanne :
-                    goto_cmd, 700, 0, 400, 1,
-                    goto_cmd, 700, -70, 400, 1,
-                     pickup_cmd,1,1, 0,
-                     goto_cmd, 700, 0, 400,-1,
-                     goto_cmd, 0, 0, 400,1,
-                     putdown_cmd,
-
-                      goto_cmd, 450,0, 400,-1,
-                      goto_cmd, 450,-100, 400,1,
-                     pickup_cmd,1,1, 0,
-                     goto_cmd, 450, -80, 400,-1,
-                     goto_cmd, 0, -80, 400,1,
-                    putdown_cmd,
-                     
-                     goto_cmd, 200,-80,400,-1,
-                     goto_cmd, 200,-130,400,1,
-                     pickup_cmd,1,1, 1,
-                    goto_cmd, 250,0,400,-1,
-                    goto_cmd, 150,0,400,1,
-                    putdown_cmd,
-
-
-                    // orientate_cmd, 90, 0,     angle ?
-                    // pickup_cmd, 1, 1, 1,
-                    // oriantate_cmd, 180, 0, // orientate to 90 degrees
-                    //letgo_cmd,
-                    //oriantate_cmd, -180, 0, // orientate to 90 degrees
-                    //pickup_cmd, 1, 1, 0, // pick up right and
-                    //goto_cmd, 400, 75, 500, // go to (0, 0) at 500mm/s speed
-                    //goto_cmd, 400, 275, 500, // go to (0, 0) at 500mm/s speed
-                    //letgo_cmd,
-
-
-
-
-
-
-
-                  };
-  int num_commands = sizeof(commands) / sizeof(commands[0]);
+  int goto_cmd = 0, orientate_cmd = 1, set_position_cmd = 2, pickup_cmd = 3, putdown_cmd = 4, walking_position_cmd = 5, prepare_cmd = 6 , letgo_cmd = 7, go_backward_cmd = 8, forward_cmd = 9, move_linear_cmd=10  ; 
+  
+  // Use global commands array received from ROS2
+  extern int commands[];
+  extern size_t commands_count;
+  int num_commands = commands_count;
   int i = 0;
   while (i < num_commands){
     int command_type = commands[i];
@@ -109,30 +59,55 @@ void strategy()
       int y = commands[i + 2];
       int speed = commands[i + 3];
       int direction = commands[i + 4];
+      Serial.printf("[CMD] goto_cmd: x=%d, y=%d, speed=%d, direction=%d\n", x, y, speed, direction);
       while(go_to(x, y, speed, direction)){
         wait_for_obstacle_clearance();
         Serial.println("obstacle cleared, resuming...");
       }
+      Serial.printf("[POS] After goto: robot_x=%.1f, robot_y=%.1f, robot_phi=%.1f deg\n", current_x, current_y, rad_to_deg(current_phi));
       i += 5;
     }
     else if (command_type == orientate_cmd){
       int angle = commands[i + 1];
       int is_radian = commands[i + 2];
+      Serial.printf("[CMD] orientate_cmd: angle=%d, is_radian=%d\n", angle, is_radian);
       orientate(angle, is_radian);
+      Serial.printf("[POS] After orientate: robot_x=%.1f, robot_y=%.1f, robot_phi=%.1f deg\n", current_x, current_y, rad_to_deg(current_phi));
       i += 3;
-    }else if (command_type == pickup_cmd){
-      pickup(commands[i + 1], commands[i + 2], commands[i + 3]);
+    }
+    else if (command_type == set_position_cmd){
+      int x = commands[i + 1];
+      int y = commands[i + 2];
+      int phi_degrees = commands[i + 3];
+      Serial.printf("[CMD] set_position_cmd: x=%d, y=%d, phi=%d degrees\n", x, y, phi_degrees);
+      float phi_radians = deg_to_rad(phi_degrees);
+      set_position(x, y, phi_radians, phi_radians);
+      Serial.printf("[POS] After set_position: robot_x=%.1f, robot_y=%.1f, robot_phi=%.1f deg\n", current_x, current_y, rad_to_deg(current_phi));
       i += 4;
-    }else if (command_type == putdown_cmd){
+    }
+    else if (command_type == pickup_cmd){
+      Serial.printf("[CMD] pickup_cmd: arg1=%d, arg2=%d, arg3=%d\n", commands[i + 1], commands[i + 2], commands[i + 3]);
+      pickup(commands[i + 1], commands[i + 2], commands[i + 3]);
+      Serial.printf("[POS] After pickup: robot_x=%.1f, robot_y=%.1f, robot_phi=%.1f deg\n", current_x, current_y, rad_to_deg(current_phi));
+      i += 4;
+    }
+    else if (command_type == putdown_cmd){
+      Serial.println("[CMD] putdown_cmd");
       putdown();
       i++;
-    }else if (command_type == walking_position_cmd){
+    }
+    else if (command_type == walking_position_cmd){
+      Serial.println("[CMD] walking_position_cmd");
       walking_position();
       i++;
-    }else if (command_type == prepare_cmd){
+    }
+    else if (command_type == prepare_cmd){
+      Serial.println("[CMD] prepare_cmd");
       prepare_servo_up();
       i++;
-    }else if (command_type == letgo_cmd){
+    }
+    else if (command_type == letgo_cmd){
+      Serial.println("[CMD] letgo_cmd");
       letgo();
       i++;
     }
@@ -142,6 +117,7 @@ void strategy()
       int x = commands[i + 3];
       int y = commands[i + 4];
       int direction = commands[i + 5];
+      Serial.printf("[CMD] forward_cmd: distance=%d, speed=%d, x=%d, y=%d, direction=%d\n", distance, speed, x, y, direction);
       // while(go_backward_to(x, y, speed)){
       //   wait_for_obstacle_clearance();
       //   Serial.println("obstacle cleared, resuming...");
@@ -442,20 +418,20 @@ void setup()
 
 
   Serial.println("Creating tasks...");
-  /*
+  
   //Create tasks with lower stack sizes first
-  //   xTaskCreatePinnedToCore(
-  //    communicationTask,
-  //     "communicationTask",
-  //     8192,
-  //     NULL,
-  //     1, // Lower priority
-  //      &communicationTaskHandle,
-  //      0); // Pin to core 0
+    xTaskCreatePinnedToCore(
+     communicationTask,
+      "communicationTask",
+      8192,
+      NULL,
+      1, // Lower priority
+       &communicationTaskHandle,
+       0); // Pin to core 0
 
-  //  delay(500); // Delay between task creation
-  //  Serial.println("Communication task created");
-*/
+   delay(500); // Delay between task creation
+   Serial.println("Communication task created");
+
 
   xTaskCreatePinnedToCore(
       commandExecutionTask,
@@ -505,7 +481,7 @@ void setup()
   Serial.println("All tasks created successfully!");
   control_loop_state = DISACTIVATED;
   delay(1000);
-  strategy_waiting = true;
+  strategy_waiting = false;
   //prepare_go_to(400, -0, 300);
   //prepare_rotate(180, 0);
   //prepare_orientate(360, 0);
