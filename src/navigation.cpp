@@ -74,11 +74,13 @@ int move_forward(float distance, float speed, float target_x, float target_y, fl
 			return 0;
 		}
 
+		float phi_error = normalize_angle(calculate_instant_target_phi(x, distance) - current_phi);
 		float deviation_angle = normalize_angle(atan2(current_y - starting_y, current_x - starting_x) - atan2(target_y - starting_y, target_x - starting_x) );
 		float deviation_distance = -direction * sqrt(SQR(current_y - starting_y) + SQR(current_x - starting_x)) * sin(deviation_angle); // positive to the left and negative to the right
-		float phi_correction_term = direction * (calculate_instant_target_phi(x, distance) - absolute_phi) * (1.5 / ( MAX( ( abs(target_speed_R) + abs(target_speed_L) )/2, 100.0) /500.0) ); // the first coefficient is tunable
+		float phi_correction_term = direction * phi_error * ( 1.5 / ( MAX( ( abs(target_speed_R) + abs(target_speed_L) )/2, 100.0) /500.0) ); // the first coefficient is tunable
 		lane_correction_term = (deviation_distance) * ( 0.04 / ( MAX( ( abs(target_speed_R) + abs(target_speed_L) )/2, 100.0) /500.0)) + phi_correction_term; // the first coefficient is tunable
 		lane_correction_term = MIN(MAX(lane_correction_term, -0.1), 0.1);
+		debugger = deviation_distance;
 
 		set_target_speeds(direction*calculate_instant_target_speed_R(x, distance)*(1 + lane_correction_term) ,direction*calculate_instant_target_speed_L(x, distance)* (1 - lane_correction_term));
 		custom_delay(4);
@@ -102,11 +104,13 @@ int move_forward(float distance, float speed, float target_x, float target_y, fl
 	int32_t phase_two_start_time = micros();
 	while (distance_to_target > 0 && distance_to_target <= previous_distance_to_target){
 		
+		float phi_error = normalize_angle(calculate_instant_target_phi(x, distance) - current_phi);
 		float deviation_angle = normalize_angle(atan2(current_y - starting_y, current_x - starting_x) - atan2(target_y - starting_y, target_x - starting_x) );
-		float deviation_distance = -direction * sqrt(SQR(current_y - starting_y) + SQR(current_x - starting_x)) * sin(deviation_angle);
-		float phi_correction_term = direction * (calculate_instant_target_phi(x, distance) - absolute_phi) * ( 1.5 / ( MAX( ( abs(target_speed_R) + abs(target_speed_L) )/2, 100.0) /500.0) ); // the first coefficient is tunable
-		lane_correction_term = (deviation_distance) * ( 0.04 / ( MAX( ( abs(target_speed_R) + abs(target_speed_L) )/2, 100.0) /500.0) ) + phi_correction_term;
+		float deviation_distance = -direction * sqrt(SQR(current_y - starting_y) + SQR(current_x - starting_x)) * sin(deviation_angle); // positive to the left and negative to the right
+		float phi_correction_term = direction * phi_error * ( 1.5 / ( MAX( ( abs(target_speed_R) + abs(target_speed_L) )/2, 100.0) /500.0) ); // the first coefficient is tunable
+		lane_correction_term = (deviation_distance) * ( 0.04 / ( MAX( ( abs(target_speed_R) + abs(target_speed_L) )/2, 100.0) /500.0)) + phi_correction_term; // the first coefficient is tunable
 		lane_correction_term = MIN(MAX(lane_correction_term, -0.1), 0.1);
+		debugger = deviation_distance;
 
 		set_target_speeds(speed*(1 + lane_correction_term) ,speed* (1 - lane_correction_term));
 		speed = MAX(fabs(speed)*0.99, speed_offset) * direction;
@@ -235,7 +239,7 @@ float calculate_instant_target_phi(float x, float distance)
 int rotate(float angle, int8_t is_radian){
 	wait_for_idle();
 	reset_speed_control_variables();
-	float rotating_breaking_acceleration = -4;
+	float rotating_breaking_acceleration = -3;
 	float rotating_ramping_acceleration = 4;
 	angle = is_radian ? angle : deg_to_rad(angle);
 	float arc_length = (wheels_spacing / 2) * angle;
@@ -363,7 +367,7 @@ int go_to(float x, float y, float speed, float direction)
 	if(direction == -1){
 		target_angle = normalize_angle(target_angle - PI);
 	}
-    while (fabs(target_angle - current_phi) > deg_to_rad(2))
+    while (fabs(target_angle - current_phi) > deg_to_rad(1.5))
 	{
 		if (orientate(target_angle, 1)){
 			return 1;
@@ -394,7 +398,7 @@ void reset_speed_control_variables(){
 	previous_speed_error_R = 0;
 }
 bool is_idle(){
-	int encoder_tolerance = 5;
+	int encoder_tolerance = 3;
 	int pwm_tolerance = 500;
 	bool right_wheel_idle = (fabs(target_encoder_count_R - encoder_count_R) < encoder_tolerance) && (fabs(PWM_R) < pwm_tolerance) && (fabs(previous_position_error_R) < encoder_tolerance);
 	bool left_wheel_idle = (fabs(target_encoder_count_L - encoder_count_L) < encoder_tolerance) && (fabs(PWM_L) < pwm_tolerance) && (fabs(previous_position_error_L) < encoder_tolerance);

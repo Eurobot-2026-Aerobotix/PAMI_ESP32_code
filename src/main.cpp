@@ -15,7 +15,7 @@
 #include <Arduino.h>
 #include "navigation.h"
 #include "command_controller.h"
-//#include "communication.h"
+#include "communication.h"
 #include "websocket.h"
 
 // External variables from communication
@@ -29,7 +29,6 @@ TaskHandle_t commandExecutionTaskHandle;
 TaskHandle_t websocketTaskHandle;
 TaskHandle_t emergencyBreakTaskHandle;
 int websocket=0;
-//float debugger = 0;
 // Custom strategy implementation
 void strategy(){
   Serial.println("PAMI Robot Strategy Started!");
@@ -46,24 +45,24 @@ void strategy(){
   int goto_cmd = 0, orientate_cmd = 1, set_position_cmd = 2, pickup_cmd = 3, putdown_cmd = 4, walking_position_cmd = 5, prepare_cmd = 6 , letgo_cmd = 7, go_backward_cmd = 8, forward_cmd = 9, move_linear_cmd=10  ; 
   
   // Use global commands array received from ROS2
-  //extern int commands[];
-  int commands[] = { set_position_cmd, 0, 0, 0, // set initial position at (0,0) with 90 degrees orientation
-                      goto_cmd, 500, 0, 500, 1,
-                      goto_cmd, 0, 0, 500, 1,
-                      orientate_cmd, 0, 0,
-                      // orientate_cmd, 90, 0,
-                      // goto_cmd, 500, 500, 400, 1,
-                      // pickup_cmd, 1, 0, 0,
-                      // goto_cmd, 500, 0, 400, 1,
-                      // putdown_cmd,
-                      // walking_position_cmd,
-                      // prepare_cmd,
-                      // letgo_cmd,
-                      // forward_cmd, 300, 400, 500, 500, 1
-                    };
+  extern int commands[];
+  // int commands[] = { set_position_cmd, 0, 0, 0, // set initial position at (0,0) with 90 degrees orientation
+  //                     goto_cmd, 500, 0, 500, 1,
+  //                     goto_cmd, 0, 0, 500, 1,
+  //                     orientate_cmd, 0, 0,
+  //                     // orientate_cmd, 90, 0,
+  //                     // goto_cmd, 500, 500, 400, 1,
+  //                     // pickup_cmd, 1, 0, 0,
+  //                     // goto_cmd, 500, 0, 400, 1,
+  //                     // putdown_cmd,
+  //                     // walking_position_cmd,
+  //                     // prepare_cmd,
+  //                     // letgo_cmd,
+  //                     // forward_cmd, 300, 400, 500, 500, 1
+  //                   };
   extern size_t commands_count;
-  //int num_commands = commands_count;
-  int num_commands = sizeof(commands) / sizeof(commands[0]); // For testing, replace with commands_count in production
+  int num_commands = commands_count;
+  //int num_commands = sizeof(commands) / sizeof(commands[0]); // For testing, replace with commands_count in production
   int i = 0;
   strategy_start_time = millis();
   while (i < num_commands){
@@ -161,43 +160,43 @@ void strategy(){
     }
   }
   // 3. Send completion signal
-  //send_action_done(1);
+  send_action_done(1);
 
   Serial.println("Strategy execution completed!");
 }
 
-// void communicationTask(void *pvParameters)
-// {
-//   const TickType_t xDelay = pdMS_TO_TICKS(50); // 50ms delay for responsive communication
-//   TickType_t xLastWakeTime = xTaskGetTickCount();
+void communicationTask(void *pvParameters)
+{
+  const TickType_t xDelay = pdMS_TO_TICKS(50); // 50ms delay for responsive communication
+  TickType_t xLastWakeTime = xTaskGetTickCount();
 
-//   Serial.println("Communication task started");
+  Serial.println("Communication task started");
   
-//   // Setup micro-ROS (will handle WiFi connection internally)
-//   if (setup_micro_ros("harissa", "harissaharissa2026", "10.42.1.1", 8888))
-//   {
-//     Serial.println("micro-ROS setup successful");
-//   }
-//   else
-//   {
-//     Serial.println("micro-ROS setup failed");
-//   }
+  // Setup micro-ROS (will handle WiFi connection internally)
+  if (setup_micro_ros("harissa", "harissaharissa2026", "10.42.1.1", 8888))
+  {
+    Serial.println("micro-ROS setup successful");
+  }
+  else
+  {
+    Serial.println("micro-ROS setup failed");
+  }
   
-//   for (;;) // Infinite loop - CRITICAL!
-//   {
-//     // Only run communication loop if WiFi is connected
-//     if (WiFi.status() == WL_CONNECTED) {
-//       communication_loop();
-//     } else {
-//       // If WiFi disconnected, try to reconnect
-//       Serial.println("WiFi disconnected in task, attempting reconnection...");
-//       connect_wifi("harissa", "harissaharissa2026");
-//       vTaskDelay(pdMS_TO_TICKS(5000)); // Wait 5 seconds before next attempt
-//     }
+  for (;;) // Infinite loop - CRITICAL!
+  {
+    // Only run communication loop if WiFi is connected
+    if (WiFi.status() == WL_CONNECTED) {
+      communication_loop();
+    } else {
+      // If WiFi disconnected, try to reconnect
+      Serial.println("WiFi disconnected in task, attempting reconnection...");
+      connect_wifi("harissa", "harissaharissa2026");
+      vTaskDelay(pdMS_TO_TICKS(5000)); // Wait 5 seconds before next attempt
+    }
 
-//     vTaskDelayUntil(&xLastWakeTime, xDelay);
-//   }
-// }
+    vTaskDelayUntil(&xLastWakeTime, xDelay);
+  }
+}
 
 void emergencyBreakTask(void *pvParameters)
 {
@@ -206,7 +205,7 @@ void emergencyBreakTask(void *pvParameters)
   
   for (;;)
   {
-    if (( ((get_ultrasonic_distance() < min_distance && trajectory == STRAIGHT) || (millis() - strategy_start_time >= max_running_time)) && wheel_state_R != EMERGENCY_BREAK && wheel_state_L != EMERGENCY_BREAK) ) 
+    if (( (( (!ultrasonic_blocked) && get_ultrasonic_distance() < min_distance && trajectory == STRAIGHT) || (millis() - strategy_start_time >= max_running_time)) && wheel_state_R != EMERGENCY_BREAK && wheel_state_L != EMERGENCY_BREAK) ) 
     {
       prepare_emergency_break();
     }
@@ -390,7 +389,7 @@ void setup()
   set_PWM_min_max(1023, 100, 100, -100, -100); //yess    //130  120
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(47.317247893109677230077992933005,47.417944313397205804732340651526,120.5181194805959281481467603); //   122.84370983629917196470781680778
+  set_wheel_diameter_and_spacing(47.317247893109677230077992933005,47.417944313397205804732340651526,119.98254149091414877140958997754); //   122.84370983629917196470781680778
   HAL_setup();
 
 
@@ -407,17 +406,17 @@ void setup()
   Serial.println("Creating tasks...");
   
   //Create tasks with lower stack sizes first
-  //   xTaskCreatePinnedToCore(
-  //    communicationTask,
-  //     "communicationTask",
-  //     8192,
-  //     NULL,
-  //     1, // Lower priority
-  //      &communicationTaskHandle,
-  //      0); // Pin to core 0
+    xTaskCreatePinnedToCore(
+     communicationTask,
+      "communicationTask",
+      8192,
+      NULL,
+      1, // Lower priority
+       &communicationTaskHandle,
+       0); // Pin to core 0
 
-  //  delay(500); // Delay between task creation
-  //  Serial.println("Communication task created");
+   delay(500); // Delay between task creation
+   Serial.println("Communication task created");
 
 
   xTaskCreatePinnedToCore(
@@ -468,7 +467,7 @@ void setup()
   Serial.println("All tasks created successfully!");
   control_loop_state = DISACTIVATED;
   delay(1000);
-  strategy_waiting = 1;
+  strategy_waiting = 0;
 }
 void loop(){
   
@@ -490,6 +489,6 @@ void loop(){
   // delay(10);
   // send_values_to_usart(current_speed_R, current_speed_L, target_speed_R, target_speed_L);
   // delay(10);
- // send_values_to_usart(encoder_count_R, encoder_count_L, current_x, current_y); // send encoder counts and position for debugging
-  //delay(10);
+  // send_values_to_usart(debugger*100, 0, target_speed_R, target_speed_L); // send encoder counts and position for debugging
+  // delay(10);
 }
