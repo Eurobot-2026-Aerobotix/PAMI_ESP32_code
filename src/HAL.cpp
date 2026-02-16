@@ -60,16 +60,16 @@ float wheel_diameter_L;
 float wheels_spacing;
 
 // PID control parameters
-float kpS_R = 0.6;
+float kpS_R = 3;
 float kdS_R = 0.0000;
-float kiS_R = 20;
+float kiS_R = 50;
 float speed_integral_R = 0;
 float speed_derivative_R = 0;
 float previous_speed_error_R = 0;
 
-float kpS_L = 0.6;
+float kpS_L = 3;
 float kdS_L = 0;
-float kiS_L = 20;
+float kiS_L = 50;
 float speed_integral_L = 0;
 float speed_derivative_L = 0;
 float previous_speed_error_L = 0;
@@ -86,13 +86,13 @@ int32_t target_encoder_count_R = 0;
 int32_t target_encoder_count_L = 0;
 
 // position control parameters
-float kpP_R = 20;
-float kdP_R = 0;
-float kiP_R = 0;
+float kpP_R = 100;
+float kdP_R = 5;
+float kiP_R = 400;
 
-float kpP_L = 20;
-float kdP_L = 0;
-float kiP_L = 0;
+float kpP_L = 100;
+float kdP_L = 5;
+float kiP_L = 400;
 volatile float debugger = 0;
 int strategy_start_time = 1000000;
 

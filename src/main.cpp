@@ -15,7 +15,7 @@
 #include <Arduino.h>
 #include "navigation.h"
 #include "command_controller.h"
-#include "communication.h"
+//#include "communication.h"
 #include "websocket.h"
 
 // External variables from communication
@@ -46,9 +46,24 @@ void strategy(){
   int goto_cmd = 0, orientate_cmd = 1, set_position_cmd = 2, pickup_cmd = 3, putdown_cmd = 4, walking_position_cmd = 5, prepare_cmd = 6 , letgo_cmd = 7, go_backward_cmd = 8, forward_cmd = 9, move_linear_cmd=10  ; 
   
   // Use global commands array received from ROS2
-  extern int commands[];
+  //extern int commands[];
+  int commands[] = { set_position_cmd, 0, 0, 0, // set initial position at (0,0) with 90 degrees orientation
+                      goto_cmd, 500, 0, 500, 1,
+                      goto_cmd, 0, 0, 500, 1,
+                      orientate_cmd, 0, 0,
+                      // orientate_cmd, 90, 0,
+                      // goto_cmd, 500, 500, 400, 1,
+                      // pickup_cmd, 1, 0, 0,
+                      // goto_cmd, 500, 0, 400, 1,
+                      // putdown_cmd,
+                      // walking_position_cmd,
+                      // prepare_cmd,
+                      // letgo_cmd,
+                      // forward_cmd, 300, 400, 500, 500, 1
+                    };
   extern size_t commands_count;
-  int num_commands = commands_count;
+  //int num_commands = commands_count;
+  int num_commands = sizeof(commands) / sizeof(commands[0]); // For testing, replace with commands_count in production
   int i = 0;
   strategy_start_time = millis();
   while (i < num_commands){
@@ -146,43 +161,43 @@ void strategy(){
     }
   }
   // 3. Send completion signal
-  send_action_done(1);
+  //send_action_done(1);
 
   Serial.println("Strategy execution completed!");
 }
 
-void communicationTask(void *pvParameters)
-{
-  const TickType_t xDelay = pdMS_TO_TICKS(50); // 50ms delay for responsive communication
-  TickType_t xLastWakeTime = xTaskGetTickCount();
+// void communicationTask(void *pvParameters)
+// {
+//   const TickType_t xDelay = pdMS_TO_TICKS(50); // 50ms delay for responsive communication
+//   TickType_t xLastWakeTime = xTaskGetTickCount();
 
-  Serial.println("Communication task started");
+//   Serial.println("Communication task started");
   
-  // Setup micro-ROS (will handle WiFi connection internally)
-  if (setup_micro_ros("harissa", "harissaharissa2026", "10.42.1.1", 8888))
-  {
-    Serial.println("micro-ROS setup successful");
-  }
-  else
-  {
-    Serial.println("micro-ROS setup failed");
-  }
+//   // Setup micro-ROS (will handle WiFi connection internally)
+//   if (setup_micro_ros("harissa", "harissaharissa2026", "10.42.1.1", 8888))
+//   {
+//     Serial.println("micro-ROS setup successful");
+//   }
+//   else
+//   {
+//     Serial.println("micro-ROS setup failed");
+//   }
   
-  for (;;) // Infinite loop - CRITICAL!
-  {
-    // Only run communication loop if WiFi is connected
-    if (WiFi.status() == WL_CONNECTED) {
-      communication_loop();
-    } else {
-      // If WiFi disconnected, try to reconnect
-      Serial.println("WiFi disconnected in task, attempting reconnection...");
-      connect_wifi("harissa", "harissaharissa2026");
-      vTaskDelay(pdMS_TO_TICKS(5000)); // Wait 5 seconds before next attempt
-    }
+//   for (;;) // Infinite loop - CRITICAL!
+//   {
+//     // Only run communication loop if WiFi is connected
+//     if (WiFi.status() == WL_CONNECTED) {
+//       communication_loop();
+//     } else {
+//       // If WiFi disconnected, try to reconnect
+//       Serial.println("WiFi disconnected in task, attempting reconnection...");
+//       connect_wifi("harissa", "harissaharissa2026");
+//       vTaskDelay(pdMS_TO_TICKS(5000)); // Wait 5 seconds before next attempt
+//     }
 
-    vTaskDelayUntil(&xLastWakeTime, xDelay);
-  }
-}
+//     vTaskDelayUntil(&xLastWakeTime, xDelay);
+//   }
+// }
 
 void emergencyBreakTask(void *pvParameters)
 {
@@ -211,12 +226,6 @@ void PIDTask(void *pvParameters){
   float dt = 0.001;
 
   for (;;){
-    // Add error checking
-    if (previous_speed_control_time == 0){
-      previous_speed_control_time = micros();
-      vTaskDelayUntil(&xLastWakeTime, xDelay);
-      continue;
-    }
 
     update_position(dt);
 
@@ -398,17 +407,17 @@ void setup()
   Serial.println("Creating tasks...");
   
   //Create tasks with lower stack sizes first
-    xTaskCreatePinnedToCore(
-     communicationTask,
-      "communicationTask",
-      8192,
-      NULL,
-      1, // Lower priority
-       &communicationTaskHandle,
-       0); // Pin to core 0
+  //   xTaskCreatePinnedToCore(
+  //    communicationTask,
+  //     "communicationTask",
+  //     8192,
+  //     NULL,
+  //     1, // Lower priority
+  //      &communicationTaskHandle,
+  //      0); // Pin to core 0
 
-   delay(500); // Delay between task creation
-   Serial.println("Communication task created");
+  //  delay(500); // Delay between task creation
+  //  Serial.println("Communication task created");
 
 
   xTaskCreatePinnedToCore(
@@ -459,7 +468,7 @@ void setup()
   Serial.println("All tasks created successfully!");
   control_loop_state = DISACTIVATED;
   delay(1000);
-  strategy_waiting = 0;
+  strategy_waiting = 1;
 }
 void loop(){
   
