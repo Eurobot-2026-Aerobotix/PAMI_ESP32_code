@@ -353,9 +353,13 @@ void pickup(int pick_right, int pick_left, int up_or_down){
     custom_delay(2000);
 }
 void putdown(){
+    move_servo(1);
+    custom_delay(2000);
     set_pump_state(0);
     set_EV_states(1, 1);
-    custom_delay(4000);
+    custom_delay(2000);
+    move_servo(0);
+
 }
 void letgo(){
     set_pump_state(0);

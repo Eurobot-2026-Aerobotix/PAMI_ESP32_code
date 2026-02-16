@@ -45,9 +45,33 @@ void strategy(){
   int goto_cmd = 0, orientate_cmd = 1, set_position_cmd = 2, pickup_cmd = 3, putdown_cmd = 4, walking_position_cmd = 5, prepare_cmd = 6 , letgo_cmd = 7, go_backward_cmd = 8, forward_cmd = 9, move_linear_cmd=10  ; 
   
   // Use global commands array received from ROS2
-  extern int commands[];
-  // int commands[] = { set_position_cmd, 0, 0, 0, // set initial position at (0,0) with 90 degrees orientation
-  //                     goto_cmd, 500, 0, 500, 1,
+  // extern int commands[];
+  int commands[] = {  //set_position_cmd, 0, 0, 0,
+                      //pickup_cmd, 1, 1, 0,
+                      //goto_cmd, 600, 0, 400, 1,
+                     // goto_cmd, 200, 200, 400, 1,
+
+    
+    
+                     
+                       set_position_cmd, 67, 675, 90,
+                      goto_cmd, 67, 1350, 500, 1,
+                      goto_cmd, 110, 1350, 500, 1,
+                      pickup_cmd, 1, 1, 0,
+                      goto_cmd, 67, 1150, 300, 1,
+                      goto_cmd, 67, 675, 500, 1,
+                      putdown_cmd,
+                      goto_cmd, 67, 1098, 500, -1,
+                      goto_cmd, 156, 1098, 500, 1,
+                        pickup_cmd, 1, 1, 0,
+                        goto_cmd, 156, 675, 500, 1,
+                        putdown_cmd,
+                        goto_cmd, 156, 850, 300, -1,
+                        orientate_cmd, 90, 0,
+                        pickup_cmd, 1, 1, 1,
+                     
+                         // set_position_cmd, 0, 0, 0, // set initial position at (0,0) with 90 degrees orientation
+  //                       goto_cmd, 500, 0, 500, 1,
   //                     goto_cmd, 0, 0, 500, 1,
   //                     orientate_cmd, 0, 0,
   //                     // orientate_cmd, 90, 0,
@@ -59,10 +83,10 @@ void strategy(){
   //                     // prepare_cmd,
   //                     // letgo_cmd,
   //                     // forward_cmd, 300, 400, 500, 500, 1
-  //                   };
+                     };
   extern size_t commands_count;
-  int num_commands = commands_count;
-  //int num_commands = sizeof(commands) / sizeof(commands[0]); // For testing, replace with commands_count in production
+  //int num_commands = commands_count;
+  int num_commands = sizeof(commands) / sizeof(commands[0]); // For testing, replace with commands_count in production
   int i = 0;
   strategy_start_time = millis();
   while (i < num_commands){
@@ -406,17 +430,17 @@ void setup()
   Serial.println("Creating tasks...");
   
   //Create tasks with lower stack sizes first
-    xTaskCreatePinnedToCore(
-     communicationTask,
-      "communicationTask",
-      8192,
-      NULL,
-      1, // Lower priority
-       &communicationTaskHandle,
-       0); // Pin to core 0
+  //   xTaskCreatePinnedToCore(
+  //    communicationTask,
+  //     "communicationTask",
+  //     8192,
+  //     NULL,
+  //     1, // Lower priority
+  //      &communicationTaskHandle,
+  //      0); // Pin to core 0
 
-   delay(500); // Delay between task creation
-   Serial.println("Communication task created");
+  //  delay(500); // Delay between task creation
+  //  Serial.println("Communication task created");
 
 
   xTaskCreatePinnedToCore(
@@ -467,7 +491,7 @@ void setup()
   Serial.println("All tasks created successfully!");
   control_loop_state = DISACTIVATED;
   delay(1000);
-  strategy_waiting = 0;
+  strategy_waiting = true;
 }
 void loop(){
   
@@ -491,4 +515,6 @@ void loop(){
   // delay(10);
   // send_values_to_usart(debugger*100, 0, target_speed_R, target_speed_L); // send encoder counts and position for debugging
   // delay(10);
+  send_values_to_usart(target_speed_R, target_speed_L, current_speed_R, current_speed_L); // send encoder counts and position for debugging
+  delay(10);
 }

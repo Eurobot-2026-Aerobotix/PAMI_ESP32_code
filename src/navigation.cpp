@@ -4,7 +4,7 @@ enum Control_loop control_loop_state = SPEED;
 enum Wheel_state wheel_state_R = DEAD_STOP;
 enum Wheel_state wheel_state_L = DEAD_STOP;
 enum Trajectory trajectory = STRAIGHT;
-float ramping_acceleration = 5; // tzid acc tzid fl ramping meloul 
+float ramping_acceleration = 2; // tzid acc tzid fl ramping meloul 
 float breaking_acceleration = -2; // tzid break tzid flkher 
 float emergency_breaking_acceleration = -10;
 float rotating_speed = 400;
@@ -16,8 +16,8 @@ float turning_radius;
 int min_distance = 70;
 int32_t previous_speed_control_time = 0;
 float speed_offset = 50;
-float deceleration_offset = 40;// eli ybda menou deceleratiuon //40
-float deceleration_offset_fast = 40;
+float deceleration_offset = 10;// eli ybda menou deceleratiuon //40
+float deceleration_offset_fast = 10;
 float acc_linearization_coef = 15;
 int8_t reached_destination = 1;
 
