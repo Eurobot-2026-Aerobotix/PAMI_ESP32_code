@@ -42,33 +42,42 @@ void strategy(){
   }
   
 
-  int goto_cmd = 0, orientate_cmd = 1, set_position_cmd = 2, pickup_cmd = 3, putdown_cmd = 4, walking_position_cmd = 5, prepare_cmd = 6 , letgo_cmd = 7, go_backward_cmd = 8, forward_cmd = 9, move_linear_cmd=10  ; 
+  int goto_cmd = 0, orientate_cmd = 1, set_position_cmd = 2, pickup_cmd = 3, putdown_cmd = 4, walking_position_cmd = 5, prepare_cmd = 6 , letgo_cmd = 7, go_backward_cmd = 8, forward_cmd = 9, move_linear_cmd=10, rotate_cmd=11  ; 
   
   // Use global commands array received from ROS2
   // extern int commands[];
-  int commands[] = {  //set_position_cmd, 0, 0, 0,
-                      //pickup_cmd, 1, 1, 0,
-                      //goto_cmd, 600, 0, 400, 1,
+   int commands[] = {  
+   // set_position_cmd, 0, 0, 0,
+    //goto_cmd, 400, 0, 400, 1,
+   // rotate_cmd, 90, 0, // initial rotation to prepare the robot for movement, can be removed if not needed
+    //set_position_cmd, 1800, 2500, 0,
+                       //goto_cmd, 400, -100, 400, 1,
+  //                     goto_cmd, 1800, 2500, 400, 1, 
+                     // pickup_cmd, 1, 1, 0,
+                      //orientate_cmd, 180, 0,
+                      //goto_cmd, 0, 0, 400, 1,
                      // goto_cmd, 200, 200, 400, 1,
+                      //goto_cmd, 200, 0, 400, 1,
+                      //goto_cmd, 0, 0, 400, 1,
+                      
+    
+                     /////////////////
+                      set_position_cmd, 67, 675, 90,
 
-    
-    
-                     
-                       set_position_cmd, 67, 675, 90,
-                      goto_cmd, 67, 1350, 500, 1,
-                      goto_cmd, 110, 1350, 500, 1,
-                      pickup_cmd, 1, 1, 0,
-                      goto_cmd, 67, 1150, 300, 1,
-                      goto_cmd, 67, 675, 500, 1,
-                      putdown_cmd,
-                      goto_cmd, 67, 1098, 500, -1,
-                      goto_cmd, 156, 1098, 500, 1,
-                        pickup_cmd, 1, 1, 0,
-                        goto_cmd, 156, 675, 500, 1,
-                        putdown_cmd,
-                        goto_cmd, 156, 850, 300, -1,
-                        orientate_cmd, 90, 0,
-                        pickup_cmd, 1, 1, 1,
+                     goto_cmd, 63, 1350, 500, 1,
+                     goto_cmd, 110, 1350, 500, 1,
+                     //pickup_cmd, 1, 1, 0,
+                      goto_cmd, 57, 1150, 300, 1,
+                      goto_cmd, 57, 680, 500, 1,
+                      // putdown_cmd,
+                      // goto_cmd, 63, 1098, 500, -1,
+                      // goto_cmd, 140, 1098, 500, 1,
+                      //   pickup_cmd, 1, 1, 0,
+                      //   goto_cmd, 140, 675, 500, 1,
+                      //   putdown_cmd,
+                      //   goto_cmd, 140, 850, 300, -1,
+                      //   orientate_cmd, -90, 0,
+                      //   pickup_cmd, 1, 1, 1,*/
                      
                          // set_position_cmd, 0, 0, 0, // set initial position at (0,0) with 90 degrees orientation
   //                       goto_cmd, 500, 0, 500, 1,
@@ -80,7 +89,7 @@ void strategy(){
   //                     // goto_cmd, 500, 0, 400, 1,
   //                     // putdown_cmd,
   //                     // walking_position_cmd,
-  //                     // prepare_cmd,
+  //                     // pre+
   //                     // letgo_cmd,
   //                     // forward_cmd, 300, 400, 500, 500, 1
                      };
@@ -89,6 +98,7 @@ void strategy(){
   int num_commands = sizeof(commands) / sizeof(commands[0]); // For testing, replace with commands_count in production
   int i = 0;
   strategy_start_time = millis();
+  //rotate(1800, 0);// initial rotation to prepare the robot for movement, can be removed if not needed
   while (i < num_commands){
     int command_type = commands[i];
     if (command_type == goto_cmd){
@@ -104,6 +114,16 @@ void strategy(){
       Serial.printf("[POS] After goto: robot_x=%.1f, robot_y=%.1f, robot_phi=%.1f deg\n", current_x, current_y, rad_to_deg(current_phi));
       i += 5;
     }
+
+    else if (command_type == rotate_cmd) {
+            int angle = commands[i + 1];
+            int is_radian = commands[i + 2];
+            Serial.printf("[CMD] rotate_cmd: angle=%d, is_radian=%d\n", angle, is_radian);
+            rotate(angle, is_radian);
+            Serial.printf("[POS] After rotate: robot_x=%.1f, robot_y=%.1f, robot_phi=%.1f deg\n", current_x, current_y, rad_to_deg(current_phi));
+            i += 3;}
+
+
     else if (command_type == orientate_cmd){
       int angle = commands[i + 1];
       int is_radian = commands[i + 2];
@@ -119,7 +139,7 @@ void strategy(){
       Serial.printf("[CMD] set_position_cmd: x=%d, y=%d, phi=%d degrees\n", x, y, phi_degrees);
       float phi_radians = deg_to_rad(phi_degrees);
       set_position(x, y, phi_radians, phi_radians);
-      Serial.printf("[POS] After set_position: robot_x=%.1f, robot_y=%.1f, robot_phi=%.1f deg\n", current_x, current_y, rad_to_deg(current_phi));
+      Serial.printf("[POS] After set_position: robot_x=%.1f, robot_y=%.1f, robot_phi=%.1f deg\n",   current_x, current_y, rad_to_deg(current_phi));
       i += 4;
     }
     else if (command_type == pickup_cmd){
@@ -128,6 +148,9 @@ void strategy(){
       Serial.printf("[POS] After pickup: robot_x=%.1f, robot_y=%.1f, robot_phi=%.1f deg\n", current_x, current_y, rad_to_deg(current_phi));
       i += 4;
     }
+
+
+    
     else if (command_type == putdown_cmd){
       Serial.println("[CMD] putdown_cmd");
       putdown();
@@ -312,10 +335,9 @@ void PIDTask(void *pvParameters){
 
       previous_position_error_L = error;
     }
- //PWM_L= 0;// MIN =320temchi  319 temchich   min=-320 temchi -319temchich  
- //PWM_R= 0;//MIN =320temchi  319 temchich    min=-320 temchi -319temchich  
+ //PWM_L= 500;// MIN =320temchi  319 temchich   min=-320 temchi -319temchich  
+ //PWM_R= 500;//MIN =320temchi  319 temchich    min=-320 temchi -319temchich  
 //set_target_speeds(600, 600); 
-
   //  delay(10);
     run_right_motor();
     run_left_motor();
@@ -492,6 +514,10 @@ void setup()
   control_loop_state = DISACTIVATED;
   delay(1000);
   strategy_waiting = true;
+  //rotate(1800, 0);
+  //prepare_rotate(1800, 0);
+ // set_position(0, 0, 0, 0);
+  //go_to(400, 0, 400, 1);
 }
 void loop(){
   
@@ -509,12 +535,13 @@ void loop(){
   //    send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
   //  delay(10);
   //  }
+
   // send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
   // delay(10);
   // send_values_to_usart(current_speed_R, current_speed_L, target_speed_R, target_speed_L);
   // delay(10);
   // send_values_to_usart(debugger*100, 0, target_speed_R, target_speed_L); // send encoder counts and position for debugging
   // delay(10);
-  send_values_to_usart(target_speed_R, target_speed_L, current_speed_R, current_speed_L); // send encoder counts and position for debugging
-  delay(10);
+  // send_values_to_usart(current_x, current_y, absolute_phi, 0); // send encoder counts and position for debugging
+  // delay(10);
 }

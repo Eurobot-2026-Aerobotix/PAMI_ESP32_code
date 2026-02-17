@@ -1,9 +1,9 @@
 #include "odometry.h"
 
-float current_x = 63;
-float current_y = 675;
-float current_phi = deg_to_rad(90);    
-float absolute_phi = deg_to_rad(90);
+float current_x = 0;
+float current_y = 0;
+double current_phi = 0;
+double absolute_phi = 0;
 float phi_offset = 0;  // Offset to align encoder frame with world frame
 int32_t previous_encoder_count_R = 0;
 int32_t previous_encoder_count_L = 0;
@@ -20,14 +20,14 @@ void update_position(float dt){
 	encoder_count_R = encoder_get_R();
 
 	update_speed(dt);
-	float dR = ticks_to_distance(encoder_count_R - previous_encoder_count_R, wheel_diameter_R);
-	float dL = ticks_to_distance(encoder_count_L - previous_encoder_count_L, wheel_diameter_L);
-	float dC = (dR+dL)/2;
+	double dR = ticks_to_distance(encoder_count_R - previous_encoder_count_R, wheel_diameter_R);
+	double dL = ticks_to_distance(encoder_count_L - previous_encoder_count_L, wheel_diameter_L);
+	double dC = (dR+dL)/2;
 	previous_encoder_count_R = encoder_count_R;
 	previous_encoder_count_L = encoder_count_L;
 
-	float previous_absolute_phi = absolute_phi;
-	float encoder_phi = ( ticks_to_distance(encoder_count_R, wheel_diameter_R) - ticks_to_distance(encoder_count_L, wheel_diameter_L) )/wheels_spacing;
+	double previous_absolute_phi = absolute_phi;
+	double encoder_phi = ( ticks_to_distance(encoder_count_R, wheel_diameter_R) - ticks_to_distance(encoder_count_L, wheel_diameter_L) )/wheels_spacing;
 	absolute_phi = encoder_phi + phi_offset;
 
 	current_x += dC*cos( ( previous_absolute_phi + absolute_phi ) / 2 );
@@ -68,7 +68,7 @@ float get_arc_distance_to(float target_point__x, float target_point__y, float ce
 float get_angle_to(float x, float y){
 	return atan2(y - current_y, x - current_x);
 }
-float ticks_to_distance(int32_t ticks, float wheel_diameter){
+double ticks_to_distance(int32_t ticks, float wheel_diameter){
 	return (ticks*wheel_diameter*PI/CPR);
 }
 float distance_to_ticks(int32_t distance, float wheel_diameter){
