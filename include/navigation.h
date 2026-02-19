@@ -35,6 +35,7 @@ extern enum Trajectory trajectory;
 extern float ramping_acceleration; // !!! these accelerations mark the rate of change in velocity with respect to the distance traveled, not time!!!
 extern float breaking_acceleration;
 extern float emergency_breaking_acceleration;
+extern float acc_linearization_coef;
 extern float rotating_speed;
 extern float cruise_speed_R; // the speed which the right wheel is accelerating towards
 extern float cruise_speed_L;

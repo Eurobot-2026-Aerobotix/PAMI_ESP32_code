@@ -26,7 +26,6 @@ int commands[100]; // Integer array for converted commands
 size_t commands_count = 0;
 bool micro_ros_init_successful = false;
 enum CommunicationState comm_state = WAITING_AGENT;
-bool strategy_waiting=false ;
 
 // WiFi reconnection variables
 unsigned long last_wifi_check = 0;

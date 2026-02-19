@@ -15,7 +15,7 @@
 #include <Arduino.h>
 #include "navigation.h"
 #include "command_controller.h"
-#include "communication.h"
+//#include "communication.h"
 #include "websocket.h"
 
 /// tasks
@@ -48,14 +48,22 @@ void strategy()
   // Example: move forward, rotate, etc.
   // move_forward(100, 50); // Move 100mm at 50mm/s speed
   //custom_delay(500);
-  int goto_cmd = 0, orientate_cmd = 1, set_position_cmd = 2;
+  int delay_cmd = 0, goto_cmd = 1, orientate_cmd = 2, set_position_cmd = 3, backwards_cmd = 4;
   
   // Use global commands array received from ROS2
-  extern int commands[];
-  extern size_t commands_count;
-  int num_commands = commands_count;
+  //extern int commands[];
+  //extern size_t commands_count;
+  int commands[] = { //goto_cmd, 500, 0, 400,
+                     //goto_cmd, 0, 0, 400,
+                     //orientate_cmd, 0, 0
+                     backwards_cmd, 100, 200,
+                    }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
+  int num_commands = sizeof(commands) / sizeof(commands[0]);
+  //int num_commands = commands_count;
   int i = 0;
   strategy_start_time = millis();
+  // rotate(1800, 0);
+  // while(1);
   while (i < num_commands)
   {
     int command_type = commands[i];
@@ -67,6 +75,7 @@ void strategy()
       while(go_to(x, y, speed)){
         wait_for_obstacle_clearance();
         Serial.println("obstacle cleared, resuming...");
+        Serial.println("dhia is gay");
       }
       i += 4;
     }
@@ -84,45 +93,53 @@ void strategy()
       set_position(x, y, phi, phi); 
       i += 4; 
     }
+    else if (command_type == backwards_cmd) {
+      int distance = commands[i + 1];
+      int speed = commands[i + 2];
+      int target_point_x = current_x - distance * cos(current_phi);
+      int target_point_y = current_y - distance * sin(current_phi);
+      move_forward(distance, speed, target_point_x, target_point_y);
+      i += 3;
+    }
   }
   // 3. Send completion signal
-  send_action_done(1);
+  //send_action_done(1);
 
   Serial.println("Strategy execution completed!");
 }
 
-void communicationTask(void *pvParameters)
-{
-  const TickType_t xDelay = pdMS_TO_TICKS(50); // 50ms delay for responsive communication
-  TickType_t xLastWakeTime = xTaskGetTickCount();
+// void communicationTask(void *pvParameters)
+// {
+//   const TickType_t xDelay = pdMS_TO_TICKS(50); // 50ms delay for responsive communication
+//   TickType_t xLastWakeTime = xTaskGetTickCount();
 
-  Serial.println("Communication task started");
+//   Serial.println("Communication task started");
   
-  // Setup micro-ROS (will handle WiFi connection internally)
-  if (setup_micro_ros("harissa", "harissaharissa2026", "10.42.1.1", 8888))
-  {
-    Serial.println("micro-ROS setup successful");
-  }
-  else
-  {
-    Serial.println("micro-ROS setup failed");
-  }
+//   // Setup micro-ROS (will handle WiFi connection internally)
+//   if (setup_micro_ros("harissa", "harissaharissa2026", "10.42.1.1", 8888))
+//   {
+//     Serial.println("micro-ROS setup successful");
+//   }
+//   else
+//   {
+//     Serial.println("micro-ROS setup failed");
+//   }
   
-  for (;;) // Infinite loop - CRITICAL!
-  {
-    // Only run communication loop if WiFi is connected
-    if (WiFi.status() == WL_CONNECTED) {
-      communication_loop();
-    } else {
-      // If WiFi disconnected, try to reconnect
-      Serial.println("WiFi disconnected in task, attempting reconnection...");
-      connect_wifi("harissa", "harissaharissa2026");
-      vTaskDelay(pdMS_TO_TICKS(5000)); // Wait 5 seconds before next attempt
-    }
+//   for (;;) // Infinite loop - CRITICAL!
+//   {
+//     // Only run communication loop if WiFi is connected
+//     if (WiFi.status() == WL_CONNECTED) {
+//       communication_loop();
+//     } else {
+//       // If WiFi disconnected, try to reconnect
+//       Serial.println("WiFi disconnected in task, attempting reconnection...");
+//       connect_wifi("harissa", "harissaharissa2026");
+//       vTaskDelay(pdMS_TO_TICKS(5000)); // Wait 5 seconds before next attempt
+//     }
 
-    vTaskDelayUntil(&xLastWakeTime, xDelay);
-  }
-}
+//     vTaskDelayUntil(&xLastWakeTime, xDelay);
+//   }
+// }
 
 void emergencyBreakTask(void *pvParameters)
 {
@@ -281,7 +298,7 @@ void setup()
   set_PWM_min_max(1023, 240, 210, -240, -210);
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(57.342589790462290093200767685685, 57.342589790462290093200767685685, 92.938153961874487863117321276497);
+  set_wheel_diameter_and_spacing(57.26808944785478669422072940648, 57.472618338739982360985803440075, 92.294108582965129097502004452009);
   HAL_setup();
   
   // Initialize WebSocket if enabled
@@ -296,18 +313,18 @@ void setup()
 
   Serial.println("Creating tasks...");
 
-  //Create tasks with lower stack sizes first
-    xTaskCreatePinnedToCore(
-     communicationTask,
-      "communicationTask",
-      8192,
-      NULL,
-      1, // Lower priority
-       &communicationTaskHandle,
-       0); // Pin to core 0
+  // //Create tasks with lower stack sizes first
+  //   xTaskCreatePinnedToCore(
+  //    communicationTask,
+  //     "communicationTask",
+  //     8192,
+  //     NULL,
+  //     1, // Lower priority
+  //      &communicationTaskHandle,
+  //      0); // Pin to core 0
 
-   delay(500); // Delay between task creation
-   Serial.println("Communication task created");
+  //  delay(500); // Delay between task creation
+  //  Serial.println("Communication task created");
 
   xTaskCreatePinnedToCore(
       commandExecutionTask,
@@ -355,7 +372,7 @@ void setup()
   Serial.println("All tasks created successfully!");
   control_loop_state = DISACTIVATED;
   delay(1000);
-  strategy_waiting = 0;
+  strategy_waiting = 1;
 }
 
 void loop(){
@@ -387,6 +404,6 @@ void loop(){
   //   send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
   //   delay(10);
   // }
-  //send_values_to_usart(current_speed_L, current_speed_R, PWM_L*100/current_speed_L, PWM_R*100/current_speed_R);
-  vTaskDelay(pdMS_TO_TICKS(10));
+  send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
+  custom_delay(10);
 }
