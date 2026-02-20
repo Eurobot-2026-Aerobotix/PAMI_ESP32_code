@@ -53,11 +53,12 @@ void strategy()
   // Use global commands array received from ROS2
   //extern int commands[];
   //extern size_t commands_count;
-  int commands[] = { set_position_cmd, 337, 149, 0,
+  int commands[] = { set_position_cmd, 357, 199, 0,
                      goto_cmd, 1200, 350, 600,
-                     goto_cmd, 1940, 70, 600,
+                     goto_cmd, 1935, 70, 600,
                      orientate_cmd, 88, 0,
-                     backwards_cmd, 200, 200,
+                     backwards_cmd, 230, 200,
+                     set_position_cmd, 1900, 0, 90,
                      goto_cmd, 1900, 550, 400,
                     }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
   int num_commands = sizeof(commands) / sizeof(commands[0]);
@@ -92,7 +93,7 @@ void strategy()
       int x = commands[i + 1]; 
       int y = commands[i + 2]; 
       int phi = commands[i + 3]; 
-      set_position(x, y, phi, phi); 
+      set_position(x, y, deg_to_rad(phi), deg_to_rad(phi)); 
       i += 4; 
     }
     else if (command_type == backwards_cmd) {
@@ -100,7 +101,7 @@ void strategy()
       int speed = commands[i + 2];
       move_backwards(distance, speed);
       control_loop_state = DISACTIVATED;
-      set_position(1900, 0, deg_to_rad(90), deg_to_rad(90));
+      //set_position(1900, 0, deg_to_rad(90), deg_to_rad(90));
       i += 3;
     }
   }
@@ -406,6 +407,6 @@ void loop(){
   //   send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
   //   delay(10);
   // }
-  send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
+  send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, debugger);
   custom_delay(10);
 }
