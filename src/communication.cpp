@@ -26,6 +26,7 @@ int commands[100]; // Integer array for converted commands
 size_t commands_count = 0;
 bool micro_ros_init_successful = false;
 enum CommunicationState comm_state = WAITING_AGENT;
+bool is_yellow = true;
 
 // WiFi reconnection variables
 unsigned long last_wifi_check = 0;
@@ -281,6 +282,7 @@ void strategy_callback(const void *msgin)
         Serial.print(" -> command: ");
         Serial.println(commands[i]);
     }
+    is_yellow = (commands[2] < 1500);
 }
 
 // Send action done message
