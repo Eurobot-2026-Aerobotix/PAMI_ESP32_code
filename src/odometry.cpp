@@ -1,5 +1,3 @@
-#pragma once
-
 #include "odometry.h"
 
 float current_x = 0;
@@ -8,6 +6,7 @@ float current_phi = 0;
 float absolute_phi = 0;
 int32_t previous_encoder_count_R = 0;
 int32_t previous_encoder_count_L = 0;
+float phi_offset = 0;
 
 void update_speed(float dt){
     current_speed_L = current_speed_L*0.95 + 0.05*(encoder_count_L - previous_encoder_count_L)*(wheel_diameter_L * PI / CPR * directionL) / dt;
@@ -28,8 +27,8 @@ void update_position(float dt){
 	previous_encoder_count_L = encoder_count_L;
 
 	float previous_absolute_phi = absolute_phi;
-	absolute_phi = ( ticks_to_distance(encoder_count_R, wheel_diameter_R) - ticks_to_distance(encoder_count_L, wheel_diameter_L) )/wheels_spacing;
-
+	float encoder_phi = ( ticks_to_distance(encoder_count_R, wheel_diameter_R) - ticks_to_distance(encoder_count_L, wheel_diameter_L) )/wheels_spacing;
+	absolute_phi = encoder_phi + phi_offset;
 	current_x += dC*cos( ( previous_absolute_phi + absolute_phi ) / 2 );
 	current_y += dC*sin( ( previous_absolute_phi + absolute_phi ) / 2 );
 
@@ -52,6 +51,8 @@ void set_position(float current__x, float current__y, float current__phi, float 
 	current_y = current__y;
 	current_phi = current__phi;
 	absolute_phi = absolute__phi;
+	float encoder_phi = ( ticks_to_distance(encoder_get_R(), wheel_diameter_R) - ticks_to_distance(encoder_get_L(), wheel_diameter_L) )/wheels_spacing;
+	phi_offset = absolute__phi - encoder_phi;
 }
 float get_distance_to(float x, float y){
 	return sqrt(SQR(current_x - x) + SQR(current_y - y));

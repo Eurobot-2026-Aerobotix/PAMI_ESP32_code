@@ -53,10 +53,12 @@ void strategy()
   // Use global commands array received from ROS2
   //extern int commands[];
   //extern size_t commands_count;
-  int commands[] = { //goto_cmd, 500, 0, 400,
-                     //goto_cmd, 0, 0, 400,
-                     //orientate_cmd, 0, 0
-                     backwards_cmd, 100, 200,
+  int commands[] = { set_position_cmd, 337, 149, 0,
+                     goto_cmd, 1200, 350, 600,
+                     goto_cmd, 1940, 70, 600,
+                     orientate_cmd, 88, 0,
+                     backwards_cmd, 200, 200,
+                     goto_cmd, 1900, 550, 400,
                     }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
   int num_commands = sizeof(commands) / sizeof(commands[0]);
   //int num_commands = commands_count;
@@ -96,9 +98,9 @@ void strategy()
     else if (command_type == backwards_cmd) {
       int distance = commands[i + 1];
       int speed = commands[i + 2];
-      int target_point_x = current_x - distance * cos(current_phi);
-      int target_point_y = current_y - distance * sin(current_phi);
-      move_forward(distance, speed, target_point_x, target_point_y);
+      move_backwards(distance, speed);
+      control_loop_state = DISACTIVATED;
+      set_position(1900, 0, deg_to_rad(90), deg_to_rad(90));
       i += 3;
     }
   }
