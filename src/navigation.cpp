@@ -141,11 +141,11 @@ float calculate_instant_target_speed_R_full(float x, float distance, float rampi
 	if (wheel_state_R == ACCELERATING){
 		if (direction_R == 1)
 		{
-			return MAX(MIN(ramping__acceleration * x, cruise_speed_R), 50);
+			return MAX(MIN(ramping__acceleration *sqrt(x)*acc_linearization_coef, cruise_speed_R), 50);
 		}
 		else
 		{
-			return MIN(MAX(-ramping__acceleration * x, cruise_speed_R), -50);
+			return MIN(MAX(-ramping__acceleration *sqrt(x)*acc_linearization_coef, cruise_speed_R), -50);
 		}
 	}
 	else if (wheel_state_R == CRUISING)
@@ -181,11 +181,11 @@ float calculate_instant_target_speed_L_full(float x, float distance, float rampi
 	if (wheel_state_L == ACCELERATING){
 		if (direction_L == 1)
 		{
-			return MAX(MIN(ramping__acceleration * x, cruise_speed_L), 50);
+			return MAX(MIN(ramping__acceleration *sqrt(x)*acc_linearization_coef, cruise_speed_L), 50);
 		}
 		else
 		{
-			return MIN(MAX(-ramping__acceleration * x, cruise_speed_L), -50);
+			return MIN(MAX(-ramping__acceleration *sqrt(x)*acc_linearization_coef, cruise_speed_L), -50);
 		}
 	}
 	else if (wheel_state_L == CRUISING)
@@ -242,8 +242,11 @@ int rotate(float angle, int8_t is_radian){
 	float rotating_breaking_acceleration = -3;
 	float rotating_ramping_acceleration = 4;
 	angle = is_radian ? angle : deg_to_rad(angle);
+	rotating_ramping_acceleration = MIN(pow(fabs(rad_to_deg(angle)), 1.3) * 0.015, 3);
+	rotating_breaking_acceleration = -MIN(pow(fabs(rad_to_deg(angle)), 1.3) * 0.015, 3);
 	float arc_length = (wheels_spacing / 2) * angle;
 
+	
 	direction_R = SGN(angle);
 	direction_L = -direction_R;
 
@@ -304,7 +307,7 @@ int rotate(float angle, int8_t is_radian){
 			yaw_centering_term = 0;
 		}
 		speed = calculate_instant_target_speed_R_full(x, distance, rotating_ramping_acceleration, rotating_breaking_acceleration);
-		speed = MAX(fabs(speed), 100);
+		speed = MAX(fabs(speed), 50);
 		speed = speed * direction_R;
 		set_target_speeds(speed * (1 - yaw_centering_term), -speed * (1 + yaw_centering_term));
 		custom_delay(4);
@@ -326,7 +329,7 @@ int rotate(float angle, int8_t is_radian){
 		yaw_centering_term = MAX(yaw_centering_term, -1);
        
 		set_target_speeds(speed * (1 - yaw_centering_term), -speed * (1 + yaw_centering_term));
-		speed = MAX(fabs(speed) * 0.985, 100) * direction_R;
+		speed = MAX(fabs(speed) * 0.985, 50) * direction_R;
 		previous_distance_to_target = distance_to_target;
 		custom_delay(2);
 		distance_to_target = (wheels_spacing/2) * fabs(target_phi - absolute_phi);
@@ -367,7 +370,7 @@ int go_to(float x, float y, float speed, float direction)
 	if(direction == -1){
 		target_angle = normalize_angle(target_angle - PI);
 	}
-    while (fabs(target_angle - current_phi) > deg_to_rad(1.5))
+   while (fabs(normalize_angle(target_angle - current_phi)) > deg_to_rad(2))
 	{
 		if (orientate(target_angle, 1)){
 			return 1;
@@ -398,7 +401,7 @@ void reset_speed_control_variables(){
 	previous_speed_error_R = 0;
 }
 bool is_idle(){
-	int encoder_tolerance = 3;
+	int encoder_tolerance = 2;
 	int pwm_tolerance = 500;
 	bool right_wheel_idle = (fabs(target_encoder_count_R - encoder_count_R) < encoder_tolerance) && (fabs(PWM_R) < pwm_tolerance) && (fabs(previous_position_error_R) < encoder_tolerance);
 	bool left_wheel_idle = (fabs(target_encoder_count_L - encoder_count_L) < encoder_tolerance) && (fabs(PWM_L) < pwm_tolerance) && (fabs(previous_position_error_L) < encoder_tolerance);
@@ -406,7 +409,7 @@ bool is_idle(){
 }
 void wait_for_idle(){
 	int start_time = millis();
-	while(!is_idle() && !(current_speed_L == 0 && current_speed_R == 0) && (wheel_state_R != EMERGENCY_BREAK) && (wheel_state_L != EMERGENCY_BREAK) ){
+	while(!is_idle() && (wheel_state_R != EMERGENCY_BREAK) && (wheel_state_L != EMERGENCY_BREAK) ){
 		custom_delay(10);
 		if (millis() - start_time > 700){
 			break;

@@ -65,22 +65,31 @@ void strategy(){
                       set_position_cmd, 67, 675, 90,
 
                      goto_cmd, 63, 1350, 500, 1,
-                     goto_cmd, 110, 1350, 500, 1,
-                     //pickup_cmd, 1, 1, 0,
+                     goto_cmd, 110, 1350, 300, 1,
+                     pickup_cmd, 1, 1, 0,
                       goto_cmd, 57, 1150, 300, 1,
-                      goto_cmd, 57, 680, 500, 1,
-                      // putdown_cmd,
-                      // goto_cmd, 63, 1098, 500, -1,
-                      // goto_cmd, 140, 1098, 500, 1,
-                      //   pickup_cmd, 1, 1, 0,
-                      //   goto_cmd, 140, 675, 500, 1,
-                      //   putdown_cmd,
-                      //   goto_cmd, 140, 850, 300, -1,
-                      //   orientate_cmd, -90, 0,
-                      //   pickup_cmd, 1, 1, 1,*/
-                     
+                      goto_cmd, 57, 675, 500, 1,
+                      putdown_cmd,
+                     goto_cmd, 57,1100, 500, -1,
+                      goto_cmd, 135, 1100, 300, 1,
+                        pickup_cmd, 1, 1, 0,
+                       goto_cmd, 135, 680, 400, 1,
+                       putdown_cmd,
+                         goto_cmd, 135, 850, 300, -1,
+                        orientate_cmd, -90, 0,
+                        goto_cmd, 200, 850, 300, 1,
+                         pickup_cmd, 1, 1, 1,
+                         goto_cmd, 65, 850, 300, -1,
+                      goto_cmd, 65, 675, 300, 1,
+                      putdown_cmd,
+                      goto_cmd, 65, 850, 300, 1,
+                         goto_cmd, 200, 850, 300, 1,
+                         pickup_cmd, 1, 1, 0, // yhez 2 mel 4
+                         
+
+
                          // set_position_cmd, 0, 0, 0, // set initial position at (0,0) with 90 degrees orientation
-  //                       goto_cmd, 500, 0, 500, 1,
+  //                      
   //                     goto_cmd, 0, 0, 500, 1,
   //                     orientate_cmd, 0, 0,
   //                     // orientate_cmd, 90, 0,
