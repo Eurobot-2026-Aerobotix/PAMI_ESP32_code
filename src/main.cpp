@@ -49,11 +49,12 @@ void strategy()
   // move_forward(100, 50); // Move 100mm at 50mm/s speed
   //custom_delay(500);
   int goto_cmd = 0, orientate_cmd = 1, set_position_cmd = 2;
-  int commands[] = {goto_cmd, 0, 400, 600,
-                    goto_cmd, -100, 400, 600,
+  int commands[] = {goto_cmd, 200, 0, 600,
+                    goto_cmd, 200, 200, 600,
+                    goto_cmd, 0, 200, 600,
                     goto_cmd, 0, 0, 600,
                     orientate_cmd, 0, 0,
-                    }; // Orientate to 0 degrees
+                    }; // Orientate to 0 degrgoto_cmd, 0, 0, 600,ees
   int num_commands = sizeof(commands) / sizeof(commands[0]);
   int i = 0;
   strategy_start_time = millis();
@@ -221,6 +222,8 @@ void PIDTask(void *pvParameters){
 
       previous_position_error_L = error;
     }
+    
+
     run_right_motor();
     run_left_motor();
 
@@ -271,7 +274,7 @@ void setup()
   Serial.println("=== PAMI ESP32 Setup ===");
 
   Serial.println("Setting motor pins...");
-  set_motor_pins(26, 21, 18, 19, 23, 17);
+  set_motor_pins(22, 21, 18, 19, 23, 17);
 
   set_ultrasonic_pins(14, 12);
 
@@ -279,10 +282,10 @@ void setup()
   set_encoder_channels(4, 16, 15, 2, 350);
 
   Serial.println("Setting PWM parameters...");
-  set_PWM_min_max(1023, 240, 210, -240, -210);
+  set_PWM_min_max(1023, 250, 250, -260, -260);
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(57.342589790462290093200767685685, 57.342589790462290093200767685685, 92.938153961874487863117321276497);
+  set_wheel_diameter_and_spacing(57.342589790462290093200767685685, 57.342589790462290093200767685685, 95.241041316360367184554131187574);
   HAL_setup();
   
   // Initialize WebSocket if enabled
@@ -360,6 +363,26 @@ void setup()
 }
 
 void loop(){
+    // PWM_R=250;
+    // PWM_L=250;
+  //   delay(2000);
+   
+  //   PWM_R=-500;
+  //   PWM_L=-500;
+  //   delay(2000);
+    
+  //   PWM_R=500;
+  //   PWM_L=0;
+  //   delay(2000);
+
+
+  //   PWM_R=0;
+  //   PWM_L=500;
+  //   delay(2000);
+
+  Serial.print(encoder_count_L);
+   Serial.print(" - ");
+   Serial.println(encoder_count_R);
   // for(int i=0; i<100; i++){
   //   set_target_speeds(i*2, 0);
   //   send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
@@ -388,11 +411,11 @@ void loop(){
   //   send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
   //   delay(10);
   // }
-  if (millis() < 5000){
-    send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, debugger*100);
-    delay(10);
-  }else{
-    send_values_to_usart(current_x, current_y, current_phi*100, 0);
-    delay(10);
-  }
+  // if (millis() < 5000){
+  //   send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, debugger*100);
+  //   delay(10);
+  // }else{
+  //   send_values_to_usart(current_x, current_y, current_phi*100, 0);
+  //   delay(10);
+  // }
 }
