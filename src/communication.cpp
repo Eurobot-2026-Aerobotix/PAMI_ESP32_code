@@ -22,9 +22,10 @@ std_msgs__msg__Int32 action_done_msg;
 std_msgs__msg__Float32MultiArray strategy_msg;
 float received_floats[100]; // Adjust size as needed
 size_t received_floats_count = 0;
+int commands[100]; // Integer array for converted commands
+size_t commands_count = 0;
 bool micro_ros_init_successful = false;
 enum CommunicationState comm_state = WAITING_AGENT;
-bool strategy_waiting=false ;
 
 // WiFi reconnection variables
 unsigned long last_wifi_check = 0;
@@ -266,14 +267,19 @@ void strategy_callback(const void *msgin)
     
     Serial.println("Received float table:");
     received_floats_count = msg->data.size;
+    commands_count = msg->data.size;
     
     for (size_t i = 0; i < msg->data.size && i < 100; i++)
     {
         received_floats[i] = msg->data.data[i];
+        commands[i] = (int)msg->data.data[i]; // Convert float to int
+        
         Serial.print("  [");
         Serial.print(i);
         Serial.print("]: ");
-        Serial.println(received_floats[i], 4);
+        Serial.print(received_floats[i], 4);
+        Serial.print(" -> command: ");
+        Serial.println(commands[i]);
     }
 }
 
