@@ -58,8 +58,6 @@ void strategy()
                      goto_cmd, 1650, 380, 600,
                      goto_cmd, 1922, 50, 600,
                      orientate_cmd, 88, 0,
-                     backwards_cmd, 180, 200,
-                     set_position_cmd, 1900, 0, 90,
                      goto_cmd, 1900, 550, 400,
                     }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
   int num_commands = sizeof(commands) / sizeof(commands[0]);
@@ -104,6 +102,9 @@ void strategy()
       control_loop_state = DISACTIVATED;
       //set_position(1900, 0, deg_to_rad(90), deg_to_rad(90));
       i += 3;
+    }else if (command_type == delay_cmd){
+      custom_delay(commands[i+1]);
+      i += 2;
     }
   }
   // 3. Send completion signal
@@ -291,7 +292,7 @@ void setup()
   Serial.println("=== PAMI ESP32 Setup ===");
 
   Serial.println("Setting motor pins...");
-  set_motor_pins(26, 21, 18, 19, 23, 17);
+  set_motor_pins(21, 22, 18, 19, 23, 17);
 
   set_ultrasonic_pins(14, 12);
 
@@ -302,7 +303,7 @@ void setup()
   set_PWM_min_max(1023, 240, 210, -240, -210);
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(57.26808944785478669422072940648, 57.472618338739982360985803440075, 92.294108582965129097502004452009);
+  set_wheel_diameter_and_spacing(57.814457791555129755173136668791, 57.57543160947118089830420380401, 97.898273135542852506579071027061);
   HAL_setup();
   
   // Initialize WebSocket if enabled
