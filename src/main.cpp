@@ -54,10 +54,11 @@ void strategy()
   //extern int commands[];
   //extern size_t commands_count;
   int commands[] = { set_position_cmd, 357, 199, 0,
-                     goto_cmd, 1200, 350, 600,
-                     goto_cmd, 1935, 70, 600,
+                     goto_cmd, 900, 400, 600,
+                     goto_cmd, 1650, 380, 600,
+                     goto_cmd, 1922, 50, 600,
                      orientate_cmd, 88, 0,
-                     backwards_cmd, 230, 200,
+                     backwards_cmd, 180, 200,
                      set_position_cmd, 1900, 0, 90,
                      goto_cmd, 1900, 550, 400,
                     }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees

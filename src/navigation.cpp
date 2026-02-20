@@ -81,7 +81,7 @@ int move_forward(float distance, float speed, float target_point_x, float target
 	// completing the last part of distance separately, so the break happens on point
 	// calculating the distance to move that  results in the robot being the closest to target point, i can't explain the math in code unfortunately
 	speed = (target_speed_R + target_speed_L) / 2;
-	speed = MAX(fabs(speed), 50);
+	speed = MAX(fabs(speed), 75);
 	int32_t phase_two_start_time = micros();
 	while (distance_to_target > 1){
 		float phi_error = normalize_angle(calculate_instant_target_phi(x, distance) - current_phi);
@@ -92,7 +92,7 @@ int move_forward(float distance, float speed, float target_point_x, float target
 		lane_correction_term = MIN(MAX(lane_correction_term, -0.1), 0.1); // the coefficient is tunable
 
 		set_target_speeds(speed * (1 + lane_correction_term), speed * (1 - lane_correction_term));
-		speed = MAX(fabs(speed) * 0.995, 50);
+		speed = MAX(fabs(speed) * 0.995, 75);
 		previous_distance_to_target = distance_to_target;
 		custom_delay(2);
 		distance_to_target = distance - get_distance_to(starting_x, starting_y);
@@ -293,7 +293,7 @@ int rotate(float angle, int8_t is_radian){
 	wait_for_idle();
 	reset_speed_control_variables();
 	float rotating_breaking_acceleration = breaking_acceleration;
-	float rotating_ramping_acceleration = 2;
+	float rotating_ramping_acceleration = 4;
 	angle = is_radian ? angle : deg_to_rad(angle);
 	float arc_length = (wheels_spacing / 2) * angle;
 
@@ -362,7 +362,7 @@ int rotate(float angle, int8_t is_radian){
 			yaw_centering_term = 0;
 		}
 		speed = calculate_instant_target_speed_R_full(x, distance, rotating_ramping_acceleration, rotating_breaking_acceleration);
-		speed = MAX(fabs(speed), 50);
+		speed = MAX(fabs(speed), 80);
 		speed = speed * direction_R;
 		set_target_speeds(speed * (1 - yaw_centering_term), -speed * (1 + yaw_centering_term));
 		custom_delay(4);
@@ -385,7 +385,7 @@ int rotate(float angle, int8_t is_radian){
 		yaw_centering_term = 0;
 
 		set_target_speeds(speed * (1 - yaw_centering_term), -speed * (1 + yaw_centering_term));
-		speed = MAX(fabs(speed) * 0.985, 50) * direction_R;
+		speed = MAX(fabs(speed) * 0.985, 80) * direction_R;
 		previous_distance_to_target = distance_to_target;
 		custom_delay(2);
 		distance_to_target = (wheels_spacing/2) * fabs(target_phi - absolute_phi);
