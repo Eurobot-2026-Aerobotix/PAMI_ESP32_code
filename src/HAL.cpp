@@ -53,16 +53,16 @@ float wheel_diameter_L;
 float wheels_spacing;
 
 // PID control parameters
-float kpS_R = 2;
+float kpS_R = 3;
 float kdS_R = 0.0000;
-float kiS_R = 15;
+float kiS_R = 40;
 float speed_integral_R = 0;
 float speed_derivative_R = 0;
 float previous_speed_error_R = 0;
 
-float kpS_L = 2;
+float kpS_L = 3;
 float kdS_L = 0;
-float kiS_L = 15;
+float kiS_L = 40;
 float speed_integral_L = 0;
 float speed_derivative_L = 0;
 float previous_speed_error_L = 0;
@@ -86,8 +86,9 @@ float kiP_R = 1000;
 float kpP_L = 200;
 float kdP_L = 5;
 float kiP_L = 1000;
-float debugger = 0;
+volatile float debugger = 0;
 int strategy_start_time = 1000000;
+bool strategy_waiting = 0;
 
 void set_motor_pins(int right_forward, int right_backward, int left_forward, int left_backward, int right_enable, int left_enable)
 {

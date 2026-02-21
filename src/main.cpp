@@ -15,7 +15,7 @@
 #include <Arduino.h>
 #include "navigation.h"
 #include "command_controller.h"
-#include "communication.h"
+//#include "communication.h"
 #include "websocket.h"
 
 /// tasks
@@ -48,24 +48,26 @@ void strategy()
   // Example: move forward, rotate, etc.
   // move_forward(100, 50); // Move 100mm at 50mm/s speed
   //custom_delay(500);
-  int goto_cmd = 0, orientate_cmd = 1, set_position_cmd = 2, rotate_cmd = 3;
-   int commands[] = {  goto_cmd, 500, 0, 300, // Go to (0, 300) at 500mm/s speed
-                       //rotate_cmd, 90, 0,
-  //                   goto_cmd, 0, 0, 300,                  
-                      //  orientate_cmd, 180, 0,
-                      //  goto_cmd, 0, 0, 300,
-                    // goto_cmd, 1100, 250, 300, // Go to (0, 0) at 500mm/s speed
-                    // goto_cmd, 1540, -70, 300,
-                    // goto_cmd, 1595, 415, 200,
-                    ////////
-                    // set_position_cmd, 337, 149, 0,
-                    // goto_cmd, 1200, 350, 600,
-                    // goto_cmd, 1955, 140, 500,
-                    // goto_cmd, 1935, 635, 300,
-                    }; // Orientate to 0 degrees
+  int delay_cmd = 0, goto_cmd = 1, orientate_cmd = 2, set_position_cmd = 3, backwards_cmd = 4;
+  
+  // Use global commands array received from ROS2
+  //extern int commands[];
+  //extern size_t commands_count;
+  int commands[] = { set_position_cmd, 357, 199, 0,
+                     goto_cmd, 900, 400, 600,
+                     goto_cmd, 1650, 380, 600,
+                     goto_cmd, 1922, 50, 600,
+                     orientate_cmd, 88, 0,
+                     backwards_cmd, 180, 200,
+                     set_position_cmd, 1900, 0, 90,
+                     goto_cmd, 1900, 550, 400,
+                    }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
   int num_commands = sizeof(commands) / sizeof(commands[0]);
+  //int num_commands = commands_count;
   int i = 0;
   strategy_start_time = millis();
+  // rotate(1800, 0);
+  // while(1);
   while (i < num_commands)
   {
     int command_type = commands[i];
@@ -77,6 +79,7 @@ void strategy()
       while(go_to(x, y, speed)){
         wait_for_obstacle_clearance();
         Serial.println("obstacle cleared, resuming...");
+        Serial.println("dhia is gay");
       }
       i += 4;
     }
@@ -91,53 +94,56 @@ void strategy()
       int x = commands[i + 1]; 
       int y = commands[i + 2]; 
       int phi = commands[i + 3]; 
-      set_position(x, y, phi, phi); 
+      set_position(x, y, deg_to_rad(phi), deg_to_rad(phi)); 
       i += 4; 
     }
-    else if (command_type == rotate_cmd){
-      int angle = commands[i + 1];
-      int is_radian = commands[i + 2];
-      rotate(angle, is_radian);
+    else if (command_type == backwards_cmd) {
+      int distance = commands[i + 1];
+      int speed = commands[i + 2];
+      move_backwards(distance, speed);
+      control_loop_state = DISACTIVATED;
+      //set_position(1900, 0, deg_to_rad(90), deg_to_rad(90));
+      i += 3;
     }
   }
   // 3. Send completion signal
-  send_action_done(1);
+  //send_action_done(1);
 
   Serial.println("Strategy execution completed!");
 }
 
-void communicationTask(void *pvParameters)
-{
-  const TickType_t xDelay = pdMS_TO_TICKS(50); // 50ms delay for responsive communication
-  TickType_t xLastWakeTime = xTaskGetTickCount();
+// void communicationTask(void *pvParameters)
+// {
+//   const TickType_t xDelay = pdMS_TO_TICKS(50); // 50ms delay for responsive communication
+//   TickType_t xLastWakeTime = xTaskGetTickCount();
 
-  Serial.println("Communication task started");
+//   Serial.println("Communication task started");
   
-  // Setup micro-ROS (will handle WiFi connection internally)
-  if (setup_micro_ros("harissa", "harissaharissa2026", "10.42.1.1", 8888))
-  {
-    Serial.println("micro-ROS setup successful");
-  }
-  else
-  {
-    Serial.println("micro-ROS setup failed");
-  }
+//   // Setup micro-ROS (will handle WiFi connection internally)
+//   if (setup_micro_ros("harissa", "harissaharissa2026", "10.42.1.1", 8888))
+//   {
+//     Serial.println("micro-ROS setup successful");
+//   }
+//   else
+//   {
+//     Serial.println("micro-ROS setup failed");
+//   }
   
-  for (;;) // Infinite loop - CRITICAL!
-  {
-    // Only run communication loop if WiFi is connected
-    if (WiFi.status() == WL_CONNECTED) {
-      communication_loop();
-    } else {
-      // If WiFi disconnected, try to reconnect
-      Serial.println("WiFi disconnected in task, attempting reconnection...");
-      connect_wifi("harissa", "harissaharissa2026");
-      vTaskDelay(pdMS_TO_TICKS(5000)); // Wait 5 seconds before next attempt
-    }
+//   for (;;) // Infinite loop - CRITICAL!
+//   {
+//     // Only run communication loop if WiFi is connected
+//     if (WiFi.status() == WL_CONNECTED) {
+//       communication_loop();
+//     } else {
+//       // If WiFi disconnected, try to reconnect
+//       Serial.println("WiFi disconnected in task, attempting reconnection...");
+//       connect_wifi("harissa", "harissaharissa2026");
+//       vTaskDelay(pdMS_TO_TICKS(5000)); // Wait 5 seconds before next attempt
+//     }
 
-    vTaskDelayUntil(&xLastWakeTime, xDelay);
-  }
-}
+//     vTaskDelayUntil(&xLastWakeTime, xDelay);
+//   }
+// }
 
 void emergencyBreakTask(void *pvParameters)
 {
@@ -146,7 +152,7 @@ void emergencyBreakTask(void *pvParameters)
   
   for (;;)
   {
-    if (( ((get_ultrasonic_distance() < min_distance && trajectory == STRAIGHT) || (millis() - strategy_start_time >= max_running_time)) && wheel_state_R != EMERGENCY_BREAK && wheel_state_L != EMERGENCY_BREAK) ) 
+    if (( ((get_ultrasonic_distance() < min_distance && trajectory == STRAIGHT && current_x < 1700) || (millis() - strategy_start_time >= max_running_time)) && wheel_state_R != EMERGENCY_BREAK && wheel_state_L != EMERGENCY_BREAK) ) 
     {
       prepare_emergency_break();
     }
@@ -156,13 +162,14 @@ void emergencyBreakTask(void *pvParameters)
 }
 
 void PIDTask(void *pvParameters){
-  const TickType_t xDelay = pdMS_TO_TICKS(1); // Increased to 10ms delay for stability
+  const TickType_t xDelay = pdMS_TO_TICKS(1);
   TickType_t xLastWakeTime = xTaskGetTickCount();
 
   Serial.println("PID task started");
 
   // Initialize previous_speed_control_time
   previous_speed_control_time = micros();
+  float dt = 0.001;
 
   for (;;){
     // Add error checking
@@ -172,20 +179,11 @@ void PIDTask(void *pvParameters){
       continue;
     }
 
-    float dt = 0.001;
     update_position(dt);
-
 
     // right motor speed control
     if (control_loop_state == SPEED){
-      float dt = (micros() - previous_speed_control_time) / 1000000.0; // in seconds
-
       // Prevent division by zero or very small numbers
-      if (dt < 0.001)
-      {
-        vTaskDelayUntil(&xLastWakeTime, xDelay);
-        continue;
-      }
 
       float error = target_speed_R - current_speed_R;
 
@@ -206,7 +204,6 @@ void PIDTask(void *pvParameters){
       speed_integral_L += error * dt;
 
       previous_speed_error_L = error;
-      previous_speed_control_time = micros();
 
       PWM_L = PWM_L * 0.95 + 0.05 * (PWM_offset_L + kpS_L * error + kdS_L * speed_derivative_L + kiS_L * speed_integral_L);
       PWM_L = (PWM_L > PWM_max) ? PWM_max : (PWM_L < -PWM_max) ? -PWM_max : PWM_L;
@@ -215,17 +212,10 @@ void PIDTask(void *pvParameters){
       speed_integral_L = ((PWM_L == PWM_max) || (PWM_L == -PWM_max)) ? (speed_integral_L - 2 * error * dt) : speed_integral_L;
     }
     else if (control_loop_state == POSITION){
-      float dt = (micros() - previous_position_control_time)/1000000.0;
-
-      if (dt < 0.001)
-      {
-        vTaskDelayUntil(&xLastWakeTime, xDelay);
-        continue;
-      }
       // right motor position control
       float error = (target_encoder_count_R - encoder_count_R)*2; 
 
-      position_derivative_R = (error - previous_position_error_R) / dt; // unit = tick/s²
+      position_derivative_R = (error - previous_position_error_R)/dt; // unit = tick/s²
 
       position_integral_R = ( SGN(error) == SGN( previous_position_error_R ) )? position_integral_R + error*dt : 0;
 
@@ -239,7 +229,7 @@ void PIDTask(void *pvParameters){
       // left motor position control
       error = (target_encoder_count_L - encoder_count_L);
 
-      position_derivative_L = (error - previous_position_error_L) / dt; // unit = mm/s²
+      position_derivative_L = (error - previous_position_error_L)/dt; // unit = mm/s²
       position_integral_L = ( SGN(error) == SGN( previous_position_error_L) )? position_integral_L + error*dt : 0;
 
       previous_position_error_L = error;
@@ -250,7 +240,6 @@ void PIDTask(void *pvParameters){
       position_integral_L = ( (PWM_L == PWM_max) || (PWM_L == -PWM_max) )? (position_integral_L - 2*error*dt) : position_integral_L;
 
       previous_position_error_L = error;
-      previous_position_control_time = micros();
     }
     // PWM_R = 300;
     // PWM_L = 300;
@@ -290,35 +279,7 @@ void websocketTask(void *pvParameters)
   
   for (;;) // Infinite loop - CRITICAL!
   {
-    if (websocket == 1) {
-      // Handle reconnections and polling
-      websocket_reconnect_if_needed();
-      websocket_poll();
-    
-      // Send robot data via WebSocket at 10Hz (every 100ms)
-      static TickType_t last_data_send = 0;
-      if ((xTaskGetTickCount() - last_data_send) >= pdMS_TO_TICKS(100)) {
-        last_data_send = xTaskGetTickCount();
-        if (websocket_has_new_string()) {
-        String receivedMsg = websocket_get_last_string();
-        Serial.println("Processing: " + receivedMsg);
-    // String is automatically processed by processReceivedString()
-}
-        if (websocket_is_connected()) {
-          // Send current robot data
-          /*
-          websocket_send_data(0xAA, current_speed_R_filtered);
-          websocket_send_data(0xAB, current_speed_L_filtered);
-          websocket_send_data(0xAC, target_speed_R);
-          websocket_send_data(0xAD, target_speed_L);
-          */
-          websocket_send_data(0xAA, current_speed_L);
-          websocket_send_data(0xAB, current_speed_R);
-          websocket_send_data(0xAC, target_speed_L);
-          websocket_send_data(0xAD, target_speed_R);
-        }
-      }
-    }
+    //send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, debugger);
     
     vTaskDelayUntil(&xLastWakeTime, xDelay);
   }
@@ -359,7 +320,7 @@ void setup()
 
   Serial.println("Creating tasks...");
 
-  //Create tasks with lower stack sizes first
+  // //Create tasks with lower stack sizes first
   //   xTaskCreatePinnedToCore(
   //    communicationTask,
   //     "communicationTask",
@@ -403,32 +364,22 @@ void setup()
       1); // Pin to core 1
 
   // Create WebSocket task if enabled
-  if (websocket_enabled == 1) {
-    xTaskCreatePinnedToCore(
-        websocketTask,
-        "websocketTask",
-        8192, // Larger stack for WebSocket operations
-        NULL,
-        1, // Lower priority than PID
-        &websocketTaskHandle,
-        0); // Pin to core 0 (same as other communication tasks)
-    
-    delay(500); // Delay between task creation
-    Serial.println("WebSocket task created");
-  }
+  xTaskCreatePinnedToCore(
+      websocketTask,
+      "websocketTask",
+      8192, // Larger stack for WebSocket operations
+      NULL,
+      1, // Lower priority than PID
+      &websocketTaskHandle,
+      0); // Pin to core 0 (same as other communication tasks)
+  
+  delay(500); // Delay between task creation
+  Serial.println("WebSocket task created");
 
   Serial.println("All tasks created successfully!");
   control_loop_state = DISACTIVATED;
   delay(1000);
   strategy_waiting = 1;
-  // prepare_go_to(300, 0, 300);
-  // prepare_rotate(1800, 0);
-  //prepare_go_to(1000, 0, 300);
-  // while(1){
-  //   digitalWrite(21, HIGH);
-  // }
-  //prepare_go_to(500, 0, 300);
-  //set_target_encoder_counts(0, 0);
 }
 
 void loop(){
@@ -460,6 +411,6 @@ void loop(){
   //   send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
   //   delay(10);
   // }
-  send_values_to_usart(encoder_count_R, encoder_count_L, 0, 0);
-  delay(10);
+  send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, debugger);
+  custom_delay(10);
 }
