@@ -64,8 +64,8 @@ void strategy()
   int num_commands = commands_count;
   int i = 0;
   strategy_start_time = millis();
-  rotate(1800, 0);
-  while(1);
+  // rotate(1800, 0);
+  // while(1);
   while (i < num_commands)
   {
     int command_type = commands[i];
@@ -400,9 +400,9 @@ void loop(){
   //   PWM_L=500;
   //   delay(2000);
 
-  Serial.print(encoder_count_L);
-   Serial.print(" - ");
-   Serial.println(encoder_count_R);
+  // Serial.print(encoder_count_L);
+  //  Serial.print(" - ");
+  //  Serial.println(encoder_count_R);
   // for(int i=0; i<100; i++){
   //   set_target_speeds(i*2, 0);
   //   send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
