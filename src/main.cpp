@@ -259,7 +259,7 @@ void commandExecutionTask(void *pvParameters)
   {
     if (strategy_waiting) {
       strategy_waiting = 0;
-      custom_delay(85);
+      custom_delay(85000);
       strategy();
     }
     execute_command();
