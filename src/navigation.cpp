@@ -7,7 +7,7 @@ enum Trajectory trajectory = STRAIGHT;
 float ramping_acceleration = 2; // tzid acc tzid fl ramping meloul 
 float breaking_acceleration = -2; // tzid break tzid flkher 
 float emergency_breaking_acceleration = -10;
-float rotating_speed = 400;
+float rotating_speed = 250;
 
 float cruise_speed_R;
 float cruise_speed_L;

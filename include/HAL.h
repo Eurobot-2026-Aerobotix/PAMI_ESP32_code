@@ -123,7 +123,7 @@ extern float kdP_L;
 extern float kiP_L;
 extern volatile float debugger;
 extern int strategy_start_time;
-const int max_running_time = 100000; // 10 seconds
+const int max_running_time = 100000; // 100 seconds
 
 extern int servo_positions[7];
 extern bool ultrasonic_blocked;
@@ -175,3 +175,4 @@ void prepare_servo_up();
 void letgo();
 void HAL_setup();
 void custom_delay(int ms);
+void party_time();
