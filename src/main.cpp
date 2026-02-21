@@ -47,12 +47,10 @@ void strategy(){
   // Use global commands array received from ROS2
   // extern int commands[];
    int commands[] = {  
-   // set_position_cmd, 0, 0, 0,
-    //goto_cmd, 400, 0, 400, 1,
-   // rotate_cmd, 90, 0, // initial rotation to prepare the robot for movement, can be removed if not needed
-    //set_position_cmd, 1800, 2500, 0,
+     
+
                        //goto_cmd, 400, -100, 400, 1,
-  //                     goto_cmd, 1800, 2500, 400, 1, 
+                      // goto_cmd, 1800, 2500, 400, 1, 
                      // pickup_cmd, 1, 1, 0,
                       //orientate_cmd, 180, 0,
                       //goto_cmd, 0, 0, 400, 1,
@@ -60,47 +58,96 @@ void strategy(){
                       //goto_cmd, 200, 0, 400, 1,
                       //goto_cmd, 0, 0, 400, 1,
                       
-    
-                     /////////////////
-                      set_position_cmd, 67, 675, 90,
+                     ///////////////// strategy yellow 1 ////////////////////////
+                     // set_position_cmd, 65.5, 680, 90,
 
-                     goto_cmd, 63, 1350, 500, 1,
-                     goto_cmd, 110, 1350, 300, 1,
-                     pickup_cmd, 1, 1, 0,
-                      goto_cmd, 57, 1150, 300, 1,
-                      goto_cmd, 57, 675, 500, 1,
-                      putdown_cmd,
-                     goto_cmd, 57,1100, 500, -1,
-                      goto_cmd, 135, 1100, 300, 1,
-                        pickup_cmd, 1, 1, 0,
-                       goto_cmd, 135, 680, 400, 1,
-                       putdown_cmd,
-                         goto_cmd, 135, 850, 300, -1,
+                    //  goto_cmd, 63, 1350, 500, 1,
+                    //  goto_cmd, 110, 1350, 300, 1,
+                    //  pickup_cmd, 1, 1, 0,    // pick up 1 far
+                    //   goto_cmd, 55, 1150, 300, 1,
+                    //   goto_cmd, 55, 662, 500, 1,
+                    //   putdown_cmd,
+                    //  goto_cmd, 55,1100, 500, -1,
+                    //   goto_cmd, 132, 1100, 300, 1,
+                    //     pickup_cmd, 1, 1, 0, // pick up 2 close 
+                    //    goto_cmd, 132, 662, 400, 1,
+                    //    putdown_cmd,
+                    //      goto_cmd, 132, 825, 300, -1,
+                    //     orientate_cmd, -90, 0,
+                    //     goto_cmd, 180, 825, 300, 1,
+                    //      pickup_cmd, 1, 1, 1, // pick up 2blacks
+                    //      goto_cmd, 70, 825, 300, -1,
+                    //   goto_cmd, 70, 675, 300, 1,
+                    //   putdown_cmd,
+                    //   goto_cmd, 70, 840, 300, 1,
+                    //      goto_cmd, 180, 840, 300, 1,
+                    //      pickup_cmd, 1, 1, 0, // pick up 2 yellow  
+                    //      goto_cmd, 150, 840, 400, -1,
+                    //       goto_cmd, 150, 1300, 400, 1,
+                    //       goto_cmd, 360, 1300, 400, 1,
+                    //       putdown_cmd,
+                          
+
+                          // startegy yellow 2 :
+                     set_position_cmd, 66, 680, 90,
+                     goto_cmd, 66, 1100, 500, 1,
+                     goto_cmd, 165, 1100, 400, 1,
+                     pickup_cmd, 1, 1, 0,    // pick up 1 close
+                     goto_cmd, 68, 680, 400, 1,
+                     orientate_cmd, -90, 0,
+                     putdown_cmd,
+                      goto_cmd, 66, 825, 400, -1,
+                       orientate_cmd, -90, 0,
+                       goto_cmd, 190, 825, 300, 1,
+                        pickup_cmd, 1, 1, 1, // pick up 2blacks
+                        goto_cmd, 160, 825, 400, -1,
+                      //orientate_cmd, 90, 0,
+                     //orientate_cmd ,180,0,
+                     //orientate_cmd, -90, 0,
+                        goto_cmd, 70, 682, 400, 1,
                         orientate_cmd, -90, 0,
-                        goto_cmd, 200, 850, 300, 1,
-                         pickup_cmd, 1, 1, 1,
-                         goto_cmd, 65, 850, 300, -1,
-                      goto_cmd, 65, 675, 300, 1,
+                     putdown_cmd,
+                     goto_cmd, 70, 840, 400,-1,
+                         goto_cmd, 200, 840, 400, 1,
+                         pickup_cmd, 1, 1, 0, // pick up 2 yellow  
+                         goto_cmd, 150, 840, 400, -1,
+                          goto_cmd, 150, 1200, 500, 1,
+                          goto_cmd, 365, 1200, 500, 1,
+                           putdown_cmd,
+                         goto_cmd, 365, 1350, 300, 1,
+                    goto_cmd, 330, 1350, 300, 1,
+                    pickup_cmd, 1, 1, 0, // pick up 2 far
+                    goto_cmd, 135, 1100, 500, 1,
+                     goto_cmd, 135, 680, 500, 1,
+                     putdown_cmd,
+                     goto_cmd, 140, 750, 300, -1,
+                     goto_cmd, 200, 750,300, 1,
+                     pickup_cmd, 1, 1, 0, // pick up 2 yellow
+                     goto_cmd, 200, 1280, 500, 1,
+                     goto_cmd, 400, 1280, 300, 1,
+                     orientate_cmd, 0, 0,
                       putdown_cmd,
-                      goto_cmd, 65, 850, 300, 1,
-                         goto_cmd, 200, 850, 300, 1,
-                         pickup_cmd, 1, 1, 0, // yhez 2 mel 4
-                         
 
 
-                         // set_position_cmd, 0, 0, 0, // set initial position at (0,0) with 90 degrees orientation
-  //                      
-  //                     goto_cmd, 0, 0, 500, 1,
-  //                     orientate_cmd, 0, 0,
-  //                     // orientate_cmd, 90, 0,
-  //                     // goto_cmd, 500, 500, 400, 1,
-  //                     // pickup_cmd, 1, 0, 0,
-  //                     // goto_cmd, 500, 0, 400, 1,
-  //                     // putdown_cmd,
-  //                     // walking_position_cmd,
-  //                     // pre+
-  //                     // letgo_cmd,
-  //                     // forward_cmd, 300, 400, 500, 500, 1
+
+
+
+
+                
+
+
+
+
+                    //       goto_cmd, 140, 1200, 400, -1,
+                    //       goto_cmd, 140, 725, 400, 1,
+                    //       goto_cmd, 190, 725, 300, 1,
+                    //       pickup_cmd , 0,1,0, // pick one black
+                    //       goto_cmd, 130, 725, 300, -1,
+                    //       orientate_cmd, 180, 0,
+                    //       putdown_cmd,
+                    //       goto_cmd, 160, 725, 300, -1,
+                    //       orientate_cmd, 0, 0,
+
                      };
   extern size_t commands_count;
   //int num_commands = commands_count;
