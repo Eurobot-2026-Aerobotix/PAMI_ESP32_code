@@ -51,7 +51,6 @@ void strategy()
   int delay_cmd = 0, goto_cmd = 1, orientate_cmd = 2, set_position_cmd = 3, backwards_cmd = 4;
   
   // Use global commands array received from ROS2
-<<<<<<< HEAD
   extern int commands[];
   extern size_t commands_count;
   // int commands[] = { set_position_cmd, 357, 199, 0,
@@ -63,41 +62,6 @@ void strategy()
   //                   }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
   //int num_commands = sizeof(commands) / sizeof(commands[0]);
   int num_commands = commands_count;
-=======
-  //extern int commands[];
-  //extern size_t commands_count;
-  int yellow_commands[] = { set_position_cmd, 357, 199, 0,
-                     goto_cmd, 900, 400, 600,
-                     goto_cmd, 1650, 380, 600,
-                     goto_cmd, 1922, 50, 600,
-                     orientate_cmd, 88, 0,
-                     backwards_cmd, 180, 200,
-                     set_position_cmd, 1900, 0, 90,
-                     goto_cmd, 1900, 550, 400,
-                    };
-  int blue_commands[] = { set_position_cmd, 357, 2801, 0,
-                     goto_cmd, 900, 2560, 600,
-                     goto_cmd, 1680, 2550, 600,
-                     goto_cmd, 1962, 2780, 600,
-                     orientate_cmd, -94, 0,
-                     backwards_cmd, 180, 200,
-                     set_position_cmd, 1900, 3000, -90,
-                     goto_cmd, 1890, 2450, 400,
-                    };
-  int commands[100];
-  int num_commands = 0;
-  if (is_yellow){
-    num_commands = sizeof(yellow_commands) / sizeof(yellow_commands[0]);
-    for (int i = 0; i < num_commands && i < 100; i++){
-      commands[i] = yellow_commands[i];
-    }
-  }else{
-    num_commands = sizeof(blue_commands) / sizeof(blue_commands[0]);
-    for (int i = 0; i < num_commands && i < 100; i++){
-      commands[i] = blue_commands[i];
-    }
-  }
->>>>>>> PAMI1
   int i = 0;
   strategy_start_time = millis();
   // rotate(1800, 0);
@@ -452,11 +416,6 @@ void loop(){
   //   send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
   //   delay(10);
   // }
-<<<<<<< HEAD
-  // send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, debugger);
-  // custom_delay(10);
-=======
   //send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, debugger);
   custom_delay(10);
->>>>>>> PAMI1
 }
