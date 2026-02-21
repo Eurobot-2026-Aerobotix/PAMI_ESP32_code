@@ -64,8 +64,8 @@ void strategy()
   //int num_commands = commands_count;
   int i = 0;
   strategy_start_time = millis();
-  // rotate(1800, 0);
-  // while(1);
+  rotate(1800, 0);
+  while(1);
   while (i < num_commands)
   {
     int command_type = commands[i];
@@ -302,7 +302,7 @@ void setup()
   set_PWM_min_max(1023, 250, 250, -260, -260);
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(57.342589790462290093200767685685, 57.342589790462290093200767685685, 95.241041316360367184554131187574);
+  set_wheel_diameter_and_spacing(57.342589790462290093200767685685, 57.342589790462290093200767685685, 93.31681404888928897576679187729);
   HAL_setup();
   
   // Initialize WebSocket if enabled
