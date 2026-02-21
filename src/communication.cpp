@@ -174,6 +174,7 @@ void communication_loop()
         if (comm_state == AGENT_CONNECTED)
         {
             rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100));
+            
         }
         else
         {
@@ -195,6 +196,7 @@ void communication_loop()
 
     // Update LED status
     digitalWrite(LED_PIN, (comm_state == AGENT_CONNECTED) ? HIGH : LOW);
+    digitalWrite(AGENT_LED_PIN, (comm_state == AGENT_CONNECTED) ? HIGH : LOW);
 }
 
 // Create all ROS entities (publishers, subscribers, timers)

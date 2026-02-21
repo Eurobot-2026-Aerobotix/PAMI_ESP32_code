@@ -324,6 +324,10 @@ void setup()
   set_wheel_diameter_and_spacing(57.26808944785478669422072940648, 57.472618338739982360985803440075, 92.294108582965129097502004452009);
   HAL_setup();
   
+  // Initialize agent LED
+  pinMode(AGENT_LED_PIN, OUTPUT);
+  digitalWrite(AGENT_LED_PIN, LOW);
+  
   // Initialize WebSocket if enabled
   extern int websocket_enabled;
   websocket_enabled = websocket;  // Set from the main websocket variable
@@ -427,6 +431,6 @@ void loop(){
   //   send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
   //   delay(10);
   // }
-  send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, debugger);
+  //send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, debugger);
   custom_delay(10);
 }
