@@ -58,8 +58,6 @@ void strategy()
                      goto_cmd, 1650, 380, 600,
                      goto_cmd, 1922, 50, 600,
                      orientate_cmd, 88, 0,
-                     backwards_cmd, 180, 200,
-                     set_position_cmd, 1900, 0, 90,
                      goto_cmd, 1900, 550, 400,
                     }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
   int num_commands = sizeof(commands) / sizeof(commands[0]);
