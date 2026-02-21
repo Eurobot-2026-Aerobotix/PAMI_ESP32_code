@@ -101,6 +101,9 @@ void strategy()
       move_backwards(distance, speed);
       control_loop_state = DISACTIVATED;
       i += 3;
+    }else if (command_type == delay_cmd){
+      custom_delay(commands[i+1]);
+      i += 2;
     }
   }
   // 3. Send completion signal
@@ -289,7 +292,7 @@ void setup()
   Serial.println("=== PAMI ESP32 Setup ===");
 
   Serial.println("Setting motor pins...");
-  set_motor_pins(22, 21, 18, 19, 23, 17);
+  set_motor_pins(21, 22, 18, 19, 23, 17);
 
   set_ultrasonic_pins(14, 12);
 
@@ -300,8 +303,12 @@ void setup()
   set_PWM_min_max(1023, 240, 210, -240, -210);
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(57.342589790462290093200767685685, 57.342589790462290093200767685685, 96.10775735864049319703153010137);
+  set_wheel_diameter_and_spacing(57.814457791555129755173136668791, 57.57543160947118089830420380401, 97.898273135542852506579071027061);
   HAL_setup();
+  
+  // Initialize agent LED
+  pinMode(AGENT_LED_PIN, OUTPUT);
+  digitalWrite(AGENT_LED_PIN, LOW);
   
   // Initialize WebSocket if enabled
   extern int websocket_enabled;
@@ -406,6 +413,6 @@ void loop(){
   //   send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
   //   delay(10);
   // }
-  // send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, debugger);
-  // custom_delay(10);
+  //send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, debugger);
+  custom_delay(10);
 }
