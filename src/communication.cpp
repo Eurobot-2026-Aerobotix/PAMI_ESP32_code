@@ -26,6 +26,7 @@ int commands[100]; // Integer array for converted commands
 size_t commands_count = 0;
 bool micro_ros_init_successful = false;
 enum CommunicationState comm_state = WAITING_AGENT;
+bool is_yellow = true;
 
 // WiFi reconnection variables
 unsigned long last_wifi_check = 0;
@@ -48,6 +49,9 @@ bool connect_wifi(const char *ssid, const char *password) {
     WiFi.disconnect(true);
     WiFi.mode(WIFI_STA);
     
+    // Disable WiFi sleep for reliable real-time communication
+    WiFi.setSleep(false);
+    
     // Configure WiFi to be more aggressive with reconnection
     WiFi.setAutoReconnect(true);
     WiFi.persistent(false);
@@ -56,7 +60,7 @@ bool connect_wifi(const char *ssid, const char *password) {
     
     int retry_count = 0;
     while (WiFi.status() != WL_CONNECTED && retry_count < MAX_WIFI_RETRY) {
-        delay(500);
+        delay(300); // Reduced from 500ms to 300ms
         Serial.print(".");
         retry_count++;
         
@@ -69,10 +73,10 @@ bool connect_wifi(const char *ssid, const char *password) {
         }
     }
     
-    // Give WiFi extra time to finish connecting after association errors
+    // Reduced stabilization time from 2000ms to 500ms
     if (WiFi.status() != WL_CONNECTED) {
         Serial.println("\nWaiting for WiFi to stabilize...");
-        delay(2000);
+        delay(500);
     }
     
     if (WiFi.status() == WL_CONNECTED) {
@@ -102,6 +106,13 @@ void check_wifi_connection(const char *ssid, const char *password) {
 bool setup_micro_ros(const char *wifi_ssid, const char *wifi_password, const char *agent_ip, int agent_port)
 {
     Serial.println("=== Setting up micro-ROS ===");
+
+    // Add random startup delay to avoid all ESPs connecting simultaneously (0-3 seconds)
+    unsigned long random_delay = random(0, 3000);
+    Serial.print("Random startup delay: ");
+    Serial.print(random_delay);
+    Serial.println("ms");
+    delay(random_delay);
 
     // Connect to WiFi with retry logic
     if (!connect_wifi(wifi_ssid, wifi_password)) {
@@ -133,10 +144,14 @@ bool setup_micro_ros(const char *wifi_ssid, const char *wifi_password, const cha
 // Main communication loop - should be called regularly from main loop
 void communication_loop()
 {
+    // Add slight random delay to desynchronize agent checks across multiple ESPs
+    static unsigned long check_offset = random(0, 500);
+    
     switch (comm_state)
     {
     case WAITING_AGENT:
-        EXECUTE_EVERY_N_MS(1000, comm_state = (RMW_RET_OK == rmw_uros_ping_agent(500, 3)) ? AGENT_AVAILABLE : WAITING_AGENT; if (comm_state == AGENT_AVAILABLE) { Serial.println("Agent detected!"); });
+        // Reduced timeout from 500ms to 200ms, and attempts from 3 to 2 for faster detection
+        EXECUTE_EVERY_N_MS(1000 + check_offset, comm_state = (RMW_RET_OK == rmw_uros_ping_agent(200, 2)) ? AGENT_AVAILABLE : WAITING_AGENT; if (comm_state == AGENT_AVAILABLE) { Serial.println("Agent detected!"); });
         break;
 
     case AGENT_AVAILABLE:
@@ -155,10 +170,11 @@ void communication_loop()
 
     case AGENT_CONNECTED:
         EXECUTE_EVERY_N_MS(1000,
-                           comm_state = (RMW_RET_OK == rmw_uros_ping_agent(500, 3)) ? AGENT_CONNECTED : AGENT_DISCONNECTED;);
+                           comm_state = (RMW_RET_OK == rmw_uros_ping_agent(200, 2)) ? AGENT_CONNECTED : AGENT_DISCONNECTED;);
         if (comm_state == AGENT_CONNECTED)
         {
             rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100));
+            
         }
         else
         {
@@ -169,8 +185,8 @@ void communication_loop()
     case AGENT_DISCONNECTED:
         Serial.println("Cleaning up and reconnecting...");
         destroy_entities();
-        // Add a small delay before reconnecting to let the agent stabilize
-        vTaskDelay(pdMS_TO_TICKS(1000)); // 1 second delay
+        // Reduced delay from 1000ms to 300ms for faster reconnection
+        vTaskDelay(pdMS_TO_TICKS(300));
         comm_state = WAITING_AGENT;
         break;
 
@@ -180,6 +196,7 @@ void communication_loop()
 
     // Update LED status
     digitalWrite(LED_PIN, (comm_state == AGENT_CONNECTED) ? HIGH : LOW);
+    digitalWrite(AGENT_LED_PIN, (comm_state == AGENT_CONNECTED) ? HIGH : LOW);
 }
 
 // Create all ROS entities (publishers, subscribers, timers)
@@ -281,6 +298,7 @@ void strategy_callback(const void *msgin)
         Serial.print(" -> command: ");
         Serial.println(commands[i]);
     }
+    is_yellow = (commands[2] < 1500);
 }
 
 // Send action done message
