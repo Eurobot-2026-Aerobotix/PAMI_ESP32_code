@@ -192,6 +192,90 @@ void strategy(){
                     //       orientate_cmd, 0, 0,
 
                      };
+  int master_cina_yellow[] = {set_position_cmd, 66, 680, 90,
+                              goto_cmd, 66, 1100, 500, 1,
+                              goto_cmd, 165, 1100, 400, 1,
+                              pickup_cmd, 1, 1, 0,    // pick up 1 close
+                              goto_cmd, 68, 680, 400, 1,
+                              orientate_cmd, -90, 0,
+                              putdown_cmd,           // drop 1 close
+                              goto_cmd, 66, 775, 400, -1,
+                              orientate_cmd, -90, 0,
+                              goto_cmd, 190, 775, 300, 1,
+                              pickup_cmd, 1, 1, 1, // pick up 2 niggas
+                              goto_cmd, 130, 775, 400, -1,
+                              orientate_cmd, 120, 0, // throw other left nigga
+                              goto_cmd, 70, 682, 400, 1,
+                              orientate_cmd, -90, 0,
+                              putdown_cmd,          // drop niggas over close ones
+                              goto_cmd, 70, 740, 400,-1,
+                              goto_cmd, 200, 740, 400, 1,
+                              pickup_cmd, 1, 1, 0, // pick up 2 yellow  
+                              goto_cmd, 80, 740, 400, -1,
+                              goto_cmd, 130, 1180, 500, 1,
+                              goto_cmd, 365, 1180, 500, 1,
+                              putdown_cmd,         // drop yellows
+                              goto_cmd, 45, 1180, 300, -1,
+                              goto_cmd, 45, 1355, 300, 1,
+                              goto_cmd, 80, 1355, 300, 1,
+                              pickup_cmd, 1, 1, 0, // pick up 2 far
+                              goto_cmd, 135, 700, 500, 1,
+                              goto_cmd, 215, 680, 500, 1,
+                              orientate_cmd, -90, 0,
+                              putdown_cmd,        //drop 2 far
+                              goto_cmd, 215, 700, 300, -1,
+                              goto_cmd, 140, 750, 300, -1,
+                              goto_cmd, 140, 850, 300, 1,
+                              goto_cmd, 210, 850, 300, 1,
+                              pickup_cmd, 1, 1, 0, // pick up 2 yellow
+                              goto_cmd, 200, 1300, 500, 1,
+                              goto_cmd, 380, 1300, 300, 1,
+                              orientate_cmd, 0, 0,
+                              putdown_cmd,  // drop 2 yellows
+                              party_time_cmd
+                            };
+  int master_cina_blue[] =   {set_position_cmd, 66, 2320, 90,
+                              goto_cmd, 66, 1900, 500, 1,
+                              goto_cmd, 165, 1900, 400, 1,
+                              pickup_cmd, 1, 1, 0,
+                              goto_cmd, 68, 2320, 400, 1,
+                              orientate_cmd, 90, 0,
+                              putdown_cmd,
+                              goto_cmd, 66, 2225, 400, -1,
+                              orientate_cmd, 90, 0,
+                              goto_cmd, 190, 2225, 300, 1,
+                              pickup_cmd, 1, 1, 1,
+                              goto_cmd, 130, 2225, 400, -1,
+                              orientate_cmd, -120, 0,
+                              goto_cmd, 70, 2318, 400, 1,
+                              orientate_cmd, 90, 0,
+                              putdown_cmd,
+                              goto_cmd, 70, 2260, 400, -1,
+                              goto_cmd, 200, 2260, 400, 1,
+                              pickup_cmd, 1, 1, 0,
+                              goto_cmd, 80, 2260, 400, -1,
+                              goto_cmd, 130, 1820, 500, 1,
+                              goto_cmd, 365, 1820, 500, 1,
+                              putdown_cmd,
+                              goto_cmd, 45, 1820, 300, -1,
+                              goto_cmd, 45, 1645, 300, 1,
+                              goto_cmd, 80, 1645, 300, 1,
+                              pickup_cmd, 1, 1, 0,
+                              goto_cmd, 135, 2300, 500, 1,
+                              goto_cmd, 215, 2320, 500, 1,
+                              orientate_cmd, 90, 0,
+                              putdown_cmd,
+                              goto_cmd, 215, 2300, 300, -1,
+                              goto_cmd, 140, 2250, 300, -1,
+                              goto_cmd, 140, 2150, 300, 1,
+                              goto_cmd, 210, 2150, 300, 1,
+                              pickup_cmd, 1, 1, 0,
+                              goto_cmd, 200, 1700, 500, 1,
+                              goto_cmd, 380, 1700, 300, 1,
+                              orientate_cmd, 0, 0,
+                              putdown_cmd,
+                              party_time_cmd
+                            };
   extern size_t commands_count;
   //int num_commands = commands_count;
   int num_commands = sizeof(commands) / sizeof(commands[0]); // For testing, replace with commands_count in production
@@ -308,7 +392,7 @@ void strategy(){
     }
   }
   // 3. Send completion signal
-  send_action_done(1);
+  //send_action_done(1);
 
   Serial.println("Strategy execution completed!");
 }
@@ -463,9 +547,6 @@ void commandExecutionTask(void *pvParameters)
     if (strategy_waiting) {
       strategy_waiting = 0;
       strategy();
-      while(1){
-        party_time();
-      }
     }
     execute_command();
     vTaskDelayUntil(&xLastWakeTime, xDelay);

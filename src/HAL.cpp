@@ -96,7 +96,7 @@ float kiP_L = 400;
 volatile float debugger = 0;
 int strategy_start_time = 1000000;
 
-int servo_positions[7] = {0, 130, 55, 85, 55, 15, 110};
+int servo_positions[7] = {0, 130, 55, 82, 55, 15, 110};
 bool ultrasonic_blocked = true;
 
 void set_motor_pins(int right_forward, int right_backward, int left_forward, int left_backward, int right_enable, int left_enable)
@@ -430,8 +430,8 @@ void custom_delay(int ms)
 void party_time(){
     while(1){
         move_servo(0);
-        custom_delay(400);
-        move_servo(6);
-        custom_delay(400);
+        custom_delay(1000);
+        move_servo(1);
+        custom_delay(1000);
     }
 }
