@@ -13,6 +13,7 @@
 
 // Macro definitions
 #define LED_PIN 13
+#define AGENT_LED_PIN 25
 #define RCCHECK(fn)                  \
     {                                \
         rcl_ret_t temp_rc = fn;      \
@@ -62,8 +63,8 @@ extern enum CommunicationState comm_state;
 // Strategy data arrays
 extern float received_floats[100];
 extern size_t received_floats_count;
-extern int commands[100];
 extern size_t commands_count;
+extern bool is_yellow;
 // Core functions
 bool setup_micro_ros(const char *wifi_ssid, const char *wifi_password, const char *agent_ip, int agent_port);
 void communication_loop();
