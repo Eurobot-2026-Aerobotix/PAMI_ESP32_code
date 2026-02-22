@@ -430,8 +430,8 @@ void custom_delay(int ms)
 void party_time(){
     while(1){
         move_servo(0);
-        custom_delay(800);
-        move_servo(5);
-        custom_delay(800);
+        custom_delay(400);
+        move_servo(6);
+        custom_delay(400);
     }
 }

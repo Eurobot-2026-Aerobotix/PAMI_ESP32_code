@@ -149,13 +149,13 @@ void strategy(){
                     goto_cmd, 200, 740, 400, 1,
                     pickup_cmd, 1, 1, 0, // pick up 2 yellow  
                     goto_cmd, 80, 740, 400, -1,
-                    goto_cmd, 80, 1180, 500, 1,
+                    goto_cmd, 130, 1180, 500, 1,
                     goto_cmd, 365, 1180, 500, 1,
                     putdown_cmd,         // drop yellows
-                    goto_cmd, 367, 1365, 300, 1,
-                    goto_cmd, 330, 1365, 300, 1,
+                    goto_cmd, 45, 1180, 300, -1,
+                    goto_cmd, 45, 1355, 300, 1,
+                    goto_cmd, 80, 1355, 300, 1,
                     pickup_cmd, 1, 1, 0, // pick up 2 far
-                    goto_cmd, 135, 1100, 500, 1,
                     goto_cmd, 135, 700, 500, 1,
                     goto_cmd, 215, 680, 500, 1,
                     orientate_cmd, -90, 0,
@@ -285,7 +285,6 @@ void strategy(){
       i += 6;
     }else if (command_type == party_time_cmd){
       party_time();
-      i++;
     }
     
     // else if(command_type == move_linear_cmd){
@@ -464,6 +463,9 @@ void commandExecutionTask(void *pvParameters)
     if (strategy_waiting) {
       strategy_waiting = 0;
       strategy();
+      while(1){
+        party_time();
+      }
     }
     execute_command();
     vTaskDelayUntil(&xLastWakeTime, xDelay);
