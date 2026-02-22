@@ -259,7 +259,6 @@ void commandExecutionTask(void *pvParameters)
   {
     if (strategy_waiting) {
       strategy_waiting = 0;
-      custom_delay(85000);
       strategy();
     }
     execute_command();
@@ -292,7 +291,7 @@ void setup()
   Serial.println("=== PAMI ESP32 Setup ===");
 
   Serial.println("Setting motor pins...");
-  set_motor_pins(21, 22, 18, 19, 23, 17);
+  set_motor_pins(22, 21, 18, 19, 23, 17);
 
   set_ultrasonic_pins(14, 12);
 
@@ -303,7 +302,7 @@ void setup()
   set_PWM_min_max(1023, 240, 210, -240, -210);
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(57.814457791555129755173136668791, 57.57543160947118089830420380401, 97.898273135542852506579071027061);
+  set_wheel_diameter_and_spacing(57.342589790462290093200767685685, 57.342589790462290093200767685685, 96.10775735864049319703153010137);
   HAL_setup();
   
   // Initialize agent LED
