@@ -53,7 +53,9 @@ void strategy()
   // Use global commands array received from ROS2
   //extern int commands[];
   //extern size_t commands_count;
-  int yellow_commands[] = { set_position_cmd, 357, 199, 0,
+  int yellow_commands[] = { 
+                     delay_cmd, 85000,
+                     set_position_cmd, 357, 199, 0,
                      goto_cmd, 900, 400, 600,
                      goto_cmd, 1650, 380, 600,
                      goto_cmd, 1922, 50, 600,
@@ -62,7 +64,9 @@ void strategy()
                      set_position_cmd, 1900, 0, 90,
                      goto_cmd, 1900, 550, 400,
                     };
-  int blue_commands[] = { set_position_cmd, 357, 2801, 0,
+  int blue_commands[] = { 
+                     delay_cmd, 85000,
+                     set_position_cmd, 357, 2801, 0,
                      goto_cmd, 900, 2560, 600,
                      goto_cmd, 1680, 2550, 600,
                      goto_cmd, 1962, 2780, 600,
@@ -123,6 +127,11 @@ void strategy()
       move_backwards(distance, speed);
       control_loop_state = DISACTIVATED;
       i += 3;
+    }
+    else if (command_type == delay_cmd){
+      int ms = commands[i + 1];
+      custom_delay(ms);
+      i += 2;
     }
   }
   // 3. Send completion signal
@@ -433,5 +442,5 @@ void loop(){
   //   delay(10);
   // }
   //send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, debugger);
-  custom_delay(10);
+  //custom_delay(10);
 }
