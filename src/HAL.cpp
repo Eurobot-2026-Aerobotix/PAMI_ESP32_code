@@ -55,9 +55,9 @@ volatile int PWM_R;
 volatile int PWM_L;
 
 // physical parameters
-float wheel_diameter_R;
-float wheel_diameter_L;
-float wheels_spacing;
+double wheel_diameter_R;
+double wheel_diameter_L;
+double wheels_spacing;
 
 // PID control parameters
 float kpS_R = 3;
@@ -96,7 +96,7 @@ float kiP_L = 400;
 volatile float debugger = 0;
 int strategy_start_time = 1000000;
 
-int servo_positions[7] = {0, 130, 55, 82, 55, 15, 110};
+int servo_positions[7] = {0, 125, 53, 74, 53, 15, 110};
 bool ultrasonic_blocked = true;
 
 void set_motor_pins(int right_forward, int right_backward, int left_forward, int left_backward, int right_enable, int left_enable)
@@ -134,7 +134,7 @@ void set_PWM_min_max(int PWM__max, int PWM__R_forward_min, int PWM__L_forward_mi
     PWM_L_forward_min = PWM__L_forward_min;
     PWM_L_backward_min = PWM__L_backward_min;
 }
-void set_wheel_diameter_and_spacing(float wheel__diameter_R, float wheel__diameter_L, float wheels__spacing)
+void set_wheel_diameter_and_spacing(double wheel__diameter_R, double wheel__diameter_L, double wheels__spacing)
 {
     wheel_diameter_R = wheel__diameter_R;
     wheel_diameter_L = wheel__diameter_L;
@@ -270,56 +270,70 @@ void stop_motors()
     set_target_speeds(0, 0);
 }
 
-void encoder_init() {
-  pcnt_config_t pcnt_config_1 = {
-    .pulse_gpio_num = encoderRB,
-    .ctrl_gpio_num  = encoderRA,
+void encoder_init()
+{
+    // =========================
+    // RIGHT ENCODER (UNIT 0)
+    // =========================
 
-    .lctrl_mode = PCNT_MODE_REVERSE,
-    .hctrl_mode = PCNT_MODE_KEEP,
+    pcnt_config_t pcnt_config_R = {0};
 
-    .pos_mode = PCNT_COUNT_INC,
-    .neg_mode = PCNT_COUNT_DIS,
+    pcnt_config_R.pulse_gpio_num = encoderRA;   // Count edges on A
+    pcnt_config_R.ctrl_gpio_num  = encoderRB;   // B decides direction
 
-    .counter_h_lim = 32767,
-    .counter_l_lim = -32768,
+    pcnt_config_R.unit    = PCNT_UNIT_0;
+    pcnt_config_R.channel = PCNT_CHANNEL_0;
 
-    .unit    = PCNT_UNIT_0,
-    .channel = PCNT_CHANNEL_0
-  };
+    // X2: count rising + falling edges
+    pcnt_config_R.pos_mode = PCNT_COUNT_INC;
+    pcnt_config_R.neg_mode = PCNT_COUNT_DEC;
 
-  pcnt_unit_config(&pcnt_config_1);
-  pcnt_set_filter_value(PCNT_UNIT_0, 100);
-  pcnt_filter_enable(PCNT_UNIT_0);
+    // Direction control
+    pcnt_config_R.lctrl_mode = PCNT_MODE_KEEP;
+    pcnt_config_R.hctrl_mode = PCNT_MODE_REVERSE;
 
-  pcnt_counter_pause(PCNT_UNIT_0);
-  pcnt_counter_clear(PCNT_UNIT_0);
-  pcnt_counter_resume(PCNT_UNIT_0);
+    pcnt_config_R.counter_h_lim = 32767;
+    pcnt_config_R.counter_l_lim = -32768;
 
-  pcnt_config_t pcnt_config_2 = {
-    .pulse_gpio_num = encoderLA,
-    .ctrl_gpio_num  = encoderLB,
+    pcnt_unit_config(&pcnt_config_R);
 
-    .lctrl_mode = PCNT_MODE_REVERSE,
-    .hctrl_mode = PCNT_MODE_KEEP,
+    pcnt_set_filter_value(PCNT_UNIT_0, 200);   // Start small (50–200 typical)
+    pcnt_filter_enable(PCNT_UNIT_0);
 
-    .pos_mode = PCNT_COUNT_INC,
-    .neg_mode = PCNT_COUNT_DIS,
+    pcnt_counter_pause(PCNT_UNIT_0);
+    pcnt_counter_clear(PCNT_UNIT_0);
+    pcnt_counter_resume(PCNT_UNIT_0);
 
-    .counter_h_lim = 32767,
-    .counter_l_lim = -32768,
 
-    .unit    = PCNT_UNIT_1,
-    .channel = PCNT_CHANNEL_1
-  };
+    // =========================
+    // LEFT ENCODER (UNIT 1)
+    // =========================
 
-  pcnt_unit_config(&pcnt_config_2);
-  pcnt_set_filter_value(PCNT_UNIT_1, 100);
-  pcnt_filter_enable(PCNT_UNIT_1);
+    pcnt_config_t pcnt_config_L = {0};
 
-  pcnt_counter_pause(PCNT_UNIT_1);
-  pcnt_counter_clear(PCNT_UNIT_1);
-  pcnt_counter_resume(PCNT_UNIT_1);
+    pcnt_config_L.pulse_gpio_num = encoderLB;   // Count edges on A
+    pcnt_config_L.ctrl_gpio_num  = encoderLA;   // B decides direction
+
+    pcnt_config_L.unit    = PCNT_UNIT_1;
+    pcnt_config_L.channel = PCNT_CHANNEL_0;
+
+    pcnt_config_L.pos_mode = PCNT_COUNT_INC;
+    pcnt_config_L.neg_mode = PCNT_COUNT_DEC;
+
+    pcnt_config_L.lctrl_mode = PCNT_MODE_KEEP;
+    pcnt_config_L.hctrl_mode = PCNT_MODE_REVERSE;
+
+    pcnt_config_L.counter_h_lim = 32767;
+    pcnt_config_L.counter_l_lim = -32768;
+
+    pcnt_unit_config(&pcnt_config_L);
+
+    pcnt_set_filter_value(PCNT_UNIT_1, 200);
+    pcnt_filter_enable(PCNT_UNIT_1);
+
+    pcnt_counter_pause(PCNT_UNIT_1);
+    pcnt_counter_clear(PCNT_UNIT_1);
+    pcnt_counter_resume(PCNT_UNIT_1);
 }
 
 int16_t encoder_get_R() {

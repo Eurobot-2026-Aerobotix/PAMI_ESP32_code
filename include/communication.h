@@ -61,6 +61,7 @@ extern bool micro_ros_init_successful;
 extern enum CommunicationState comm_state;
 extern bool strategy_waiting;
 extern bool crate_colors[8];
+extern bool is_yellow;
 
 // Strategy data arrays
 extern float received_floats[200];

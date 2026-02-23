@@ -83,9 +83,9 @@ extern volatile int PWM_R;
 extern volatile int PWM_L;
 
 // physical parameters
-extern float wheel_diameter_R;
-extern float wheel_diameter_L;
-extern float wheels_spacing;
+extern double wheel_diameter_R;
+extern double wheel_diameter_L;
+extern double wheels_spacing;
 
 // PID control parameters
 extern float kpS_R;
@@ -133,7 +133,7 @@ void set_ultrasonic_pins(int trigger_pin, int echo_pin);
 void set_system_pins(int right_electrovalve, int left_electrovalve, int pump, int servo);
 void set_encoder_channels(int _encoderRA, int _encoderRB, int _encoderLA, int _encoderLB, int cpr);
 void set_PWM_min_max(int PWM__max, int PWM__R_forward_min, int PWM__L_forward_min, int PWM__R_backward_min, int PWM__L_backward_min);
-void set_wheel_diameter_and_spacing(float wheel__diameter_R, float wheel__diameter_L, float wheel__spacing);
+void set_wheel_diameter_and_spacing(double wheel__diameter_R, double wheel__diameter_L, double wheel__spacing);
 
 void run_right_motor();
 void run_left_motor();
