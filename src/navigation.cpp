@@ -89,6 +89,13 @@ int move_forward(float distance, float speed, float target_x, float target_y, fl
 		if (distance_to_target < 100){
 			reached_destination = 1;
 		}
+		if (direction == -1 && wheel_diameter_L == CRUISING && x > distance/2 && fabs(PWM_L)/(MAX(fabs(current_speed_L), 10)) > 3 && current_y > 1150){
+			wheel_state_R = EMERGENCY_BREAK;
+			wheel_state_L = EMERGENCY_BREAK;
+			stop_motors();
+			custom_delay(200);
+			return 0;
+		}
 
 	}
 	// completing the last part of distance separately, so the break happens on point
