@@ -494,3 +494,104 @@ void prepare_emergency_break(){
 	wheel_state_R = EMERGENCY_BREAK;
 	wheel_state_L = EMERGENCY_BREAK;
 }
+int bezier_curve(float x1, float y1, float x2, float y2, float x3, float y3, float speed, int direction){
+	float x0 = current_x;
+	float y0 = current_y;
+
+	float distance =  get_bezier_distance(0, x0, y0, x1, y1, x2, y2, x3, y3);
+
+	float d_1 = speed/ramping_acceleration;
+	float d_2 = speed/breaking_acceleration + distance ;
+
+	if (d_2 <= d_1){ // correcting the cruising speed if it is too high to reach using the current ramp and break
+		float intersection_x = (breaking_acceleration*distance )/(breaking_acceleration - ramping_acceleration);
+		float intersection_speed = ramping_acceleration * intersection_x;
+		speed = 0.9 * intersection_speed;
+		d_1 = speed/ramping_acceleration;
+		d_2 = speed/breaking_acceleration + distance;
+	}
+
+	orientate(atan2(y1-y0, x1-x0) + PI*(-direction+1)/2, 1);
+
+	acc_linearization_coef = sqrt(d_1);
+
+	while(!is_idle()){
+		delay(10);
+	};
+	delay(200);
+	reset_speed_control_variables();
+
+	direction_R = 1;
+	direction_L = 1;
+	cruise_speed_R = speed;
+	cruise_speed_L = speed;
+	float distance_to_target = distance;
+	float d = 0;
+	wheel_state_R = ACCELERATING;
+	wheel_state_L = ACCELERATING;
+	control_loop_state = SPEED;
+	trajectory = BEZIER_CURVE;
+
+	float lane_correction_term;
+	float t = 0;
+	float speed_R , speed_L;
+
+
+	while (distance_to_target >= 1.0f && t < 1.0000f){
+		d = distance - distance_to_target;
+
+		if (wheel_state_R == ACCELERATING && d > d_1 ){
+			wheel_state_R = CRUISING;
+			wheel_state_L = CRUISING;
+		}else if (wheel_state_R == CRUISING && d > d_2){
+			wheel_state_R = CONTROLLED_BREAK;
+			wheel_state_L = CONTROLLED_BREAK;
+		}else if (wheel_state_R == EMERGENCY_BREAK){
+			return 0;
+		}
+
+		t = project_bezier(current_x, current_y, x0, y0, x1, y1, x2, y2, x3, y3);
+
+		float radius = get_bezier_radius(t, x0, y0, x1, y1, x2, y2, x3, y3);
+	    speed = direction * calculate_instant_target_speed_R(d, distance);
+
+		float signed_distance = direction * signed_distance_to_bezier(current_x, current_y, x0, y0, x1, y1, x2, y2, x3, y3, t);
+		lane_correction_term = MIN(fabs(SQR(signed_distance) * (0.008f)), 0.5)*SGN(signed_distance);// this coefficient is tunable
+		if (d < 0.1*d_1){ // 0.002f;
+			lane_correction_term = 0;
+		}
+
+		if (fabs(radius) < 100000){
+			speed_R = ( speed * (radius + direction * (wheels_spacing / 2.0f)) / radius );
+			speed_L = ( speed * (radius - direction * (wheels_spacing / 2.0f)) / radius );
+		}
+		else {
+			speed_R = speed ;
+			speed_L = speed ;
+		}
+		if ((fabs(speed_R)>700) || (fabs(speed_L) > 700)){
+			speed = direction * 700.0/ MAX((radius + (wheels_spacing / 2.0f)) / (radius), (radius - (wheels_spacing / 2.0f)) / (radius));
+			speed_R = ( speed * (radius + direction * (wheels_spacing / 2.0f)) / (radius));
+			speed_L = ( speed * (radius - direction * (wheels_spacing / 2.0f)) / (radius));
+		}
+
+		distance_to_target = get_bezier_distance(t, x0, y0, x1, y1, x2, y2,x3 ,y3);
+
+		set_target_speeds(speed_R*(1 + lane_correction_term) ,speed_L* (1 - lane_correction_term));
+		//send_values_to_usart(current_speed_R, current_speed_L, target_speed_R, target_speed_L);
+		//send_values_to_usart(signed_distance, 0, 0, 0);
+		delay(4);
+	}
+	stop_motors();
+	float target_angle = atan2(y3-y2 , x3-x2) + PI*(-direction+1)/2;
+	float diff = absolute_phi - target_angle;
+
+	while (diff >  PI) { target_angle += 2*PI; diff -= 2*PI; }
+	while (diff < -PI) { target_angle -= 2*PI; diff += 2*PI; }
+
+	float position_correction = ( ( (target_angle - absolute_phi) * wheels_spacing*CPR / ( ((wheel_diameter_L + wheel_diameter_R)/2)*PI) ) ) / 2.0f;
+	//set_target_encoder_counts(encoder_count_R + position_correction, encoder_count_L - position_correction); // the second part is there to fix any last minute fuck ups, concerning the phi
+	wheel_state_R = DEAD_STOP;
+	wheel_state_L = DEAD_STOP;
+	return 0;
+}
