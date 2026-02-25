@@ -48,12 +48,14 @@ void strategy()
   // Example: move forward, rotate, etc.
   // move_forward(100, 50); // Move 100mm at 50mm/s speed
   //custom_delay(500);
-  int delay_cmd = 0, goto_cmd = 1, orientate_cmd = 2, set_position_cmd = 3, backwards_cmd = 4;
+  int delay_cmd = 0, goto_cmd = 1, orientate_cmd = 2, set_position_cmd = 3, backwards_cmd = 4, bezier_cmd = 5;
   
   // Use global commands array received from ROS2
   extern int commands[];
   extern size_t commands_count;
-  // int commands[] = { set_position_cmd, 357, 199, 0,
+  //  int commands[] = { set_position_cmd, 100, 140, 0,
+  //                     bezier_cmd, 220, 140, 250, 190, 240, 370, 500, 1,
+  //                    set_position_cmd, 357, 199, 0,
   //                    goto_cmd, 900, 400, 600,
   //                    goto_cmd, 1650, 380, 600,
   //                    goto_cmd, 1922, 50, 600,
@@ -104,6 +106,18 @@ void strategy()
     }else if (command_type == delay_cmd){
       custom_delay(commands[i+1]);
       i += 2;
+    }
+     else if (command_type == bezier_cmd){
+      int x1 = commands[i + 1];
+      int y1 = commands[i + 2];
+      int x2 = commands[i + 3];
+      int y2 = commands[i + 4];
+      int x3 = commands[i + 5];
+      int y3 = commands[i + 6];
+      int speed = commands[i + 7];
+      int direction = commands[i + 8];
+      bezier_curve(x1, y1, x2, y2, x3, y3, speed, direction);
+      i += 9;
     }
   }
   // 3. Send completion signal
