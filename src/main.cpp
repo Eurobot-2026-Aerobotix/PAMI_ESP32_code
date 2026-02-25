@@ -75,7 +75,7 @@ void strategy()
       int y = commands[i + 2];
       int speed = commands[i + 3];
       while(go_to(x, y, speed)){
-        wait_for_obstacle_clearance();
+        //wait_for_obstacle_clearance();
         Serial.println("obstacle cleared, resuming...");
         Serial.println("dhia is gay");
       }
@@ -154,7 +154,7 @@ void emergencyBreakTask(void *pvParameters)
   {
     if (( ((get_ultrasonic_distance() < min_distance && trajectory == STRAIGHT && current_x < 1700) || (millis() - strategy_start_time >= max_running_time)) && wheel_state_R != EMERGENCY_BREAK && wheel_state_L != EMERGENCY_BREAK) ) 
     {
-      prepare_emergency_break();
+      //prepare_emergency_break();
     }
 
     vTaskDelayUntil(&xLastWakeTime, xDelay);
