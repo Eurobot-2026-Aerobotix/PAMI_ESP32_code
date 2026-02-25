@@ -18,7 +18,8 @@ enum Trajectory
 	STRAIGHT,
 	ROTATING,
 	CIRCLE_CURVE,
-	POLYNOMIAL_CURVE
+	POLYNOMIAL_CURVE,
+	BEZIER_CURVE
 };
 
 enum Control_loop {
@@ -61,3 +62,4 @@ void set_target_encoder_counts(int32_t encoder__count_R, int32_t encoder__count_
 void wait_for_obstacle_clearance();
 void wait_for_idle();
 void prepare_emergency_break();
+int bezier_curve(float x1, float y1, float x2, float y2, float x3, float y3, float speed, int direction);
