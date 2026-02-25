@@ -44,49 +44,49 @@ void strategy(){
 
   int goto_cmd = 0, orientate_cmd = 1, set_position_cmd = 2, pickup_cmd = 3, putdown_cmd = 4, walking_position_cmd = 5, prepare_cmd = 6 , letgo_cmd = 7, go_backward_cmd = 8, forward_cmd = 9, move_linear_cmd = 10, rotate_cmd = 11, party_time_cmd = 12, fix_x_cmd = 13; 
 
-  int master_cina_yellow[] = {set_position_cmd, 66, 680, 90,
-                              goto_cmd, 66, 1100, 500, 1,
-                              goto_cmd, 165, 1100, 400, 1,
-                              pickup_cmd, 1, 1, 0,    // pick up 1 close
-                              goto_cmd, 68, 680, 400, 1,
-                              orientate_cmd, -90, 0,
-                              putdown_cmd,           // drop 1 close
-                              goto_cmd, 66, 775, 400, -1,
-                              goto_cmd, 180, 772, 300, 1,
-                              pickup_cmd, 1, 1, 1, // pick up 2 niggas
-                              goto_cmd, 130, 775, 400, -1,
-                              orientate_cmd, 120, 0, // throw other left nigga
-                              goto_cmd, 70, 682, 400, 1,
-                              orientate_cmd, -90, 0,
-                              putdown_cmd,          // drop niggas over close ones
-                              goto_cmd, 70, 740, 400,-1,
-                              goto_cmd, 180, 747, 400, 1,
-                              pickup_cmd, 1, 1, 0, // pick up 2 yellow  
-                              goto_cmd, 80, 740, 400, -1,
-                              goto_cmd, 130, 1200, 500, 1,
-                              goto_cmd, 357, 1200, 500, 1,
-                              putdown_cmd,         // drop yellows
-                              //goto_cmd, 40, 1180, 300, -1,
-                              goto_cmd, -5, 1200, 300, -1,
-                              fix_x_cmd, 25,
-                              goto_cmd, 40, 1200, 400, 1,
-                              //
-                              goto_cmd, 40, 1355, 300, 1,
-                              goto_cmd, 80, 1355, 300, 1,
-                              pickup_cmd, 1, 1, 0, // pick up 2 far
-                              goto_cmd, 135, 700, 500, -1,
-                              goto_cmd, 215, 680, 500, -1,
-                              orientate_cmd, -90, 0,
-                              putdown_cmd,        //drop 2 far
-                              goto_cmd, 120, 750, 300, -1,
-                              goto_cmd, 120, 850, 300, 1,
-                              goto_cmd, 200, 850, 300, 1,
-                              pickup_cmd, 1, 1, 0, // pick up 2 yellow
-                              goto_cmd, 200, 1300, 500, 1,
-                              goto_cmd, 350, 1300, 300, 1,
-                              orientate_cmd, 0, 0,
-                              putdown_cmd,  // drop 2 yellows
-                              party_time_cmd
+  int master_cina_yellow[] = {//set_position_cmd, 66, 680, 90,
+                              // goto_cmd, 66, 1100, 500, 1,
+                              // goto_cmd, 165, 1100, 400, 1,
+                              // pickup_cmd, 1, 1, 0,    // pick up 1 close
+                              // goto_cmd, 68, 680, 400, 1,
+                              // orientate_cmd, -90, 0,
+                              // putdown_cmd,           // drop 1 close
+                              // goto_cmd, 66, 775, 400, -1,
+                              // goto_cmd, 180, 772, 300, 1,
+                              // pickup_cmd, 1, 1, 1, // pick up 2 niggas
+                              // goto_cmd, 130, 775, 400, -1,
+                              // orientate_cmd, 120, 0, // throw other left nigga
+                              // goto_cmd, 70, 682, 400, 1,
+                              // orientate_cmd, -90, 0,
+                              // putdown_cmd,          // drop niggas over close ones
+                              // goto_cmd, 70, 740, 400,-1,
+                              // goto_cmd, 180, 747, 400, 1,
+                              // pickup_cmd, 1, 1, 0, // pick up 2 yellow  
+                              // goto_cmd, 80, 740, 400, -1,
+                              // goto_cmd, 130, 1200, 500, 1,
+                              // goto_cmd, 357, 1200, 500, 1,
+                              // putdown_cmd,         // drop yellows
+                              // goto_cmd, -5, 1200, 300, -1,
+                              // fix_x_cmd, 25,
+                              // goto_cmd, 40, 1200, 400, 1,
+                              // goto_cmd, 40, 1355, 300, 1,
+                              // goto_cmd, 80, 1355, 300, 1,
+                              // pickup_cmd, 1, 1, 0, // pick up 2 far
+                              // goto_cmd, 135, 700, 500, -1,
+                              // goto_cmd, 215, 680, 500, -1,
+                              // orientate_cmd, -90, 0,
+                              // putdown_cmd,        //drop 2 far
+                              // goto_cmd, 120, 750, 300, -1,
+                              // goto_cmd, 120, 850, 300, 1,
+                              // goto_cmd, 200, 850, 300, 1,
+                              // pickup_cmd, 1, 1, 0, // pick up 2 yellow
+                              // goto_cmd, 200, 1300, 500, 1,
+                              // goto_cmd, 350, 1300, 300, 1,
+                              // orientate_cmd, 0, 0,
+                              // putdown_cmd,  // drop 2 yellows
+                              // party_time_cmd
+                              set_position_cmd, 0, 0, 0,
+                              goto_cmd, 400, 0, 400, 1
                             };
   int master_cina_blue[] =   {set_position_cmd, 66, 2320, -90,
                               goto_cmd, 66, 1885, 500, 1,
@@ -96,35 +96,37 @@ void strategy(){
                               orientate_cmd, 90, 0,
                               putdown_cmd,        // drop 2 close
                               goto_cmd, 85, 2220, 400, -1,
-                              goto_cmd, 190, 2220, 300, 1,
+                              goto_cmd, 180, 2220, 300, 1,
                               pickup_cmd, 1, 1, 1, // pickup 2 niggas
                               goto_cmd, 130, 2220, 400, -1,
                               orientate_cmd, -120, 0, // throw other left nigga
-                              goto_cmd, 85, 2318, 400, 1,
-                              orientate_cmd, 90, 0,
+                              goto_cmd, 85, 2310, 400, 1,
+                              orientate_cmd, 85, 0,
                               putdown_cmd,           // drop 2 niggas
                               goto_cmd, 85, 2250, 400, -1,
-                              goto_cmd, 200, 2245, 400, 1,
+                              goto_cmd, 200, 2233, 400, 1,
                               pickup_cmd, 1, 1, 0,  // pickup 2 blue
-                              goto_cmd, 75, 2245, 400, -1,
-                              goto_cmd, 130, 1780, 500, 1,
-                              goto_cmd, 365, 1780, 500, 1,
+                              goto_cmd, 75, 2245, 400, -1, 
+                              goto_cmd, 130, 1820, 500, 1,
+                              goto_cmd, 270, 1780, 500, 1,
                               putdown_cmd,          // drop 2 blue
-                              goto_cmd, 50, 1780, 400, -1,
-                              goto_cmd, 50, 1630, 300, 1,
-                              goto_cmd, 80, 1630, 300, 1,
+                              goto_cmd, -90, 1835, 300, -1,
+                              fix_x_cmd, 35,
+                              goto_cmd, 50, 1830, 400, 1,
+                              goto_cmd, 10, 1680, 300, 1,
+                              goto_cmd, 70, 1658, 300, 1,
                               pickup_cmd, 1, 1, 0,    // pickup 2 far
-                              goto_cmd, 135, 2300, 500, 1,
-                              goto_cmd, 215, 2320, 500, 1,
-                              orientate_cmd, 90, 0,
+                              goto_cmd, 240, 2270, 500, 1,
+                              goto_cmd, 300, 2300, 500, 1,
+                              orientate_cmd, 82, 0,
                               putdown_cmd,            // drop 2 far
-                              goto_cmd, 215, 2300, 300, -1,
-                              goto_cmd, 140, 2250, 300, -1,
-                              goto_cmd, 140, 2150, 300, 1,
-                              goto_cmd, 210, 2130, 300, 1,
+                              goto_cmd, 255, 2300, 300, -1,
+                              goto_cmd, 180, 2250, 300, -1,
+                              goto_cmd, 180, 2160, 300, 1,
+                              goto_cmd, 250, 2140, 300, 1,
                               pickup_cmd, 1, 1, 0,    // pickup 2 blue
                               goto_cmd, 200, 1700, 500, 1,
-                              goto_cmd, 380, 1700, 300, 1,
+                              goto_cmd, 280, 1640, 300, 1,
                               orientate_cmd, 0, 0,
                               putdown_cmd,            // drop 2 blue
                               party_time_cmd
@@ -148,8 +150,8 @@ void strategy(){
   //int num_commands = sizeof(commands) / sizeof(commands[0]); // For testing, replace with commands_count in production
   int i = 0;
   strategy_start_time = millis();
-  // rotate(1800, 0);
-  // while(1);
+  rotate(1800, 0);
+  while(1);
   while (i < num_commands){
     Serial.print("current command");
     Serial.println(i);
@@ -492,7 +494,7 @@ void setup()
   set_PWM_min_max(1023, 100, 100, -100, -100); //yess    //130  120
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(47.669870635475871651225659202322, 47.746482927568600730665129011754, 119.5258393387415377576987954744); //   122.84370983629917196470781680778
+  set_wheel_diameter_and_spacing(47.746482927568600730665129011754, 47.669870635475871651225659202322, 120.49790153655701745414567414581); //   122.84370983629917196470781680778
   HAL_setup();
 
 
@@ -593,11 +595,13 @@ void loop(){
   //  delay(10);
   //  }
 
-  send_values_to_usart(current_speed_L, current_speed_R, fabs(PWM_L)/(MAX(fabs(current_speed_L), 10))*100, target_speed_R);
-  delay(10);
+  // send_values_to_usart(current_speed_L, current_speed_R, fabs(PWM_L)/(MAX(fabs(current_speed_L), 10))*100, target_speed_R);
+  // delay(10);
   // send_values_to_usart(current_speed_R, current_speed_L, target_speed_R, target_speed_L);
   // delay(10);
   // send_values_to_usart(debugger*100, 0, target_speed_R, target_speed_L); // send encoder counts and position for debugging
   // send_values_to_usart(encoder_count_R, encoder_count_L, 0, 0); // send encoder counts and position for debugging
+  // delay(10);
+  // send_values_to_usart(current_x, current_y, current_phi * 100, 0);
   // delay(10);
 }
