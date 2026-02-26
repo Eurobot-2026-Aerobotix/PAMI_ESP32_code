@@ -48,7 +48,7 @@ void strategy()
   // Example: move forward, rotate, etc.
   // move_forward(100, 50); // Move 100mm at 50mm/s speed
   //custom_delay(500);
-  int delay_cmd = 0, goto_cmd = 1, orientate_cmd = 2, set_position_cmd = 3, backwards_cmd = 4, bezier_cmd = 5;
+  int delay_cmd = 0, goto_cmd = 1, orientate_cmd = 2, set_position_cmd = 3, bezier_cmd = 4, backwards_cmd = 5;
   
   // Use global commands array received from ROS2
   extern int commands[];
@@ -61,8 +61,8 @@ void strategy()
   //                    goto_cmd, 1922, 50, 600,
   //                    orientate_cmd, 88, 0,
   //                    goto_cmd, 1900, 550, 400,
-  //                  }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
-  //int num_commands = sizeof(commands) / sizeof(commands[0]);
+                    // }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
+  // int num_commands = sizeof(commands) / sizeof(commands[0]);
   int num_commands = commands_count;
   int i = 0;
   strategy_start_time = millis();
@@ -77,9 +77,9 @@ void strategy()
       int y = commands[i + 2];
       int speed = commands[i + 3];
       while(go_to(x, y, speed)){
-        //wait_for_obstacle_clearance();
+        wait_for_obstacle_clearance();
         Serial.println("obstacle cleared, resuming...");
-        Serial.println("dhia is gay");
+        Serial.println("mahdi y7ebb louled");
       }
       i += 4;
     }
@@ -116,7 +116,10 @@ void strategy()
       int y3 = commands[i + 6];
       int speed = commands[i + 7];
       int direction = commands[i + 8];
-      bezier_curve(x1, y1, x2, y2, x3, y3, speed, direction);
+      while(bezier_curve(x1, y1, x2, y2, x3, y3, speed, direction)){
+        wait_for_obstacle_clearance();
+        Serial.println("obstacle cleared, resuming...");
+      }
       i += 9;
     }
 
@@ -432,5 +435,5 @@ void loop(){
   //   delay(10);
   // }
   //send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, debugger);
-  custom_delay(10);
+  // custom_delay(10);
 }

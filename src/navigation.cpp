@@ -547,7 +547,8 @@ int bezier_curve(float x1, float y1, float x2, float y2, float x3, float y3, flo
 			wheel_state_R = CONTROLLED_BREAK;
 			wheel_state_L = CONTROLLED_BREAK;
 		}else if (wheel_state_R == EMERGENCY_BREAK){
-			return 0;
+			emergency_break();
+			return 1;
 		}
 
 		t = project_bezier(current_x, current_y, x0, y0, x1, y1, x2, y2, x3, y3);
@@ -590,7 +591,7 @@ int bezier_curve(float x1, float y1, float x2, float y2, float x3, float y3, flo
 	while (diff < -PI) { target_angle -= 2*PI; diff += 2*PI; }
 
 	float position_correction = ( ( (target_angle - absolute_phi) * wheels_spacing*CPR / ( ((wheel_diameter_L + wheel_diameter_R)/2)*PI) ) ) / 2.0f;
-	//set_target_encoder_counts(encoder_count_R + position_correction, encoder_count_L - position_correction); // the second part is there to fix any last minute fuck ups, concerning the phi
+	set_target_encoder_counts(encoder_count_R + position_correction, encoder_count_L - position_correction); // the second part is there to fix any last minute fuck ups, concerning the phi
 	wheel_state_R = DEAD_STOP;
 	wheel_state_L = DEAD_STOP;
 	return 0;
