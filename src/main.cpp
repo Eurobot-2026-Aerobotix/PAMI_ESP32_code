@@ -118,7 +118,10 @@ void strategy()
       int y3 = commands[i + 6];
       int speed = commands[i + 7];
       int direction = commands[i + 8];
-      bezier_curve(x1, y1, x2, y2, x3, y3, speed, direction);
+      while(bezier_curve(x1, y1, x2, y2, x3, y3, speed, direction)){
+        wait_for_obstacle_clearance();
+        Serial.println("obstacle cleared, resuming...");
+      }
       i += 9;
     }
   }

@@ -241,7 +241,8 @@ int bezier_curve(float x1, float y1, float x2, float y2, float x3, float y3, flo
 			wheel_state_R = CONTROLLED_BREAK;
 			wheel_state_L = CONTROLLED_BREAK;
 		}else if (wheel_state_R == EMERGENCY_BREAK){
-			return 0;
+			emergency_break();
+			return 1;
 		}
 
 		t = project_bezier(current_x, current_y, x0, y0, x1, y1, x2, y2, x3, y3);
