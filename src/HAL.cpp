@@ -366,14 +366,13 @@ void pickup(int pick_right, int pick_left, int up_or_down){
     move_servo(up_or_down? 4 : 2);
     custom_delay(500);
 }
-void putdown(){
+void putdown(int bechwaya){
     move_servo(6);
-    custom_delay(100);
+    custom_delay(bechwaya? 500 : 100);
     set_pump_state(0);
     set_EV_states(1, 1);
     custom_delay(600);
     move_servo(0);
-
 }
 void letgo(){
     set_pump_state(0);

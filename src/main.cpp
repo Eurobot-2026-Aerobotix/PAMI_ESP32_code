@@ -44,21 +44,23 @@ void strategy(){
 
   int goto_cmd = 0, orientate_cmd = 1, set_position_cmd = 2, pickup_cmd = 3, putdown_cmd = 4, walking_position_cmd = 5, prepare_cmd = 6 , letgo_cmd = 7, go_backward_cmd = 8, forward_cmd = 9, move_linear_cmd = 10, rotate_cmd = 11, party_time_cmd = 12, fix_x_cmd = 13; 
 
-  int master_cina_yellow[] = {//set_position_cmd, 66, 680, 90,
-                              // goto_cmd, 66, 1100, 500, 1,
-                              // goto_cmd, 165, 1100, 400, 1,
-                              // pickup_cmd, 1, 1, 0,    // pick up 1 close
-                              // goto_cmd, 68, 680, 400, 1,
-                              // orientate_cmd, -90, 0,
-                              // putdown_cmd,           // drop 1 close
-                              // goto_cmd, 66, 775, 400, -1,
-                              // goto_cmd, 180, 772, 300, 1,
-                              // pickup_cmd, 1, 1, 1, // pick up 2 niggas
-                              // goto_cmd, 130, 775, 400, -1,
-                              // orientate_cmd, 120, 0, // throw other left nigga
-                              // goto_cmd, 70, 682, 400, 1,
-                              // orientate_cmd, -90, 0,
-                              // putdown_cmd,          // drop niggas over close ones
+  int master_cina_yellow[] = {set_position_cmd, 66, 680, 90,
+                              goto_cmd, 70, 1100, 500, 1,
+                              goto_cmd, 150, 1100, 400, 1,
+                              pickup_cmd, 1, 1, 0,    // pick up 1 close
+                              goto_cmd, 56, 668, 400, 1,
+                              orientate_cmd, -90, 0,
+                              putdown_cmd, 1,      // drop 1 close
+                              goto_cmd, 56, 775, 400, -1,
+                              goto_cmd, 175, 772, 300, 1,
+                              pickup_cmd, 1, 1, 1, // pick up 2 niggas
+                              goto_cmd, 66, 775, 400, -1,
+                              orientate_cmd, 90, 0, // throw other left nigga
+                              goto_cmd, 0, 775, 400, -1,
+                              set_position_cmd, 30, 775, 90,
+                              goto_cmd, 15, 775, 400, -1,
+                              goto_cmd, 15, 670, 400, 1,
+                              putdown_cmd,          // drop niggas over close ones
                               // goto_cmd, 70, 740, 400,-1,
                               // goto_cmd, 180, 747, 400, 1,
                               // pickup_cmd, 1, 1, 0, // pick up 2 yellow  
@@ -85,8 +87,6 @@ void strategy(){
                               // orientate_cmd, 0, 0,
                               // putdown_cmd,  // drop 2 yellows
                               // party_time_cmd
-                              set_position_cmd, 0, 0, 0,
-                              goto_cmd, 400, 0, 400, 1
                             };
   int master_cina_blue[] =   {set_position_cmd, 66, 2320, -90,
                               goto_cmd, 66, 1885, 500, 1,
@@ -150,8 +150,8 @@ void strategy(){
   //int num_commands = sizeof(commands) / sizeof(commands[0]); // For testing, replace with commands_count in production
   int i = 0;
   strategy_start_time = millis();
-  rotate(1800, 0);
-  while(1);
+  // rotate(1800, 0);
+  // while(1);
   while (i < num_commands){
     Serial.print("current command");
     Serial.println(i);
@@ -202,9 +202,10 @@ void strategy(){
       i += 4;
     }
     else if (command_type == putdown_cmd){
+      int bechwaya = commands[i+1];
       Serial.println("[CMD] putdown_cmd");
-      putdown();
-      i++;
+      putdown(bechwaya);
+      i += 2;
     }
     else if (command_type == walking_position_cmd){
       Serial.println("[CMD] walking_position_cmd");

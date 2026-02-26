@@ -169,7 +169,7 @@ void move_servo(int position);//0 means down position and so on till 5 means up 
 void set_EV_states(int left_electrovalve_state, int right_electrovalve_state);//0 means off means fantzing, 1 means no tfantiz
 void set_pump_state(int pump_state);
 void pickup(int pick_right, int pick_left, int up_or_down);
-void putdown();
+void putdown(int bechwaya);
 void walking_position();
 void prepare_servo_up();
 void letgo();
