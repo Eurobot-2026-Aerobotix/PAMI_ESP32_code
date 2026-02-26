@@ -13,6 +13,7 @@
 
 // Macro definitions
 #define LED_PIN 13
+#define AGENT_LED_PIN 25
 #define RCCHECK(fn)                  \
     {                                \
         rcl_ret_t temp_rc = fn;      \
