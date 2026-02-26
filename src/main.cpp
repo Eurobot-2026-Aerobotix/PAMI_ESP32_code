@@ -51,21 +51,21 @@ void strategy()
   int delay_cmd = 0, goto_cmd = 1, orientate_cmd = 2, set_position_cmd = 3, bezier_cmd = 4, backwards_cmd = 5;
   
   // Use global commands array received from ROS2
-  extern int commands[];
-  extern size_t commands_count;
+  // extern int commands[];
+  // extern size_t commands_count;
 
-  // int commands[] = {
-  //                   set_position_cmd, 100, 140, 0,
-  //                   bezier_cmd, 220, 140, 250, 190, 240, 370, 500, 1,
-  //                   // set_position_cmd, 357, 199, 0,
-  //                   //  goto_cmd, 900, 400, 600,
-  //                   //  goto_cmd, 1650, 380, 600,
-  //                   //  goto_cmd, 1922, 50, 600,
-  //                   //  orientate_cmd, 88, 0,
-  //                   //  goto_cmd, 1900, 550, 400,
-  //                   }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
-  //int num_commands = sizeof(commands) / sizeof(commands[0]);
-  int num_commands = commands_count;
+  int commands[] = {
+                    set_position_cmd, 100, 140, 0,
+                    bezier_cmd, 220, 140, 250, 190, 240, 370, 500, 1,
+                    // set_position_cmd, 357, 199, 0,
+                    //  goto_cmd, 900, 400, 600,
+                    //  goto_cmd, 1650, 380, 600,
+                    //  goto_cmd, 1922, 50, 600,
+                    //  orientate_cmd, 88, 0,
+                    //  goto_cmd, 1900, 550, 400,
+                    }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
+  int num_commands = sizeof(commands) / sizeof(commands[0]);
+  // int num_commands = commands_count;
   int i = 0;
   strategy_start_time = millis();
   // rotate(1800, 0);
@@ -307,7 +307,7 @@ void setup()
   Serial.println("=== PAMI ESP32 Setup ===");
 
   Serial.println("Setting motor pins...");
-  set_motor_pins(22, 21, 18, 19, 23, 17);
+  set_motor_pins(22, 21, 18, 19, 23, 26);
 
   set_ultrasonic_pins(14, 12);
 
@@ -396,7 +396,7 @@ void setup()
   Serial.println("All tasks created successfully!");
   control_loop_state = DISACTIVATED;
   delay(1000);
-  strategy_waiting = 0;
+  strategy_waiting = 1;
 }
 
 void loop(){
