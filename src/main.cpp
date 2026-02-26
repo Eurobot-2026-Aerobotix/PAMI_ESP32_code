@@ -48,50 +48,50 @@ void strategy()
   // Example: move forward, rotate, etc.
   // move_forward(100, 50); // Move 100mm at 50mm/s speed
   //custom_delay(500);
-  int delay_cmd = 0, goto_cmd = 1, orientate_cmd = 2, set_position_cmd = 3, backwards_cmd = 4, bezier_cmd = 5;
+  int delay_cmd = 0, goto_cmd = 1, orientate_cmd = 2, set_position_cmd = 3, bezier_cmd = 4, backwards_cmd = 5;
   
   // Use global commands array received from ROS2
-  int commands[] = {//goto_cmd, 300, 0, 500,
-                      set_position_cmd, 100, 140, 0,
-                      bezier_cmd, 220, 140, 250, 190, 240, 370, 500, 1,
-  };
-  int num_commands = sizeof(commands) / sizeof(commands[0]);
+  // int commands[] = {//goto_cmd, 300, 0, 500,
+  //                     set_position_cmd, 100, 140, 0,
+  //                     bezier_cmd, 220, 140, 250, 190, 240, 370, 500, 1,
+  // };
+  // int num_commands = sizeof(commands) / sizeof(commands[0]);
   //extern size_t commands_count;
-  // int yellow_commands[] = { 
-  //                    delay_cmd, 85000,
-  //                    set_position_cmd, 357, 199, 0,
-  //                    goto_cmd, 900, 400, 600,
-  //                    goto_cmd, 1650, 380, 600,
-  //                    goto_cmd, 1922, 50, 600,
-  //                    orientate_cmd, 88, 0,
-  //                    backwards_cmd, 180, 200,
-  //                    set_position_cmd, 1900, 0, 90,
-  //                    goto_cmd, 1900, 550, 400,
-  //                   };
-  // int blue_commands[] = { 
-  //                    delay_cmd, 85000,
-  //                    set_position_cmd, 357, 2801, 0,
-  //                    goto_cmd, 900, 2560, 600,
-  //                    goto_cmd, 1680, 2550, 600,
-  //                    goto_cmd, 1962, 2780, 600,
-  //                    orientate_cmd, -94, 0,
-  //                    backwards_cmd, 180, 200,
-  //                    set_position_cmd, 1900, 3000, -90,
-  //                    goto_cmd, 1890, 2450, 400,
-  //                   };
-  // int commands[100];
-  // int num_commands = 0;
-  // if (is_yellow){
-  //   num_commands = sizeof(yellow_commands) / sizeof(yellow_commands[0]);
-  //   for (int i = 0; i < num_commands && i < 100; i++){
-  //     commands[i] = yellow_commands[i];
-  //   }
-  // }else{
-  //   num_commands = sizeof(blue_commands) / sizeof(blue_commands[0]);
-  //   for (int i = 0; i < num_commands && i < 100; i++){
-  //     commands[i] = blue_commands[i];
-  //   }
-  // }
+  int yellow_commands[] = { 
+                     delay_cmd, 85000,
+                     set_position_cmd, 357, 199, 0,
+                     goto_cmd, 900, 400, 600,
+                     goto_cmd, 1650, 380, 600,
+                     goto_cmd, 1922, 50, 600,
+                     orientate_cmd, 88, 0,
+                     backwards_cmd, 180, 200,
+                     set_position_cmd, 1900, 0, 90,
+                     goto_cmd, 1900, 550, 400,
+                    };
+  int blue_commands[] = { 
+                     delay_cmd, 85000,
+                     set_position_cmd, 357, 2801, 0,
+                     goto_cmd, 900, 2560, 600,
+                     goto_cmd, 1680, 2550, 600,
+                     goto_cmd, 1962, 2780, 600,
+                     orientate_cmd, -94, 0,
+                     backwards_cmd, 180, 200,
+                     set_position_cmd, 1900, 3000, -90,
+                     goto_cmd, 1890, 2450, 400,
+                    };
+  int commands[100];
+  int num_commands = 0;
+  if (is_yellow){
+    num_commands = sizeof(yellow_commands) / sizeof(yellow_commands[0]);
+    for (int i = 0; i < num_commands && i < 100; i++){
+      commands[i] = yellow_commands[i];
+    }
+  }else{
+    num_commands = sizeof(blue_commands) / sizeof(blue_commands[0]);
+    for (int i = 0; i < num_commands && i < 100; i++){
+      commands[i] = blue_commands[i];
+    }
+  }
   int i = 0;
   strategy_start_time = millis();
   // rotate(1800, 0);
@@ -146,7 +146,11 @@ void strategy()
       int y3 = commands[i + 6];
       int speed = commands[i + 7];
       int direction = commands[i + 8];
-      bezier_curve(x1, y1, x2, y2, x3, y3, speed, direction);
+      while(bezier_curve(x1, y1, x2, y2, x3, y3, speed, direction)){
+        wait_for_obstacle_clearance();
+        Serial.println("obstacle cleared, resuming...");
+        Serial.println("mahdi y7ebb louled");
+      }
       i += 9;
     }
   }
@@ -425,17 +429,7 @@ void setup()
   Serial.println("All tasks created successfully!");
   control_loop_state = DISACTIVATED;
   delay(1000);
-  strategy_waiting = 1;
-  // set_position(100, 140, 0, 0);
-  // float x1 = 220.0f;
-  // float y1 = 190.0f;
-  // float x2 = 250.0f;
-  // float y2 = 190.0f;
-  // float x3 = 240.0f;
-  // float y3 = 370.0f;
-  // move_forward(300, 300, 300, 0);
-  // delay(10);
-  // bezier_curve(x1 ,y1, x2, y2, x3, y3, 300, 1);
+  strategy_waiting = 0;
 }
 
 void loop(){
@@ -470,6 +464,6 @@ void loop(){
   ///////////////////////////////////
   // send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, debugger);
   // custom_delay(10);
-  send_values_to_usart(current_x, current_y, 0, 0);
-  custom_delay(10);
+  // send_values_to_usart(current_x, current_y, 0, 0);
+  // custom_delay(10);
 }
