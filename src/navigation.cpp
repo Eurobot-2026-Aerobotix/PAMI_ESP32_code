@@ -209,10 +209,7 @@ int bezier_curve(float x1, float y1, float x2, float y2, float x3, float y3, flo
 
 	acc_linearization_coef = sqrt(d_1);
 
-	while(!is_idle()){
-		delay(10);
-	};
-	delay(200);
+	wait_for_idle();
 	reset_speed_control_variables();
 
 	direction_R = 1;
@@ -269,13 +266,13 @@ int bezier_curve(float x1, float y1, float x2, float y2, float x3, float y3, flo
 			speed_R = ( speed * (radius + direction * (wheels_spacing / 2.0f)) / (radius));
 			speed_L = ( speed * (radius - direction * (wheels_spacing / 2.0f)) / (radius));
 		}
-
+  
 		distance_to_target = get_bezier_distance(t, x0, y0, x1, y1, x2, y2,x3 ,y3);
 
 		set_target_speeds(speed_R*(1 + lane_correction_term) ,speed_L* (1 - lane_correction_term));
 		//send_values_to_usart(current_speed_R, current_speed_L, target_speed_R, target_speed_L);
 		//send_values_to_usart(signed_distance, 0, 0, 0);
-		delay(4);
+		custom_delay(4);
 	}
 	stop_motors();
 	float target_angle = atan2(y3-y2 , x3-x2) + PI*(-direction+1)/2;
