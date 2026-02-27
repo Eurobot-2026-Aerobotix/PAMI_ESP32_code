@@ -79,7 +79,7 @@ void strategy()
       while(go_to(x, y, speed)){
         wait_for_obstacle_clearance();
         Serial.println("obstacle cleared, resuming...");
-        Serial.println("dhia is gay");
+        Serial.println("mahdi y7ebb louled");
       }
       i += 4;
     }
@@ -107,22 +107,6 @@ void strategy()
       custom_delay(commands[i+1]);
       i += 2;
     }
-     else if (command_type == bezier_cmd){
-      int x1 = commands[i + 1];
-      int y1 = commands[i + 2];
-      int x2 = commands[i + 3];
-      int y2 = commands[i + 4];
-      int x3 = commands[i + 5];
-      int y3 = commands[i + 6];
-      int speed = commands[i + 7];
-      int direction = commands[i + 8];
-      while(bezier_curve(x1, y1, x2, y2, x3, y3, speed, direction)){ // needs fixing
-        wait_for_obstacle_clearance();
-        Serial.println("obstacle cleared, resuming...");
-        Serial.println("mahdi y7ebb louled");
-      }
-      i += 9;
-    }
   }
   // 3. Send completion signal
   send_action_done(1);
@@ -138,7 +122,7 @@ void communicationTask(void *pvParameters)
   Serial.println("Communication task started");
   
   // Setup micro-ROS (will handle WiFi connection internally)
-  if (setup_micro_ros("harissa", "harissaharissa2026", "10.42.1.1", 8888))
+  if (setup_micro_ros("hrissa", "harissaharissa2026", "10.42.2.1", 8888))
   {
     Serial.println("micro-ROS setup successful");
   }
@@ -155,7 +139,7 @@ void communicationTask(void *pvParameters)
     } else {
       // If WiFi disconnected, try to reconnect
       Serial.println("WiFi disconnected in task, attempting reconnection...");
-      connect_wifi("harissa", "harissaharissa2026");
+      connect_wifi("hrissa", "harissaharissa2026");
       vTaskDelay(pdMS_TO_TICKS(5000)); // Wait 5 seconds before next attempt
     }
 
@@ -454,5 +438,5 @@ void loop(){
   //   delay(10);
   // }
   //send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, debugger);
-  // custom_delay(10);
+  custom_delay(10);
 }

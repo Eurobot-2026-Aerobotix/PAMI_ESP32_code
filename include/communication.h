@@ -82,5 +82,6 @@ void strategy_callback(const void *msgin);
 void send_action_done(int value);
 bool is_agent_connected();
 void check_wifi_connection(const char *ssid, const char *password);
+void LED_BLINK();
 // Strategy function (to be implemented by user)
 void strategy();
