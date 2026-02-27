@@ -278,6 +278,7 @@ void commandExecutionTask(void *pvParameters)
   {
     if (strategy_waiting) {
       strategy_waiting = 0;
+      //custom_delay(85000);
       strategy();
     }
     execute_command();
@@ -431,6 +432,6 @@ void loop(){
   //   send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
   //   delay(10);
   // }
-  // send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
+  // send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, debugger);
   // custom_delay(10);
 }
