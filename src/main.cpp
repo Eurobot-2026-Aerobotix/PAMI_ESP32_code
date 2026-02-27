@@ -53,16 +53,14 @@ void strategy()
   // Use global commands array received from ROS2
   extern int commands[];
   extern size_t commands_count;
-  // int commands[] = {   set_position_cmd, 100, 140, 0,
-  //                      bezier_cmd, 220, 140, 250, 190, 240, 370, 500, 1,
-  //                    set_position_cmd, 357, 199, 0,
+  // int commands[] = { set_position_cmd, 357, 199, 0,
   //                    goto_cmd, 900, 400, 600,
   //                    goto_cmd, 1650, 380, 600,
   //                    goto_cmd, 1922, 50, 600,
   //                    orientate_cmd, 88, 0,
   //                    goto_cmd, 1900, 550, 400,
-                    // }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
-  // int num_commands = sizeof(commands) / sizeof(commands[0]);
+  //                   }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
+  //int num_commands = sizeof(commands) / sizeof(commands[0]);
   int num_commands = commands_count;
   int i = 0;
   strategy_start_time = millis();
@@ -434,6 +432,6 @@ void loop(){
   //   send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
   //   delay(10);
   // }
-  //send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, debugger);
+  // send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, debugger);
   // custom_delay(10);
 }
