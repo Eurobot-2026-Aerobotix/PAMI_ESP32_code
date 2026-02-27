@@ -107,7 +107,7 @@ void strategy()
       while(go_to(x, y, speed)){
         wait_for_obstacle_clearance();
         Serial.println("obstacle cleared, resuming...");
-        Serial.println("dhia is gay");
+        Serial.println("mahdi y7ebb louled");
       }
       i += 4;
     }
@@ -119,9 +119,9 @@ void strategy()
       i += 3;
     }
     else if (command_type == set_position_cmd) { 
-      int x = commands[i + 1]; 
-      int y = commands[i + 2]; 
-      int phi = commands[i + 3]; 
+      int x = commands[i + 1];
+      int y = commands[i + 2];
+      int phi = commands[i + 3];
       set_position(x, y, deg_to_rad(phi), deg_to_rad(phi)); 
       i += 4; 
     }
@@ -131,6 +131,24 @@ void strategy()
       move_backwards(distance, speed);
       control_loop_state = DISACTIVATED;
       i += 3;
+    }else if (command_type == delay_cmd){
+      custom_delay(commands[i+1]);
+      i += 2;
+    }
+     else if (command_type == bezier_cmd){
+      int x1 = commands[i + 1];
+      int y1 = commands[i + 2];
+      int x2 = commands[i + 3];
+      int y2 = commands[i + 4];
+      int x3 = commands[i + 5];
+      int y3 = commands[i + 6];
+      int speed = commands[i + 7];
+      int direction = commands[i + 8];
+      while(bezier_curve(x1, y1, x2, y2, x3, y3, speed, direction)){
+        wait_for_obstacle_clearance();
+        Serial.println("obstacle cleared, resuming...");
+      }
+      i += 9;
     }
     else if (command_type == delay_cmd){
       int ms = commands[i + 1];
@@ -200,7 +218,7 @@ void emergencyBreakTask(void *pvParameters)
   
   for (;;)
   {
-    if (( ((get_ultrasonic_distance() < min_distance && trajectory == STRAIGHT && current_x < 1700) || (millis() - strategy_start_time >= max_running_time)) && wheel_state_R != EMERGENCY_BREAK && wheel_state_L != EMERGENCY_BREAK) ) 
+    if (( ((get_ultrasonic_distance() < min_distance && trajectory != ROTATIN) || (millis() - strategy_start_time >= max_running_time)) && wheel_state_R != EMERGENCY_BREAK && wheel_state_L != EMERGENCY_BREAK) ) 
     {
       prepare_emergency_break();
     }
@@ -340,7 +358,7 @@ void setup()
   Serial.println("=== PAMI ESP32 Setup ===");
 
   Serial.println("Setting motor pins...");
-  set_motor_pins(26, 21, 18, 19, 23, 17);
+  set_motor_pins(22, 21, 18, 19, 23, 26);
 
   set_ultrasonic_pins(14, 12);
 
@@ -351,7 +369,7 @@ void setup()
   set_PWM_min_max(1023, 240, 210, -240, -210);
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(57.26808944785478669422072940648, 57.472618338739982360985803440075, 92.294108582965129097502004452009);
+  set_wheel_diameter_and_spacing(57.342589790462290093200767685685, 57.342589790462290093200767685685, 96.10775735864049319703153010137);
   HAL_setup();
   
   // Initialize agent LED
