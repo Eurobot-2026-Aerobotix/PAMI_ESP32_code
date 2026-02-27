@@ -381,8 +381,8 @@ void destroy_entities()
 void LED_BLINK()
 {
     digitalWrite(AGENT_LED_PIN, LOW);
-    vTaskDelay(pdMS_TO_TICKS(100));
-    digitalWrite(AGENT_LED_PIN, HIGH);
+    //vTaskDelay(pdMS_TO_TICKS(100));
+    //digitalWrite(AGENT_LED_PIN, HIGH);
 }
 
 // Callback for start topic subscription
