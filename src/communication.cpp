@@ -8,6 +8,7 @@ const char* micro_ros_name = "pami3";
 char topic_action_done[50];
 char topic_start[50];
 char topic_strategy[50];
+char service_status[50];
 
 // Global variable definitions
 rclc_support_t support;
@@ -17,9 +18,12 @@ rcl_allocator_t allocator;
 rcl_publisher_t action_done_publisher;
 rcl_subscription_t subscriber;
 rcl_subscription_t strategy_subscriber;
+rcl_service_t status_service;
 std_msgs__msg__Int32 start_msg;
 std_msgs__msg__Int32 action_done_msg;
 std_msgs__msg__Float32MultiArray strategy_msg;
+std_srvs__srv__Trigger_Request status_req;
+std_srvs__srv__Trigger_Response status_res;
 float received_floats[100]; // Adjust size as needed
 size_t received_floats_count = 0;
 int commands[100]; // Integer array for converted commands
@@ -36,7 +40,7 @@ const int MAX_WIFI_RETRY = 10;
 // Store WiFi credentials for reconnection
 static String stored_wifi_ssid = "";
 static String stored_wifi_password = "";
-
+bool pami_status=false;
 // WiFi connection function with retry logic
 bool connect_wifi(const char *ssid, const char *password) {
     // Store credentials for reconnection
@@ -223,6 +227,7 @@ bool create_entities()
     snprintf(topic_action_done, sizeof(topic_action_done), "%s/action_done", micro_ros_name);
     snprintf(topic_start, sizeof(topic_start), "%s/start", micro_ros_name);
     snprintf(topic_strategy, sizeof(topic_strategy), "%s/strategy", micro_ros_name);
+    snprintf(service_status, sizeof(service_status), "%s/status", micro_ros_name);
 
     // Create init_options
     Serial.println("DEBUG: Initializing support...");
@@ -291,10 +296,23 @@ bool create_entities()
     strategy_msg.data.size = 0;
     strategy_msg.data.capacity = 60;
     
-    // Create executor
+    // Create status service
+    Serial.println("DEBUG: Creating status service...");
+    rc = rclc_service_init_default(
+        &status_service,
+        &node,
+        ROSIDL_GET_SRV_TYPE_SUPPORT(std_srvs, srv, Trigger),
+        service_status);
+    if (rc != RCL_RET_OK) {
+        Serial.print("ERROR: Failed to create status service, code: ");
+        Serial.println(rc);
+        return false;
+    }
+    
+    // Create executor (3 handles: 2 subscriptions + 1 service)
     Serial.println("DEBUG: Creating executor...");
     executor = rclc_executor_get_zero_initialized_executor();
-    rc = rclc_executor_init(&executor, &support.context, 2, &allocator);
+    rc = rclc_executor_init(&executor, &support.context, 3, &allocator);
     if (rc != RCL_RET_OK) {
         Serial.print("ERROR: Failed to init executor, code: ");
         Serial.println(rc);
@@ -313,6 +331,14 @@ bool create_entities()
     rc = rclc_executor_add_subscription(&executor, &strategy_subscriber, &strategy_msg, &strategy_callback, ON_NEW_DATA);
     if (rc != RCL_RET_OK) {
         Serial.print("ERROR: Failed to add strategy subscription, code: ");
+        Serial.println(rc);
+        return false;
+    }
+    
+    Serial.println("DEBUG: Adding status service to executor...");
+    rc = rclc_executor_add_service(&executor, &status_service, &status_req, &status_res, &status_service_callback);
+    if (rc != RCL_RET_OK) {
+        Serial.print("ERROR: Failed to add status service, code: ");
         Serial.println(rc);
         return false;
     }
@@ -348,6 +374,12 @@ void destroy_entities()
     rc = rcl_subscription_fini(&strategy_subscriber, &node);
     if (rc != RCL_RET_OK) {
         Serial.print("WARN: Failed to destroy strategy subscriber, code: ");
+        Serial.println(rc);
+    }
+    
+    rc = rcl_service_fini(&status_service, &node);
+    if (rc != RCL_RET_OK) {
+        Serial.print("WARN: Failed to destroy status service, code: ");
         Serial.println(rc);
     }
     
@@ -397,8 +429,10 @@ void start_callback(const void *msgin)
     
     if (msg->data == 1)
     {
+        pami_status = false;  // Set status to false when start signal received
         strategy_waiting=true;
         Serial.println("Start signal detected (value = 1)!");
+        Serial.println("pami_status set to FALSE");
         //strategy(); // Call the strategy function
     }
 
@@ -429,6 +463,37 @@ void strategy_callback(const void *msgin)
         Serial.println(commands[i]);
     }
     is_yellow = (commands[2] < 1500);
+    
+    pami_status = true;  // Set status to true when strategy received
+    Serial.println("Strategy received - pami_status set to TRUE");
+}
+
+// Service callback for status service
+void status_service_callback(const void *req, void *res)
+{
+    std_srvs__srv__Trigger_Response *response = (std_srvs__srv__Trigger_Response *)res;
+    
+    // Set response success to pami_status
+    response->success = pami_status;
+    
+    // Set message based on status
+    const char* msg = pami_status ? "PAMI is ready" : "PAMI is busy";
+    
+    // Allocate memory for the string
+    response->message.data = (char*)malloc(strlen(msg) + 1);
+    if (response->message.data != NULL) {
+        strcpy(response->message.data, msg);
+        response->message.size = strlen(msg);
+        response->message.capacity = strlen(msg) + 1;
+    } else {
+        // Fallback if allocation fails
+        response->message.data = (char*)"";
+        response->message.size = 0;
+        response->message.capacity = 0;
+    }
+    
+    Serial.print("Status service called - returning: ");
+    Serial.println(pami_status ? "true" : "false");
 }
 
 // Send action done message
