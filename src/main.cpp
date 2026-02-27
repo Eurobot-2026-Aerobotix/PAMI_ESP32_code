@@ -52,7 +52,7 @@ void strategy(){
                               orientate_cmd, -90, 0,
                               putdown_cmd, 1,      // drop 1 close
                               goto_cmd, 56, 775, 400, -1,
-                              goto_cmd, 155, 772, 300, 1,
+                              goto_cmd, 165, 772, 300, 1,
                               pickup_cmd, 1, 1, 1, // pick up 2 niggas
                               goto_cmd, 66, 775, 400, -1,
                               orientate_cmd, 70, 0, // throw other left nigga
