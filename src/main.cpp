@@ -358,7 +358,7 @@ void setup()
   Serial.println("=== PAMI ESP32 Setup ===");
 
   Serial.println("Setting motor pins...");
-  set_motor_pins(22, 21, 18, 19, 23, 26);
+  set_motor_pins(26, 21, 18, 19, 23, 17);
 
   set_ultrasonic_pins(14, 12);
 
@@ -369,7 +369,7 @@ void setup()
   set_PWM_min_max(1023, 240, 210, -240, -210);
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(57.342589790462290093200767685685, 57.342589790462290093200767685685, 96.10775735864049319703153010137);
+  set_wheel_diameter_and_spacing(57.26808944785478669422072940648, 57.472618338739982360985803440075, 92.294108582965129097502004452009);
   HAL_setup();
   
   // Initialize agent LED
