@@ -168,7 +168,7 @@ void emergencyBreakTask(void *pvParameters)
   
   for (;;)
   {
-    if (( ((get_ultrasonic_distance() < min_distance && trajectory == STRAIGHT && current_x < 1700) || (millis() - strategy_start_time >= max_running_time)) && wheel_state_R != EMERGENCY_BREAK && wheel_state_L != EMERGENCY_BREAK) ) 
+    if (( ((get_ultrasonic_distance() < min_distance && trajectory != ROTATIN) || (millis() - strategy_start_time >= max_running_time)) && wheel_state_R != EMERGENCY_BREAK && wheel_state_L != EMERGENCY_BREAK) ) 
     {
       prepare_emergency_break();
     }
@@ -257,6 +257,8 @@ void PIDTask(void *pvParameters){
 
       previous_position_error_L = error;
     }
+    
+
     run_right_motor();
     run_left_motor();
 
@@ -316,7 +318,7 @@ void setup()
   set_encoder_channels(4, 16, 15, 2, 350);
 
   Serial.println("Setting PWM parameters...");
-  set_PWM_min_max(1023, 240, 210, -240, -210);
+  set_PWM_min_max(1023, 250, 250, -260, -260);
 
   Serial.println("Setting wheel parameters...");
   set_wheel_diameter_and_spacing(57.342589790462290093200767685685, 57.342589790462290093200767685685, 96.159094571885845534577947027197);
@@ -401,6 +403,26 @@ void setup()
 }
 
 void loop(){
+    // PWM_R=250;
+    // PWM_L=250;
+  //   delay(2000);
+   
+  //   PWM_R=-500;
+  //   PWM_L=-500;
+  //   delay(2000);
+    
+  //   PWM_R=500;
+  //   PWM_L=0;
+  //   delay(2000);
+
+
+  //   PWM_R=0;
+  //   PWM_L=500;
+  //   delay(2000);
+
+  // Serial.print(encoder_count_L);
+  //  Serial.print(" - ");
+  //  Serial.println(encoder_count_R);
   // for(int i=0; i<100; i++){
   //   set_target_speeds(i*2, 0);
   //   send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
