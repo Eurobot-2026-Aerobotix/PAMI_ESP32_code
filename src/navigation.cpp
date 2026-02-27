@@ -418,7 +418,7 @@ void wait_for_idle(){
 	int start_time = millis();
 	while(!is_idle() && (wheel_state_R != EMERGENCY_BREAK) && (wheel_state_L != EMERGENCY_BREAK) ){
 		custom_delay(10);
-		if (millis() - start_time > 700){
+		if (millis() - start_time > 300){
 			break;
 		}
 	}

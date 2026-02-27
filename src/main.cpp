@@ -52,15 +52,15 @@ void strategy(){
                               orientate_cmd, -90, 0,
                               putdown_cmd, 1,      // drop 1 close
                               goto_cmd, 56, 775, 400, -1,
-                              goto_cmd, 175, 772, 300, 1,
+                              goto_cmd, 155, 772, 300, 1,
                               pickup_cmd, 1, 1, 1, // pick up 2 niggas
                               goto_cmd, 66, 775, 400, -1,
-                              orientate_cmd, 90, 0, // throw other left nigga
-                              goto_cmd, 0, 775, 400, -1,
-                              set_position_cmd, 30, 775, 90,
-                              goto_cmd, 15, 775, 400, -1,
-                              goto_cmd, 15, 670, 400, 1,
-                              putdown_cmd,          // drop niggas over close ones
+                              orientate_cmd, 70, 0, // throw other left nigga
+                              goto_cmd, -40, 775, 400, -1,
+                              set_position_cmd, 30, 775, 0,
+                              goto_cmd, 45, 775, 400, 1,
+                              goto_cmd, 45, 670, 400, 1,
+                              putdown_cmd, 1         // drop niggas over close ones
                               // goto_cmd, 70, 740, 400,-1,
                               // goto_cmd, 180, 747, 400, 1,
                               // pickup_cmd, 1, 1, 0, // pick up 2 yellow  

@@ -96,7 +96,7 @@ float kiP_L = 400;
 volatile float debugger = 0;
 int strategy_start_time = 1000000;
 
-int servo_positions[7] = {0, 125, 53, 74, 53, 15, 110};
+int servo_positions[7] = {0, 125, 53, 80, 53, 15, 110};
 bool ultrasonic_blocked = true;
 
 void set_motor_pins(int right_forward, int right_backward, int left_forward, int left_backward, int right_enable, int left_enable)
