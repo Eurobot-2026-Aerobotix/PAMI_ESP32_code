@@ -28,6 +28,7 @@ float received_floats[100]; // Adjust size as needed
 size_t received_floats_count = 0;
 int commands[100]; // Integer array for converted commands
 int deploy_pos[3];
+int first_delay = 1;
 size_t commands_count = 0;
 bool micro_ros_init_successful = false;
 enum CommunicationState comm_state = WAITING_AGENT;
@@ -464,8 +465,9 @@ void strategy_callback(const void *msgin)
         Serial.println(commands[i]);
     }
     is_yellow = (commands[2] < 1500);
-    for(int i=0; i<3; i++){
-        deploy_pos[i] = commands[i+1];
+    first_delay = commands[1];
+    for(int i=2; i<5; i++){
+        deploy_pos[i-2] = commands[i+1];
     }
     
     pami_status = true;  // Set status to true when strategy received
