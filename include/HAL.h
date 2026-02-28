@@ -125,7 +125,7 @@ extern volatile float debugger;
 extern int strategy_start_time;
 const int max_running_time = 100000; // 100 seconds
 
-extern int servo_positions[7];
+extern int servo_positions[8];
 extern bool ultrasonic_blocked;
 
 void set_motor_pins(int right_forward, int right_backward, int left_forward, int left_backward, int right_enable, int left_enable);

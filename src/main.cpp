@@ -44,40 +44,41 @@ void strategy(){
 
   int goto_cmd = 0, orientate_cmd = 1, set_position_cmd = 2, pickup_cmd = 3, putdown_cmd = 4, walking_position_cmd = 5, prepare_cmd = 6 , letgo_cmd = 7, go_backward_cmd = 8, forward_cmd = 9, move_linear_cmd = 10, rotate_cmd = 11, party_time_cmd = 12, fix_x_cmd = 13; 
 
-  int master_cina_yellow[] = {set_position_cmd, 66, 680, 90,
-                              goto_cmd, 70, 1100, 500, 1,
+  int master_cina_yellow[] = {
+                              set_position_cmd, 66, 680, 90,
+                               goto_cmd, 70, 1100, 500, 1,
                               goto_cmd, 150, 1100, 400, 1,
-                              pickup_cmd, 1, 1, 0,    // pick up 1 close
+                               pickup_cmd, 1, 1, 0,    // pick up 1 close
                               goto_cmd, 56, 668, 400, 1,
-                              orientate_cmd, -90, 0,
+                               orientate_cmd, -90, 0,
                               putdown_cmd, 1,      // drop 1 close
-                              goto_cmd, 56, 775, 400, -1,
-                              goto_cmd, 165, 772, 300, 1,
-                              pickup_cmd, 1, 1, 1, // pick up 2 niggas
-                              goto_cmd, 66, 775, 400, -1,
-                              orientate_cmd, 70, 0, // throw other left nigga
+                               goto_cmd, 56, 775, 400, -1,
+                              goto_cmd, 185, 772, 300, 1,
+                               pickup_cmd, 1, 1, 1, // pick up 2 niggas
+                              goto_cmd, 100, 775, 400, -1,
+                               orientate_cmd, 70, 0, // throw other left nigga
                               goto_cmd, -40, 775, 400, -1,
-                              set_position_cmd, 30, 775, 0,
+                               set_position_cmd, 30, 775, 0,
                               goto_cmd, 45, 775, 400, 1,
-                              goto_cmd, 45, 670, 400, 1,
-                              putdown_cmd, 1         // drop niggas over close ones
-                              // goto_cmd, 70, 740, 400,-1,
-                              // goto_cmd, 180, 747, 400, 1,
-                              // pickup_cmd, 1, 1, 0, // pick up 2 yellow  
-                              // goto_cmd, 80, 740, 400, -1,
-                              // goto_cmd, 130, 1200, 500, 1,
-                              // goto_cmd, 357, 1200, 500, 1,
-                              // putdown_cmd,         // drop yellows
-                              // goto_cmd, -5, 1200, 300, -1,
-                              // fix_x_cmd, 25,
-                              // goto_cmd, 40, 1200, 400, 1,
-                              // goto_cmd, 40, 1355, 300, 1,
-                              // goto_cmd, 80, 1355, 300, 1,
-                              // pickup_cmd, 1, 1, 0, // pick up 2 far
-                              // goto_cmd, 135, 700, 500, -1,
-                              // goto_cmd, 215, 680, 500, -1,
-                              // orientate_cmd, -90, 0,
-                              // putdown_cmd,        //drop 2 far
+                               goto_cmd, 45, 670, 400, 1,
+                              putdown_cmd, 1,     // drop niggas over close ones
+                               goto_cmd, 70, 740, 400,-1,
+                              goto_cmd, 180, 740, 400, 1,
+                               pickup_cmd, 1, 1, 0, // pick up 2 yellow  
+                              goto_cmd, 80, 740, 400, -1,
+                               goto_cmd, 130, 1200, 500, 1,
+                              goto_cmd, 357, 1200, 500, 1,
+                              putdown_cmd, 1,     // drop yellows
+                              goto_cmd, -5, 1200, 300, -1,
+                              fix_x_cmd, 25,
+                              goto_cmd, 40, 1200, 400, 1,
+                              goto_cmd, 40, 1355, 300, 1,
+                              goto_cmd, 80, 1355, 300, 1,
+                              pickup_cmd, 1, 1, 0, // pick up 2 far
+                              goto_cmd, 135, 700, 500, -1,
+                              goto_cmd, 215, 680, 500, -1,
+                              orientate_cmd, -90, 0,
+                              putdown_cmd, 0,       //drop 2 far
                               // goto_cmd, 120, 750, 300, -1,
                               // goto_cmd, 120, 850, 300, 1,
                               // goto_cmd, 200, 850, 300, 1,
