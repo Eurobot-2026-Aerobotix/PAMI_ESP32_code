@@ -9,6 +9,7 @@
 #include <rclc/executor.h>
 #include <rmw_microros/rmw_microros.h>
 #include <std_msgs/msg/int32.h>
+#include <std_srvs/srv/trigger.h>
 #include "HAL.h"
 
 // Macro definitions
@@ -55,10 +56,14 @@ extern rcl_allocator_t allocator;
 extern rcl_publisher_t action_done_publisher;
 extern rcl_subscription_t subscriber;
 extern rcl_subscription_t strategy_subscriber;
+extern rcl_service_t status_service;
 extern std_msgs__msg__Int32 start_msg;
 extern std_msgs__msg__Int32 action_done_msg;
+extern std_srvs__srv__Trigger_Request status_req;
+extern std_srvs__srv__Trigger_Response status_res;
 extern bool micro_ros_init_successful;
 extern enum CommunicationState comm_state;
+extern bool pami_status;
 
 // Strategy data arrays
 extern float received_floats[100];
@@ -77,10 +82,12 @@ void destroy_entities();
 // Callback functions
 void start_callback(const void *msgin);
 void strategy_callback(const void *msgin);
+void status_service_callback(const void *req, void *res);
 
 // Utility functions
 void send_action_done(int value);
 bool is_agent_connected();
 void check_wifi_connection(const char *ssid, const char *password);
+void LED_BLINK();
 // Strategy function (to be implemented by user)
 void strategy();

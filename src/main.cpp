@@ -169,7 +169,7 @@ void emergencyBreakTask(void *pvParameters)
   
   for (;;)
   {
-    if (( ((get_ultrasonic_distance() < min_distance && trajectory == STRAIGHT && current_x < 1700) || (millis() - strategy_start_time >= max_running_time)) && wheel_state_R != EMERGENCY_BREAK && wheel_state_L != EMERGENCY_BREAK) ) 
+    if (( ((get_ultrasonic_distance() < min_distance && trajectory != ROTATIN) || (millis() - strategy_start_time >= max_running_time)) && wheel_state_R != EMERGENCY_BREAK && wheel_state_L != EMERGENCY_BREAK) ) 
     {
       //prepare_emergency_break();
     }
@@ -433,6 +433,6 @@ void loop(){
   //   send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
   //   delay(10);
   // }
-  //send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, debugger);
+  // send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, debugger);
   // custom_delay(10);
 }
