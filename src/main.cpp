@@ -59,7 +59,8 @@ void strategy()
   //extern size_t commands_count;
   int yellow_commands[] = { 
                      delay_cmd, 85000,
-                     set_position_cmd, 357, 199, 0,
+                     //set_position_cmd, 357, 199, 0,
+                     set_position_cmd, deploy_pos[0], deploy_pos[1], deploy_pos[2],
                      goto_cmd, 900, 400, 600,
                      goto_cmd, 1650, 380, 600,
                      goto_cmd, 1922, 50, 600,
@@ -70,7 +71,8 @@ void strategy()
                     };
   int blue_commands[] = { 
                      delay_cmd, 85000,
-                     set_position_cmd, 357, 2801, 0,
+                     //set_position_cmd, 357, 2801, 0,
+                     set_position_cmd, deploy_pos[0], deploy_pos[1], deploy_pos[2],
                      goto_cmd, 900, 2560, 600,
                      goto_cmd, 1680, 2550, 600,
                      goto_cmd, 1962, 2780, 600,

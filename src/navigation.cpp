@@ -275,7 +275,7 @@ int bezier_curve(float x1, float y1, float x2, float y2, float x3, float y3, flo
 		set_target_speeds(speed_R*(1 + lane_correction_term) ,speed_L* (1 - lane_correction_term));
 		//send_values_to_usart(current_speed_R, current_speed_L, target_speed_R, target_speed_L);
 		//send_values_to_usart(signed_distance, 0, 0, 0);
-		delay(4);
+		custom_delay(4);
 	}
 	stop_motors();
 	float target_angle = atan2(y3-y2 , x3-x2) + PI*(-direction+1)/2;

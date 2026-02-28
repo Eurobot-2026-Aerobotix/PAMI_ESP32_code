@@ -70,6 +70,7 @@ extern float received_floats[100];
 extern size_t received_floats_count;
 extern size_t commands_count;
 extern bool is_yellow;
+extern int deploy_pos[3];
 // Core functions
 bool setup_micro_ros(const char *wifi_ssid, const char *wifi_password, const char *agent_ip, int agent_port);
 void communication_loop();
