@@ -139,7 +139,7 @@ void communicationTask(void *pvParameters)
   Serial.println("Communication task started");
   
   // Setup micro-ROS (will handle WiFi connection internally)
-  if (setup_micro_ros("hrissa", "harissaharissa2026", "10.42.2.1", 8888))
+  if (setup_micro_ros("harissa", "harissaharissa2026", "10.42.1.1", 8888))
   {
     Serial.println("micro-ROS setup successful");
   }
@@ -156,7 +156,7 @@ void communicationTask(void *pvParameters)
     } else {
       // If WiFi disconnected, try to reconnect
       Serial.println("WiFi disconnected in task, attempting reconnection...");
-      connect_wifi("hrissa", "harissaharissa2026");
+      connect_wifi("harissa", "harissaharissa2026");
       vTaskDelay(pdMS_TO_TICKS(5000)); // Wait 5 seconds before next attempt
     }
 
@@ -278,6 +278,7 @@ void commandExecutionTask(void *pvParameters)
   {
     if (strategy_waiting) {
       strategy_waiting = 0;
+      //custom_delay(85000);
       strategy();
     }
     execute_command();
@@ -431,6 +432,6 @@ void loop(){
   //   send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
   //   delay(10);
   // }
-  // send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
+  // send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, debugger);
   // custom_delay(10);
 }
