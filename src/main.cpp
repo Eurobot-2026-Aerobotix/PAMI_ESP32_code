@@ -53,7 +53,7 @@ void strategy(){
                                orientate_cmd, -90, 0,
                               putdown_cmd, 1, 1,      // drop 1 close
                                goto_cmd, 80, 775, 400, -1,
-                              goto_cmd, 185, 772, 300, 1,
+                              goto_cmd, 185, 775, 300, 1,
                                pickup_cmd, 1, 1, 1, // pick up 2 niggas
                               goto_cmd, 100, 775, 400, -1,
                                orientate_cmd, 70, 0, // throw other left nigga
@@ -61,13 +61,13 @@ void strategy(){
                                set_position_cmd, 30, 775, 0,
                               goto_cmd, 45, 775, 400, 1,
                                goto_cmd, 45, 670, 400, 1,
-                              putdown_cmd, 0, 1,     // drop niggas over close ones
+                              putdown_cmd, 0, 1, // drop niggas over close ones
                                goto_cmd, 70, 740, 400,-1,
                               goto_cmd, 165, 737, 400, 1,
                                pickup_cmd, 1, 1, 0, // pick up 2 yellow  
                               goto_cmd, 65, 740, 400, -1,
-                               goto_cmd, 65, 1170, 500, 1,
-                              goto_cmd, 340, 1170, 500, 1,
+                               goto_cmd, 65, 1162, 500, 1,
+                              goto_cmd, 340, 1162, 500, 1,
                                putdown_cmd, 1, 0,     // drop yellows
                               goto_cmd, -5, 1170, 500, -1,
                                set_position_cmd, 25, 1170, 0,
@@ -78,18 +78,22 @@ void strategy(){
                               goto_cmd, 100, 700, 400, -1,
                                goto_cmd, 280, 680, 500, -1,
                               orientate_cmd, -90, 0,
-                               putdown_cmd, 0,1,       //drop 2 far
-                              goto_cmd, 120, 750, 500, -1,
+                               putdown_cmd, 0,1,      //drop 2 far
+                                orientate_cmd,90 , 0,
+                               goto_cmd, 280, 600, 500, -1,
+                               set_position_cmd, 280, 672, 90, // homing 3
+                               goto_cmd, 280, 682, 500, 1,
+                               goto_cmd, 120, 682, 500, 1,
                                goto_cmd, 120, 845, 500, 1,
                               goto_cmd, 180, 845, 500, 1,
                                pickup_cmd, 1, 1, 0, // pick up 2 yellow
                                goto_cmd, 100, 845, 500, -1,
-                              goto_cmd, 100, 1285, 500, 1,
-                              goto_cmd, 340, 1285, 300, 1,
+                              goto_cmd, 100, 1277, 500, 1,
+                              goto_cmd, 340, 1277, 300, 1,
                               putdown_cmd, 1,0, // drop 2 yellows
-                              goto_cmd, 300, 1300, 300, -1,
-                              goto_cmd, 300, 1235, 300, -1,
-                              goto_cmd, 410, 1235, 300, 1,
+                              goto_cmd, 300, 1292, 300, -1,
+                              goto_cmd, 300, 1227, 300, -1,
+                              goto_cmd, 385, 1227, 300, 1,
                               //  orientate_cmd, -55, 0,
                               //  orientate_cmd, 0, 0,
                                
