@@ -25,6 +25,7 @@ TaskHandle_t commandExecutionTaskHandle;
 TaskHandle_t websocketTaskHandle;
 TaskHandle_t emergencyBreakTaskHandle;
 int websocket=0;
+volatile int emergency_paused = 0; 
 
 // Custom strategy implementation
 void strategy()
@@ -51,21 +52,22 @@ void strategy()
   int delay_cmd = 0, goto_cmd = 1, orientate_cmd = 2, set_position_cmd = 3, bezier_cmd = 4, backwards_cmd = 5;
   
   // Use global commands array received from ROS2
-  extern int commands[];
-  extern size_t commands_count;
+  // extern int commands[];
+  // extern size_t commands_count;
 
-  // int commands[] = {
-  //                   set_position_cmd, 100, 140, 0,
-  //                   bezier_cmd, 220, 140, 250, 190, 240, 370, 500, 1,
+   int commands[] = {
+                      set_position_cmd, 0, 140, 0,
+                      bezier_cmd, 220, 140, 250, 190, 240, 370, 500, 1,
+                      //bezier_cmd, 220, 140, 250, 200, 250, 500, 
   //                   // set_position_cmd, 357, 199, 0,
-  //                   //  goto_cmd, 900, 400, 600,
+                      //goto_cmd, 300, 0, 600,
   //                   //  goto_cmd, 1650, 380, 600,
   //                   //  goto_cmd, 1922, 50, 600,
   //                   //  orientate_cmd, 88, 0,
   //                   //  goto_cmd, 1900, 550, 400,
-  //                   }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
-  // int num_commands = sizeof(commands) / sizeof(commands[0]);
-  int num_commands = commands_count;
+                     }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
+  int num_commands = sizeof(commands) / sizeof(commands[0]);
+  //int num_commands = commands_count;
   int i = 0;
   strategy_start_time = millis();
   // rotate(1800, 0);
@@ -174,6 +176,7 @@ void emergencyBreakTask(void *pvParameters)
     if (( ((get_ultrasonic_distance() < min_distance && trajectory != ROTATIN) || (millis() - strategy_start_time >= max_running_time)) && wheel_state_R != EMERGENCY_BREAK && wheel_state_L != EMERGENCY_BREAK) ) 
     {
       prepare_emergency_break();
+      emergency_paused = 1;
     }
 
     vTaskDelayUntil(&xLastWakeTime, xDelay);
@@ -400,7 +403,7 @@ void setup()
   Serial.println("All tasks created successfully!");
   control_loop_state = DISACTIVATED;
   delay(1000);
-  strategy_waiting = 0;
+  strategy_waiting = 1;
 }
 
 void loop(){
