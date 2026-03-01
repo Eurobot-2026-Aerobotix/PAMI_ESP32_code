@@ -176,6 +176,7 @@ void strategy(){
       while(go_to(x, y, speed, direction)){
         wait_for_obstacle_clearance();
         Serial.println("obstacle cleared, resuming...");
+        Serial.println("mahdi y7ebb louled");
       }
       Serial.printf("[POS] After goto: robot_x=%.1f, robot_y=%.1f, robot_phi=%.1f deg\n", current_x, current_y, rad_to_deg(current_phi));
       i += 5;
@@ -433,6 +434,7 @@ void commandExecutionTask(void *pvParameters)
   {
     if (strategy_waiting) {
       strategy_waiting = 0;
+      //custom_delay(85000);
       strategy();
     }
     execute_command();
@@ -509,8 +511,11 @@ void setup()
   Serial.println("Setting wheel parameters...");
   set_wheel_diameter_and_spacing(47.746482927568600730665129011754, 47.669870635475871651225659202322, 120.49790153655701745414567414581); //   122.84370983629917196470781680778
   HAL_setup();
-
-
+  
+  // Initialize agent LED
+  pinMode(AGENT_LED_PIN, OUTPUT);
+  digitalWrite(AGENT_LED_PIN, LOW);
+  
   // Initialize WebSocket if enabled
   extern int websocket_enabled;
   websocket_enabled = websocket;  // Set from the main websocket variable
@@ -524,14 +529,14 @@ void setup()
   Serial.println("Creating tasks...");
   
   //Create tasks with lower stack sizes first
-  //   xTaskCreatePinnedToCore(
-  //    communicationTask,
-  //     "communicationTask",
-  //     8192,
-  //     NULL,
-  //     1, // Lower priority
-  //      &communicationTaskHandle,
-  //      0); // Pin to core 0
+    xTaskCreatePinnedToCore(
+     communicationTask,
+      "communicationTask",
+      8192,
+      NULL,
+      1, // Lower priority
+       &communicationTaskHandle,
+       0); // Pin to core 0
 
   //  delay(500); // Delay between task creation
   //  Serial.println("Communication task created");
@@ -585,11 +590,7 @@ void setup()
   Serial.println("All tasks created successfully!");
   control_loop_state = DISACTIVATED;
   delay(1000);
-  strategy_waiting = 1;
-  //rotate(1800, 0);
-  //prepare_rotate(1800, 0);
- // set_position(0, 0, 0, 0);
-  //go_to(400, 0, 400, 1);
+  strategy_waiting = 0;
 }
 void loop(){
   

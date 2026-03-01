@@ -9,9 +9,12 @@
 #include <rclc/executor.h>
 #include <rmw_microros/rmw_microros.h>
 #include <std_msgs/msg/int32.h>
+#include <std_srvs/srv/trigger.h>
+#include "HAL.h"
 
 // Macro definitions
 #define LED_PIN 13
+#define AGENT_LED_PIN 25
 #define RCCHECK(fn)                  \
     {                                \
         rcl_ret_t temp_rc = fn;      \
@@ -54,9 +57,12 @@ extern rcl_publisher_t action_done_publisher;
 extern rcl_subscription_t subscriber;
 extern rcl_subscription_t crates_color_subscriber;
 extern rcl_subscription_t strategy_subscriber;
+extern rcl_service_t status_service;
 extern std_msgs__msg__Int32 start_msg;
 extern std_msgs__msg__Int32 crates_color_msg;
 extern std_msgs__msg__Int32 action_done_msg;
+extern std_srvs__srv__Trigger_Request status_req;
+extern std_srvs__srv__Trigger_Response status_res;
 extern bool micro_ros_init_successful;
 extern enum CommunicationState comm_state;
 extern bool strategy_waiting;
@@ -81,11 +87,13 @@ void destroy_entities();
 void start_callback(const void *msgin);
 void crates_color_callback(const void *msgin);
 void strategy_callback(const void *msgin);
+void status_service_callback(const void *req, void *res);
 
 // Utility functions
 void update_crate_colors(int32_t decimal_value);
 void send_action_done(int value);
 bool is_agent_connected();
 void check_wifi_connection(const char *ssid, const char *password);
+void LED_BLINK();
 // Strategy function (to be implemented by user)
 void strategy();

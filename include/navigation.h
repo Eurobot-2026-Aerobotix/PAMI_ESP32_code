@@ -18,7 +18,8 @@ enum Trajectory
 	STRAIGHT,
 	ROTATING,
 	CIRCLE_CURVE,
-	POLYNOMIAL_CURVE
+	POLYNOMIAL_CURVE,
+	BEZIER_CURVE
 };
 
 enum Control_loop {
@@ -35,6 +36,7 @@ extern enum Trajectory trajectory;
 extern float ramping_acceleration; // !!! these accelerations mark the rate of change in velocity with respect to the distance traveled, not time!!!
 extern float breaking_acceleration;
 extern float emergency_breaking_acceleration;
+extern float acc_linearization_coef;
 extern float rotating_speed;
 extern float cruise_speed_R; // the speed which the right wheel is accelerating towards
 extern float cruise_speed_L;
@@ -63,3 +65,4 @@ void set_target_encoder_counts(int32_t encoder__count_R, int32_t encoder__count_
 void wait_for_obstacle_clearance();
 void wait_for_idle();
 void prepare_emergency_break();
+int bezier_curve(float x1, float y1, float x2, float y2, float x3, float y3, float speed, int direction);

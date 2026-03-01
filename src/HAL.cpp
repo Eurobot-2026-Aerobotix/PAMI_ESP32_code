@@ -95,6 +95,7 @@ float kdP_L = 5;
 float kiP_L = 400;
 volatile float debugger = 0;
 int strategy_start_time = 1000000;
+bool strategy_waiting = 0;
 
 int servo_positions[9] = {0, 130, 50, 85, 50, 15, 110,50,130};
 bool ultrasonic_blocked = true;
