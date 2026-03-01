@@ -49,10 +49,10 @@ void strategy(){
                                goto_cmd, 70, 1100, 500, 1,
                               goto_cmd, 150, 1100, 400, 1,
                                pickup_cmd, 1, 1, 0,    // pick up 1 close
-                              goto_cmd, 56, 668, 400, 1,
+                              goto_cmd, 80, 668, 400, 1,
                                orientate_cmd, -90, 0,
-                              putdown_cmd, 1,      // drop 1 close
-                               goto_cmd, 56, 775, 400, -1,
+                              putdown_cmd, 1, 1,      // drop 1 close
+                               goto_cmd, 80, 775, 400, -1,
                               goto_cmd, 185, 772, 300, 1,
                                pickup_cmd, 1, 1, 1, // pick up 2 niggas
                               goto_cmd, 100, 775, 400, -1,
@@ -61,33 +61,39 @@ void strategy(){
                                set_position_cmd, 30, 775, 0,
                               goto_cmd, 45, 775, 400, 1,
                                goto_cmd, 45, 670, 400, 1,
-                              putdown_cmd, 1,     // drop niggas over close ones
+                              putdown_cmd, 0, 1,     // drop niggas over close ones
                                goto_cmd, 70, 740, 400,-1,
-                              goto_cmd, 180, 740, 400, 1,
+                              goto_cmd, 165, 737, 400, 1,
                                pickup_cmd, 1, 1, 0, // pick up 2 yellow  
-                              goto_cmd, 80, 740, 400, -1,
-                               goto_cmd, 130, 1200, 500, 1,
-                              goto_cmd, 357, 1200, 500, 1,
-                              putdown_cmd, 1,     // drop yellows
-                              goto_cmd, -5, 1200, 300, -1,
-                              fix_x_cmd, 25,
-                              goto_cmd, 40, 1200, 400, 1,
-                              goto_cmd, 40, 1355, 300, 1,
-                              goto_cmd, 80, 1355, 300, 1,
-                              pickup_cmd, 1, 1, 0, // pick up 2 far
-                              goto_cmd, 135, 700, 500, -1,
-                              goto_cmd, 215, 680, 500, -1,
+                              goto_cmd, 65, 740, 400, -1,
+                               goto_cmd, 65, 1170, 500, 1,
+                              goto_cmd, 340, 1170, 500, 1,
+                               putdown_cmd, 1, 0,     // drop yellows
+                              goto_cmd, -5, 1170, 500, -1,
+                               set_position_cmd, 25, 1170, 0,
+                              goto_cmd, 35, 1170, 400, 1,
+                               goto_cmd, 35, 1355, 500, 1,
+                              goto_cmd, 80, 1355, 500, 1,
+                               pickup_cmd, 1, 1, 0, // pick up 2 far
+                              goto_cmd, 100, 700, 400, -1,
+                               goto_cmd, 280, 680, 500, -1,
                               orientate_cmd, -90, 0,
-                              putdown_cmd, 0,       //drop 2 far
-                              // goto_cmd, 120, 750, 300, -1,
-                              // goto_cmd, 120, 850, 300, 1,
-                              // goto_cmd, 200, 850, 300, 1,
-                              // pickup_cmd, 1, 1, 0, // pick up 2 yellow
-                              // goto_cmd, 200, 1300, 500, 1,
-                              // goto_cmd, 350, 1300, 300, 1,
-                              // orientate_cmd, 0, 0,
-                              // putdown_cmd,  // drop 2 yellows
-                              // party_time_cmd
+                               putdown_cmd, 0,1,       //drop 2 far
+                              goto_cmd, 120, 750, 500, -1,
+                               goto_cmd, 120, 845, 500, 1,
+                              goto_cmd, 180, 845, 500, 1,
+                               pickup_cmd, 1, 1, 0, // pick up 2 yellow
+                               goto_cmd, 100, 845, 500, -1,
+                              goto_cmd, 100, 1285, 500, 1,
+                              goto_cmd, 340, 1285, 300, 1,
+                              putdown_cmd, 1,0, // drop 2 yellows
+                              goto_cmd, 300, 1300, 300, -1,
+                              goto_cmd, 300, 1235, 300, -1,
+                              goto_cmd, 410, 1235, 300, 1,
+                              //  orientate_cmd, -55, 0,
+                              //  orientate_cmd, 0, 0,
+                               
+                              party_time_cmd
                             };
   int master_cina_blue[] =   {set_position_cmd, 66, 2320, -90,
                               goto_cmd, 66, 1885, 500, 1,
@@ -133,7 +139,7 @@ void strategy(){
                               party_time_cmd
                             };
 
-  int commands[200];
+  int commands[300];
   int num_commands = 0;
   if (is_yellow){
     num_commands = sizeof(master_cina_yellow) / sizeof(master_cina_yellow[0]);
@@ -204,9 +210,10 @@ void strategy(){
     }
     else if (command_type == putdown_cmd){
       int bechwaya = commands[i+1];
+      int nid_lot = commands[i+2];
       Serial.println("[CMD] putdown_cmd");
-      putdown(bechwaya);
-      i += 2;
+      putdown(bechwaya, nid_lot);
+      i += 3;
     }
     else if (command_type == walking_position_cmd){
       Serial.println("[CMD] walking_position_cmd");
@@ -529,7 +536,7 @@ void setup()
   xTaskCreatePinnedToCore(
       commandExecutionTask,
       "commandExecutionTask",
-      4096, // Back to smaller stack
+      8192, // Back to smaller stack
       NULL,
       1, // Lower priority
       &commandExecutionTaskHandle,

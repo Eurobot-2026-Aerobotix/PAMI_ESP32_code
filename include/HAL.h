@@ -123,9 +123,9 @@ extern float kdP_L;
 extern float kiP_L;
 extern volatile float debugger;
 extern int strategy_start_time;
-const int max_running_time = 100000; // 100 seconds
+const int max_running_time = 120000; // 100 seconds
 
-extern int servo_positions[8];
+extern int servo_positions[9];
 extern bool ultrasonic_blocked;
 
 void set_motor_pins(int right_forward, int right_backward, int left_forward, int left_backward, int right_enable, int left_enable);
@@ -169,7 +169,7 @@ void move_servo(int position);//0 means down position and so on till 5 means up 
 void set_EV_states(int left_electrovalve_state, int right_electrovalve_state);//0 means off means fantzing, 1 means no tfantiz
 void set_pump_state(int pump_state);
 void pickup(int pick_right, int pick_left, int up_or_down);
-void putdown(int bechwaya);
+void putdown(int bechwaya, int nid_lot);
 void walking_position();
 void prepare_servo_up();
 void letgo();
