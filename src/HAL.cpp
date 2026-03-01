@@ -95,7 +95,6 @@ float kdP_L = 5;
 float kiP_L = 400;
 volatile float debugger = 0;
 int strategy_start_time = 1000000;
-bool strategy_waiting = 0;
 
 int servo_positions[9] = {0, 130, 50, 85, 50, 15, 110,50,130};
 bool ultrasonic_blocked = true;
@@ -383,6 +382,7 @@ void putdown(int bechwaya, int nid_lot){
     set_EV_states(1, 1);
     move_servo(0);
     custom_delay(600);
+    set_EV_states(0, 0);
 }
 void letgo(){
     set_pump_state(0);

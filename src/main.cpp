@@ -19,7 +19,6 @@
 #include "websocket.h"
 
 // External variables from communication
-extern bool strategy_waiting;
 extern bool crate_colors[8];
 
 /// tasks
@@ -44,7 +43,9 @@ void strategy(){
 
   int goto_cmd = 0, orientate_cmd = 1, set_position_cmd = 2, pickup_cmd = 3, putdown_cmd = 4, walking_position_cmd = 5, prepare_cmd = 6 , letgo_cmd = 7, go_backward_cmd = 8, forward_cmd = 9, move_linear_cmd = 10, rotate_cmd = 11, party_time_cmd = 12, fix_x_cmd = 13; 
 
-  int master_cina_yellow[] = {
+  int master_cina_yellow[] = { 
+	   
+	   
                               set_position_cmd, 66, 680, 90,
                                goto_cmd, 70, 1100, 500, 1,
                               goto_cmd, 150, 1100, 400, 1,
@@ -79,11 +80,11 @@ void strategy(){
                                goto_cmd, 280, 680, 500, -1,
                               orientate_cmd, -90, 0,
                                putdown_cmd, 0,1,      //drop 2 far
-                                orientate_cmd,90 , 0,
+                                orientate_cmd, 90 , 0,
                                goto_cmd, 280, 600, 500, -1,
                                set_position_cmd, 280, 672, 90, // homing 3
                                goto_cmd, 280, 682, 500, 1,
-                               goto_cmd, 120, 682, 500, 1,
+                               goto_cmd, 120, 690, 500, 1,
                                goto_cmd, 120, 845, 500, 1,
                               goto_cmd, 180, 845, 500, 1,
                                pickup_cmd, 1, 1, 0, // pick up 2 yellow
@@ -93,10 +94,7 @@ void strategy(){
                               putdown_cmd, 1,0, // drop 2 yellows
                               goto_cmd, 300, 1292, 300, -1,
                               goto_cmd, 300, 1227, 300, -1,
-                              goto_cmd, 385, 1227, 300, 1,
-                              //  orientate_cmd, -55, 0,
-                              //  orientate_cmd, 0, 0,
-                               
+                              goto_cmd, 387, 1227, 300, 1,                               
                               party_time_cmd
                             };
   int master_cina_blue[] =   {set_position_cmd, 66, 2320, -90,
@@ -293,7 +291,7 @@ void communicationTask(void *pvParameters)
   Serial.println("Communication task started");
   
   // Setup micro-ROS (will handle WiFi connection internally)
-  if (setup_micro_ros("harissa", "harissaharissa2026", "10.42.1.1", 8888))
+  if (setup_micro_ros("hrissa", "harissaharissa2026", "10.42.2.1", 8888))
   {
     Serial.println("micro-ROS setup successful");
   }
@@ -596,6 +594,7 @@ void loop(){
   
   //  for(int i=0; i<100; i++){
   //    set_target_speeds(i*2, i*2);
+
   //    send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
   //    delay(10);
   //  }

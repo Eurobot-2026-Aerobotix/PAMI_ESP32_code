@@ -12,6 +12,7 @@ char topic_strategy[50];
 char service_status[50];
 
 // Global variable definitions
+
 rclc_support_t support;
 rcl_node_t node;
 rclc_executor_t executor;
@@ -27,7 +28,7 @@ std_msgs__msg__Int32 action_done_msg;
 std_msgs__msg__Float32MultiArray strategy_msg;
 std_srvs__srv__Trigger_Request status_req;
 std_srvs__srv__Trigger_Response status_res;
-float received_floats[100]; // Adjust size as needed
+float received_floats[200]; // Adjust size as needed
 size_t received_floats_count = 0;
 int commands[200];
 size_t commands_count = 0;
@@ -444,7 +445,7 @@ void start_callback(const void *msgin)
     if (msg->data == 1)
     {
         pami_status = false;  // Set status to false when start signal received
-        strategy_waiting=true;
+        strategy_waiting = true;
         Serial.println("Start signal detected (value = 1)! Strategy will execute in main.");
     }
 }
