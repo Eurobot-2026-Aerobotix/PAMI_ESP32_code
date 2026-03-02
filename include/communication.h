@@ -70,6 +70,7 @@ extern float received_floats[100];
 extern size_t received_floats_count;
 extern size_t commands_count;
 extern bool is_yellow;
+extern int recieved_commands[100];
 extern int deploy_pos[3];
 extern int first_delay;
 // Core functions

@@ -48,7 +48,7 @@ void strategy()
   // Example: move forward, rotate, etc.
   // move_forward(100, 50); // Move 100mm at 50mm/s speed
   //custom_delay(500);
-  int delay_cmd = 0, goto_cmd = 1, orientate_cmd = 2, set_position_cmd = 3, bezier_cmd = 4, backwards_cmd = 5;
+  int delay_cmd = 0, goto_cmd = 1, orientate_cmd = 2, set_position_cmd = 3, bezier_cmd = 4, wait_for_cmd = 5, backwards_cmd = 6;
   
   // Use global commands array received from ROS2
   // int commands[] = {//goto_cmd, 300, 0, 500,
@@ -58,40 +58,41 @@ void strategy()
   // int num_commands = sizeof(commands) / sizeof(commands[0]);
   //extern size_t commands_count;
   int yellow_commands[] = { 
-                     delay_cmd, first_delay,
-                     //set_position_cmd, 357, 199, 0,
-                     set_position_cmd, deploy_pos[0], deploy_pos[1], deploy_pos[2],
-                     goto_cmd, 900, 400, 600,
-                     goto_cmd, 1650, 380, 600,
-                     goto_cmd, 1922, 50, 600,
+                    //  delay_cmd, first_delay,
+                    //  set_position_cmd, deploy_pos[0], deploy_pos[1], deploy_pos[2],
+                    //  goto_cmd, 900, 400, 600,
+                    //  goto_cmd, 1650, 380, 600,
+                    //  goto_cmd, 1922, 50, 600,
                      orientate_cmd, 88, 0,
                      backwards_cmd, 180, 200,
                      set_position_cmd, 1900, 0, 90,
                      goto_cmd, 1900, 550, 400,
                     };
   int blue_commands[] = { 
-                     delay_cmd, first_delay,
-                     //set_position_cmd, 357, 2801, 0,
-                     set_position_cmd, deploy_pos[0], deploy_pos[1], deploy_pos[2],
-                     goto_cmd, 900, 2560, 600,
-                     goto_cmd, 1680, 2550, 600,
-                     goto_cmd, 1962, 2780, 600,
+                    //  delay_cmd, first_delay,
+                    //  set_position_cmd, deploy_pos[0], deploy_pos[1], deploy_pos[2],
+                    //  goto_cmd, 900, 2560, 600,
+                    //  goto_cmd, 1680, 2550, 600,
+                    //  goto_cmd, 1962, 2780, 600,
                      orientate_cmd, -94, 0,
                      backwards_cmd, 180, 200,
                      set_position_cmd, 1900, 3000, -90,
                      goto_cmd, 1890, 2450, 400,
                     };
   int commands[100];
+  for (int i = 0; i < received_floats_count && i < 100; i++){
+    commands[i] = recieved_commands[i];
+  }
   int num_commands = 0;
   if (is_yellow){
     num_commands = sizeof(yellow_commands) / sizeof(yellow_commands[0]);
     for (int i = 0; i < num_commands && i < 100; i++){
-      commands[i] = yellow_commands[i];
+      commands[i + received_floats_count] = yellow_commands[i];
     }
   }else{
     num_commands = sizeof(blue_commands) / sizeof(blue_commands[0]);
     for (int i = 0; i < num_commands && i < 100; i++){
-      commands[i] = blue_commands[i];
+      commands[i + received_floats_count] = blue_commands[i];
     }
   }
   int i = 0;
@@ -126,8 +127,13 @@ void strategy()
       int phi = commands[i + 3];
       set_position(x, y, deg_to_rad(phi), deg_to_rad(phi)); 
       i += 4; 
-    }
-    else if (command_type == backwards_cmd) {
+    }else if (command_type == wait_for_cmd) {
+      int flag = commands[i + 1];
+      while(millis() - strategy_start_time < flag){
+        custom_delay(5);
+      }
+      i += 2;
+    }else if (command_type == backwards_cmd) {
       int distance = commands[i + 1];
       int speed = commands[i + 2];
       move_backwards(distance, speed);

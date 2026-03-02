@@ -26,7 +26,7 @@ std_srvs__srv__Trigger_Request status_req;
 std_srvs__srv__Trigger_Response status_res;
 float received_floats[100]; // Adjust size as needed
 size_t received_floats_count = 0;
-int commands[100]; // Integer array for converted commands
+int recieved_commands[100]; // Integer array for converted recieved_commands
 int deploy_pos[3];
 int first_delay = 1;
 size_t commands_count = 0;
@@ -455,19 +455,19 @@ void strategy_callback(const void *msgin)
     for (size_t i = 0; i < msg->data.size && i < 100; i++)
     {
         received_floats[i] = msg->data.data[i];
-        commands[i] = (int)msg->data.data[i]; // Convert float to int
+        recieved_commands[i] = (int)msg->data.data[i]; // Convert float to int
         
         Serial.print("  [");
         Serial.print(i);
         Serial.print("]: ");
         Serial.print(received_floats[i], 4);
         Serial.print(" -> command: ");
-        Serial.println(commands[i]);
+        Serial.println(recieved_commands[i]);
     }
-    is_yellow = (commands[2] < 1500);
-    first_delay = commands[1];
+    is_yellow = (recieved_commands[2] < 1500);
+    first_delay = recieved_commands[1];
     for(int i=2; i<5; i++){
-        deploy_pos[i-2] = commands[i+1];
+        deploy_pos[i-2] = recieved_commands[i+1];
     }
     
     pami_status = true;  // Set status to true when strategy received
