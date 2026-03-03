@@ -56,9 +56,9 @@ void strategy()
   // extern int commands[];
   // extern size_t commands_count;
 
-   int commands[] = {
+   int commands[] = { goto_cmd, 400, 0, 600,
                       set_position_cmd, 0, 140, 0,
-                      bezier_cmd, 220, 140, 250, 190, 240, 370, 500, 1,
+                      bezier_cmd, 220, 140, 250, 190, 240, 370, 500, 1, 0,
                       //bezier_cmd, 220, 140, 250, 200, 250, 500, 
   //                   // set_position_cmd, 357, 199, 0,
                       //goto_cmd, 300, 0, 600,
@@ -121,14 +121,12 @@ void strategy()
       int y3 = commands[i + 6];
       int speed = commands[i + 7];
       int direction = commands[i + 8];
-      float start_t = 0.0f;
-
-      while(bezier_curve(x1, y1, x2, y2, x3, y3,
-                   speed, direction, start_t))
-    {
-      wait_for_obstacle_clearance();
-      start_t = savedBezier.t;
-    }
+      bezier_curve(x1, y1, x2, y2, x3, y3, speed, direction, 0.0);
+    //   while(bezier_curve(x1, y1, x2, y2, x3, y3, speed, direction))
+    // {
+    //   wait_for_obstacle_clearance();
+     
+    // }
       i += 9;
     }
   }
