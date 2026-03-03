@@ -16,6 +16,7 @@ float starting_phi;
 float turning_radius;
 int min_distance = 70;
 
+SavedBezier savedBezier; 
 int32_t previous_speed_control_time = 0;
 //volatile bool emergency_paused = false; 
 
@@ -495,12 +496,32 @@ void prepare_emergency_break(){
 	wheel_state_R = EMERGENCY_BREAK;
 	wheel_state_L = EMERGENCY_BREAK;
 }
-int bezier_curve(float x1, float y1, float x2, float y2, float x3, float y3, float speed, int direction){
+void resumeBezier()
+{
+    if (!savedBezier.valid)
+        return;
+    reset_speed_control_variables();
+    bezier_curve(
+        savedBezier.x1, savedBezier.y1,
+        savedBezier.x2, savedBezier.y2,
+        savedBezier.x3, savedBezier.y3,
+        savedBezier.speed,
+        savedBezier.direction,
+        savedBezier.t      
+    );
+    savedBezier.valid = 0;
+}
+int bezier_curve(float x1, float y1, float x2, float y2, float x3, float y3, float speed, int direction, float start_t){
 	float x0 = current_x;
 	float y0 = current_y;
-
-	float distance =  get_bezier_distance(0, x0, y0, x1, y1, x2, y2, x3, y3);
-
+    float distance;
+	if(start_t > 0.0f)
+{
+     distance = get_bezier_distance(
+     start_t,
+     x0, y0,
+     x1, y1, x2, y2, x3, y3);
+}
 	float d_1 = speed/ramping_acceleration;
 	float d_2 = speed/breaking_acceleration + distance ;
 
@@ -548,20 +569,25 @@ int bezier_curve(float x1, float y1, float x2, float y2, float x3, float y3, flo
 			wheel_state_R = CONTROLLED_BREAK;
 			wheel_state_L = CONTROLLED_BREAK;
 		}else if (wheel_state_R == EMERGENCY_BREAK){
-          while(wheel_state_R == EMERGENCY_BREAK) {
-            if (!emergency_paused) {
-                emergency_break();
-                emergency_paused = true; }            
-                delay(5);}
-            // reset when resuming
-            emergency_paused = false;
-            reset_speed_control_variables();
-            wheel_state_R = ACCELERATING;
-            wheel_state_L = ACCELERATING;}
-        
+         emergency_break();
 
-		t = project_bezier(current_x, current_y, x0, y0, x1, y1, x2, y2, x3, y3);
-
+    savedBezier.x1 = x1; savedBezier.y1 = y1;
+    savedBezier.x2 = x2; savedBezier.y2 = y2;
+    savedBezier.x3 = x3; savedBezier.y3 = y3;
+    savedBezier.t = project_bezier(current_x, current_y, x0, y0, x1, y1, x2, y2, x3, y3);
+    savedBezier.speed = speed;
+    savedBezier.direction = direction;
+    savedBezier.valid = 1; 
+    return 1;
+}
+		if(start_t > 0.0f)
+       {
+           start_t = 0.0f;
+       }
+       else
+       {
+   		   t = project_bezier(current_x, current_y, x0, y0, x1, y1, x2, y2, x3, y3);
+       }
 		float radius = get_bezier_radius(t, x0, y0, x1, y1, x2, y2, x3, y3);
 	    speed = direction * calculate_instant_target_speed_R(d, distance);
 

@@ -28,6 +28,13 @@ enum Control_loop {
 	SPEED,
 	POSITION
 };
+typedef struct {
+    float x1,y1,x2,y2,x3,y3;
+    float speed;
+    int direction;
+    float t;
+    int valid;
+} SavedBezier;
 
 extern enum Control_loop control_loop_state;
 extern enum Wheel_state wheel_state_R;
@@ -62,4 +69,5 @@ void set_target_encoder_counts(int32_t encoder__count_R, int32_t encoder__count_
 void wait_for_obstacle_clearance();
 void wait_for_idle();
 void prepare_emergency_break();
-int bezier_curve(float x1, float y1, float x2, float y2, float x3, float y3, float speed, int direction);
+int bezier_curve(float x1, float y1, float x2, float y2, float x3, float y3, float speed, int direction, float start_t);
+void resumeBezier();

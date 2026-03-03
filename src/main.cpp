@@ -26,7 +26,8 @@ TaskHandle_t websocketTaskHandle;
 TaskHandle_t emergencyBreakTaskHandle;
 int websocket=0;
 volatile int emergency_paused = 0; 
-
+SavedBezier savedBezier;
+//SavedBezier savedBezier = {0};
 // Custom strategy implementation
 void strategy()
 {
@@ -120,10 +121,14 @@ void strategy()
       int y3 = commands[i + 6];
       int speed = commands[i + 7];
       int direction = commands[i + 8];
-      while(bezier_curve(x1, y1, x2, y2, x3, y3, speed, direction)){
-        wait_for_obstacle_clearance();
-        Serial.println("obstacle cleared, resuming...");
-      }
+      float start_t = 0.0f;
+
+      while(bezier_curve(x1, y1, x2, y2, x3, y3,
+                   speed, direction, start_t))
+    {
+      wait_for_obstacle_clearance();
+      start_t = savedBezier.t;
+    }
       i += 9;
     }
   }
