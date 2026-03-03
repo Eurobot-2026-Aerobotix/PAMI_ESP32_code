@@ -381,8 +381,9 @@ void putdown(int bechwaya, int nid_lot){
     set_pump_state(0);
     set_EV_states(1, 1);
     move_servo(0);
-    custom_delay(600);
-    set_EV_states(0, 0);
+    custom_delay(1000);
+   // set_EV_states(0, 0);
+
 }
 void letgo(){
     set_pump_state(0);

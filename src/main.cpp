@@ -41,28 +41,26 @@ void strategy(){
   }
   
 
-  int goto_cmd = 0, orientate_cmd = 1, set_position_cmd = 2, pickup_cmd = 3, putdown_cmd = 4, walking_position_cmd = 5, prepare_cmd = 6 , letgo_cmd = 7, go_backward_cmd = 8, forward_cmd = 9, move_linear_cmd = 10, rotate_cmd = 11, party_time_cmd = 12, fix_x_cmd = 13; 
+  int goto_cmd = 0, orientate_cmd = 1, set_position_cmd = 2, pickup_cmd = 3, putdown_cmd = 4, walking_position_cmd = 5, prepare_cmd = 6 , letgo_cmd = 7, go_backward_cmd = 8, forward_cmd = 9, move_linear_cmd = 10, rotate_cmd = 11, party_time_cmd = 12, fix_x_cmd = 13, delay_cmd = 14, print_analog12_cmd = 15; 
 
   int master_cina_yellow[] = { 
-	   
-	   
                               set_position_cmd, 66, 680, 90,
                                goto_cmd, 70, 1100, 500, 1,
                               goto_cmd, 150, 1100, 400, 1,
-                               pickup_cmd, 1, 1, 0,    // pick up 1 close
+                             pickup_cmd, 1, 1, 0,    // pick up 1 close
                               goto_cmd, 80, 668, 400, 1,
                                orientate_cmd, -90, 0,
-                              putdown_cmd, 1, 1,      // drop 1 close
+                            putdown_cmd, 1, 1,      // drop 1 close
                                goto_cmd, 80, 775, 400, -1,
                               goto_cmd, 185, 775, 300, 1,
-                               pickup_cmd, 1, 1, 1, // pick up 2 niggas
+                              pickup_cmd, 1, 1, 1, // pick up 2 niggas
                               goto_cmd, 100, 775, 400, -1,
                                orientate_cmd, 70, 0, // throw other left nigga
                               goto_cmd, -40, 775, 400, -1,
                                set_position_cmd, 30, 775, 0,
                               goto_cmd, 45, 775, 400, 1,
                                goto_cmd, 45, 670, 400, 1,
-                              putdown_cmd, 0, 1, // drop niggas over close ones
+                            putdown_cmd, 0, 1, // drop niggas over close ones
                                goto_cmd, 70, 740, 400,-1,
                               goto_cmd, 165, 737, 400, 1,
                                pickup_cmd, 1, 1, 0, // pick up 2 yellow  
@@ -75,11 +73,11 @@ void strategy(){
                               goto_cmd, 35, 1170, 400, 1,
                                goto_cmd, 35, 1355, 500, 1,
                               goto_cmd, 80, 1355, 500, 1,
-                               pickup_cmd, 1, 1, 0, // pick up 2 far
+                             pickup_cmd, 1, 1, 0, // pick up 2 far
                               goto_cmd, 100, 700, 400, -1,
                                goto_cmd, 280, 680, 500, -1,
                               orientate_cmd, -90, 0,
-                               putdown_cmd, 0,1,      //drop 2 far
+                              putdown_cmd, 0,1,      //drop 2 far
                                 orientate_cmd, 90 , 0,
                                goto_cmd, 280, 600, 500, -1,
                                set_position_cmd, 280, 672, 90, // homing 3
@@ -97,49 +95,72 @@ void strategy(){
                               goto_cmd, 387, 1227, 300, 1,                               
                               party_time_cmd
                             };
-  int master_cina_blue[] =   {set_position_cmd, 66, 2320, -90,
-                              goto_cmd, 66, 1885, 500, 1,
-                              goto_cmd, 165, 1885, 400, 1,
-                              pickup_cmd, 1, 1, 0, // pickup 2 close
-                              goto_cmd, 85, 2320, 400, 1,
-                              orientate_cmd, 90, 0,
-                              putdown_cmd,        // drop 2 close
-                              goto_cmd, 85, 2220, 400, -1,
-                              goto_cmd, 180, 2220, 300, 1,
-                              pickup_cmd, 1, 1, 1, // pickup 2 niggas
-                              goto_cmd, 130, 2220, 400, -1,
-                              orientate_cmd, -120, 0, // throw other left nigga
-                              goto_cmd, 85, 2310, 400, 1,
-                              orientate_cmd, 85, 0,
-                              putdown_cmd,           // drop 2 niggas
-                              goto_cmd, 85, 2250, 400, -1,
-                              goto_cmd, 200, 2233, 400, 1,
-                              pickup_cmd, 1, 1, 0,  // pickup 2 blue
-                              goto_cmd, 75, 2245, 400, -1, 
-                              goto_cmd, 130, 1820, 500, 1,
-                              goto_cmd, 270, 1780, 500, 1,
-                              putdown_cmd,          // drop 2 blue
-                              goto_cmd, -90, 1835, 300, -1,
-                              fix_x_cmd, 35,
-                              goto_cmd, 50, 1830, 400, 1,
-                              goto_cmd, 10, 1680, 300, 1,
-                              goto_cmd, 70, 1658, 300, 1,
-                              pickup_cmd, 1, 1, 0,    // pickup 2 far
-                              goto_cmd, 240, 2270, 500, 1,
-                              goto_cmd, 300, 2300, 500, 1,
-                              orientate_cmd, 82, 0,
-                              putdown_cmd,            // drop 2 far
-                              goto_cmd, 255, 2300, 300, -1,
-                              goto_cmd, 180, 2250, 300, -1,
-                              goto_cmd, 180, 2160, 300, 1,
-                              goto_cmd, 250, 2140, 300, 1,
-                              pickup_cmd, 1, 1, 0,    // pickup 2 blue
-                              goto_cmd, 200, 1700, 500, 1,
-                              goto_cmd, 280, 1640, 300, 1,
-                              orientate_cmd, 0, 0,
-                              putdown_cmd,            // drop 2 blue
-                              party_time_cmd
-                            };
+  int master_cina_blue[] =   {
+  set_position_cmd, 66, 2320, 90,        
+
+  goto_cmd, 70, 1900, 500, -1,              
+  goto_cmd, 150, 1900, 400, -1,
+  pickup_cmd, 1, 1, 0,
+
+  goto_cmd, 80, 2332, 400, -1,              
+  orientate_cmd, 90, 0,
+  putdown_cmd, 1, 1,
+
+  goto_cmd, 80, 2225, 400, 1,       //      
+  goto_cmd, 185, 2225, 300, 1,
+  pickup_cmd, 1, 1, 1,
+
+  goto_cmd, 100, 2225, 400, -1,
+  orientate_cmd, -70, 0,
+  goto_cmd, -40, 2225, 400, -1,
+
+  set_position_cmd, 30, 2225, 0,
+  goto_cmd, 45, 2225, 400, 1,
+  goto_cmd, 45, 2330, 400, 1,              
+  putdown_cmd, 0, 1,
+
+  goto_cmd, 70, 2260, 400, -1,             
+  goto_cmd, 165, 2263, 400, 1,            
+  pickup_cmd, 1, 1, 0,
+
+  goto_cmd, 65, 2260, 400, -1,
+  goto_cmd, 65, 1838, 500, 1,              
+  goto_cmd, 340, 1838, 500, 1,
+  putdown_cmd, 1, 0,
+
+  goto_cmd, -5, 1830, 500, -1,             
+  set_position_cmd, 25, 1830, 0,
+  goto_cmd, 35, 1830, 400, 1,
+  goto_cmd, 35, 1645, 500, 1,              
+  goto_cmd, 80, 1645, 500, 1,
+
+  pickup_cmd, 1, 1, 0,
+  goto_cmd, 100, 2300, 400, -1,           
+  goto_cmd, 280, 2320, 500, -1,           
+  orientate_cmd, 90, 0,
+  putdown_cmd, 0, 1,
+
+  orientate_cmd, -90, 0,
+  goto_cmd, 280, 2400, 500, -1,            
+  set_position_cmd, 280, 2328, -90,        
+  goto_cmd, 280, 2318, 500, 1,             
+  goto_cmd, 120, 2310, 500, 1,            
+  goto_cmd, 120, 2155, 500, 1,             
+  goto_cmd, 180, 2155, 500, 1,
+
+  pickup_cmd, 1, 1, 0,
+  goto_cmd, 100, 2155, 500, -1,
+  goto_cmd, 100, 1723, 500, 1,         
+  goto_cmd, 340, 1723, 300, 1,
+  putdown_cmd, 1, 0,
+
+  goto_cmd, 300, 1708, 300, -1,          
+  goto_cmd, 300, 1773, 300, -1,         
+  goto_cmd, 387, 1773, 300, 1,
+
+  party_time_cmd
+};
+
 
   int commands[300];
   int num_commands = 0;
@@ -271,6 +292,30 @@ void strategy(){
     //   i += 6;
     // }
 
+    else if (command_type == delay_cmd) {
+      int delay_time = commands[i + 1];
+      Serial.printf("[CMD] delay_cmd: custom_delay(%d)\n", delay_time);
+      custom_delay(delay_time);
+      i += 2;
+    }
+    else if (command_type == print_analog12_cmd) {
+      int analogValue = analogRead(12);
+      Serial.printf("[CMD] print_analog12_cmd: Analog value on pin 12 = %d\n", analogValue);
+       custom_delay(1000);
+      Serial.printf("[CMD] print_analog12_cmd: Analog value on pin 12 = %d\n", analogValue);
+       custom_delay(1000);
+      Serial.printf("[CMD] print_analog12_cmd: Analog value on pin 12 = %d\n", analogValue);
+       custom_delay(10000);
+      Serial.printf("[CMD] print_analog12_cmd: Analog value on pin 12 = %d\n", analogValue);
+       custom_delay(10000);
+      Serial.printf("[CMD] print_analog12_cmd: Analog value on pin 12 = %d\n", analogValue);
+       custom_delay(10000);
+      Serial.printf("[CMD] print_analog12_cmd: Analog value on pin 12 = %d\n", analogValue);
+       custom_delay(10000);
+      Serial.printf("[CMD] print_analog12_cmd: Analog value on pin 12 = %d\n", analogValue);
+      i += 1;
+      // Add a delay to ensure the message is printed before executing the next command
+    }
     else{
       Serial.print("Unknown command type: ");
       Serial.println(command_type);
@@ -496,13 +541,13 @@ void setup()
   set_motor_pins(19, 18, 21, 22, 17, 23);  // shah
 
   
-  set_system_pins(25, 26, 33, 27);// bdlthom
+  set_system_pins(32, 26, 33, 27);// bdlthom //25
 
   Serial.println("Setting encoder channels...");
   set_encoder_channels(2, 15, 4, 16, 1400); // badalthom
 
   Serial.println("Setting PWM parameters...");
-  set_ultrasonic_pins(12, 13); // badalthom
+  set_ultrasonic_pins(34, 12); // badalthom
 
   set_PWM_min_max(1023, 100, 100, -100, -100); //yess    //130  120
 
@@ -536,8 +581,8 @@ void setup()
        &communicationTaskHandle,
        0); // Pin to core 0
 
-  //  delay(500); // Delay between task creation
-  //  Serial.println("Communication task created");
+   delay(500); // Delay between task creation
+   Serial.println("Communication task created");
 
 
   xTaskCreatePinnedToCore(
@@ -588,7 +633,8 @@ void setup()
   Serial.println("All tasks created successfully!");
   control_loop_state = DISACTIVATED;
   delay(1000);
-  strategy_waiting = 0;
+  strategy_waiting = 0 ;
+
 }
 void loop(){
   
