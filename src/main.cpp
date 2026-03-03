@@ -95,11 +95,15 @@ void strategy()
       commands[i + received_floats_count] = blue_commands[i];
     }
   }
+  
+  // Calculate total commands: ROS commands + yellow/blue strategy commands
+  int total_commands = received_floats_count + num_commands;
+  
   int i = 0;
   strategy_start_time = millis();
   // rotate(1800, 0);
   // while(1);
-  while (i < num_commands)
+  while (i < total_commands)
   {
     int command_type = commands[i];
     if (command_type == goto_cmd)

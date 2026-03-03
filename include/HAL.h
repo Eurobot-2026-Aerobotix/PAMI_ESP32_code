@@ -114,7 +114,7 @@ extern float kdP_L;
 extern float kiP_L;
 extern volatile float debugger;
 extern int strategy_start_time;
-const int max_running_time = 100000; // 15 seconds
+const int max_running_time = 100000;
 extern bool strategy_waiting;
 
 void set_motor_pins(int right_forward, int right_backward, int left_forward, int left_backward, int right_enable, int left_enable);
