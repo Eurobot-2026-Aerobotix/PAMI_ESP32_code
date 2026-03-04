@@ -57,7 +57,7 @@ void strategy(){
                                goto_cmd, 195, 771, 300, 1,
                               pickup_cmd, 1, 1, 1, // pick up 2 niggas
                               goto_cmd, 130, 771, 400, -1,
-                               goto_cmd, 80, 675, 400, -1,
+                               goto_cmd, 80, 680, 400, -1,
                                orientate_cmd, -90, 0,
                               putdown_cmd, 0, 1, // drop niggas over close ones
                                goto_cmd, 80, 733, 400,-1,
@@ -65,7 +65,9 @@ void strategy(){
                                set_position_cmd, 30, 733, 0, // homing 2' 
                               goto_cmd, 165, 733, 400, 1,
                                pickup_cmd, 1, 1, 0, // pick up 2 yellow  
-                              goto_cmd, 65, 733, 400, -1,
+                               goto_cmd, -60, 733, 300, -1,
+                               set_position_cmd, 25, 733, 0, // homing 2'
+                              goto_cmd, 65, 733, 400, 1,
                                goto_cmd, 65, 1160, 500, 1,
                               goto_cmd, 330, 1160, 500, 1,
                                putdown_cmd, 1, 0,     // drop yellows
@@ -84,17 +86,11 @@ void strategy(){
                               putdown_cmd, 0, 1,      //drop 2 far
                                goto_cmd, 280, 540, 500, -1,
                                set_position_cmd, 280, 672, 90, // homing 3
-                               goto_cmd, 280, 687, 500, 1,
-                               goto_cmd, 100, 690, 500, 1,
-                               goto_cmd, 100, 845, 500, 1,
-                              goto_cmd, 150, 842, 500, 1,
-                               pickup_cmd, 1, 1, 0, // pick up 2 yellow
-                               goto_cmd, 100, 845, 500, -1,
-                              goto_cmd, 100, 1277, 500, 1,
-                              goto_cmd, 330, 1277, 300, 1,
-                              putdown_cmd, 1, 0, // drop 2 yellows
-                              goto_cmd, 300, 1227, 300, -1,
-                              goto_cmd, 380, 1227, 300, 1,                               
+                               goto_cmd, 280, 1210, 500, 1,
+                               goto_cmd, 280, 1170, 500, -1,
+                               goto_cmd, 80, 1170, 500, 1,
+                               goto_cmd, 80, 1260, 500, 1,
+                              goto_cmd, 380, 1260, 500, 1,                        
                               party_time_cmd
                             };
   int master_cina_blue[] =   {
