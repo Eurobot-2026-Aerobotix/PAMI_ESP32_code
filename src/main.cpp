@@ -54,41 +54,42 @@ void strategy(){
                                goto_cmd, 80, 771, 400, -1,
                                goto_cmd, -40, 771, 400, -1, 
                               set_position_cmd, 64, 771, 0, // homing 2'
-                               goto_cmd, 195, 771, 300, 1,
-                              pickup_cmd, 1, 1, 1, // pick up 2 niggas
-                              goto_cmd, 130, 771, 400, -1,
-                               goto_cmd, 80, 680, 400, -1,
-                               orientate_cmd, -90, 0,
-                              putdown_cmd, 0, 1, // drop niggas over close ones
-                               goto_cmd, 80, 733, 400,-1,
-                               goto_cmd, -45, 733, 400,-1,
-                               set_position_cmd, 30, 733, 0, // homing 2' 
-                              goto_cmd, 165, 733, 400, 1,
+                               goto_cmd, 75, 771, 300, 1,
+                               goto_cmd, 175, 708, 300, 1,
+                               walking_position_cmd,
+                               orientate_cmd, 20, 0,      // push niggas aside
+                               goto_cmd, 120, 740, 300, -1,
+                               goto_cmd, 120, 530, 300, -1,
+                               set_position_cmd, 120, 672, 90, // homing 2'
+                               goto_cmd, 120, 740, 300, 1,
+                              goto_cmd, 205, 740, 400, 1,
                                pickup_cmd, 1, 1, 0, // pick up 2 yellow  
-                               goto_cmd, -60, 733, 300, -1,
-                               set_position_cmd, 25, 733, 0, // homing 2'
-                              goto_cmd, 65, 733, 400, 1,
-                               goto_cmd, 65, 1160, 500, 1,
-                              goto_cmd, 330, 1160, 500, 1,
+                               goto_cmd, -60, 740, 200, -1,
+                               set_position_cmd, 25, 740, 0, // homing 2'
+                              goto_cmd, 65, 740, 400, 1,
+                                goto_cmd, 65, 540, 500, 1,
+                               set_position_cmd, 65, 668, -90,
+                               goto_cmd, 65, 1180, 500, -1,
+                              goto_cmd, 330, 1180, 500, 1,
                                putdown_cmd, 1, 0,     // drop yellows
-                              goto_cmd, -40, 1170, 500, -1,
-                               set_position_cmd, 25, 1170, 0, // homing 2 
-                              goto_cmd, 35, 1170, 400, 1,
-                               goto_cmd, 40, 1340, 500, 1,
-                              goto_cmd, 80, 1340, 500, 1,
+                              goto_cmd, -50, 1180, 300, -1,
+                               set_position_cmd, 25, 1180, 0, // homing 2 
+                              goto_cmd, 35, 1180, 400, 1,
+                               goto_cmd, 40, 1355, 500, 1,
+                              goto_cmd, 80, 1355, 500, 1,
                              pickup_cmd, 1, 1, 0, // pick up 2 far
-                              goto_cmd, -30, 1340, 500, -1,
-                               set_position_cmd, 25, 1340, 0, // homing 2 
-                               goto_cmd, 50, 1340, 400, 1,
+                              goto_cmd, -30, 1355, 500, -1,
+                               set_position_cmd, 25, 1355, 0, // homing 2 
+                               goto_cmd, 50, 1355, 400, 1,
                               goto_cmd, 100, 700, 400, -1,
                                goto_cmd, 280, 680, 500, -1,
                               orientate_cmd, -90, 0,
                               putdown_cmd, 0, 1,      //drop 2 far
-                               goto_cmd, 280, 540, 500, -1,
-                               set_position_cmd, 280, 672, 90, // homing 3
-                               goto_cmd, 280, 1210, 500, 1,
-                               goto_cmd, 280, 1170, 500, -1,
-                               goto_cmd, 80, 1170, 500, 1,
+                               goto_cmd, 280, 540, 500, 1,
+                               set_position_cmd, 280, 668, -90, // homing 3
+                               goto_cmd, 280, 1200, 200, -1,
+                               goto_cmd, 280, 1160, 500, 1,
+                               goto_cmd, 80, 1160, 500, 1,
                                goto_cmd, 80, 1260, 500, 1,
                               goto_cmd, 380, 1260, 500, 1,                        
                               party_time_cmd
