@@ -391,8 +391,8 @@ void letgo(){
     move_servo(5);
     custom_delay(500);
 }
-void walking_position(){
-    move_servo(3);
+void walking_position(int position){
+    move_servo(position? 0 : 3);
     custom_delay(500);
     ultrasonic_blocked = false;
 }

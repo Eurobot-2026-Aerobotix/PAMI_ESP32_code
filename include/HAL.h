@@ -170,7 +170,7 @@ void set_EV_states(int left_electrovalve_state, int right_electrovalve_state);//
 void set_pump_state(int pump_state);
 void pickup(int pick_right, int pick_left, int up_or_down);
 void putdown(int bechwaya, int nid_lot);
-void walking_position();
+void walking_position(int position);
 void prepare_servo_up();
 void letgo();
 void HAL_setup();
