@@ -374,7 +374,7 @@ float calculate_instant_target_speed_R(float x, float distance)
 }
 float calculate_instant_target_speed_L(float x, float distance)
 {
-	return calculate_instant_target_speed_R_full(x, distance, ramping_acceleration, breaking_acceleration);
+	return calculate_instant_target_speed_L_full(x, distance, ramping_acceleration, breaking_acceleration);
 }
 float calculate_instant_target_phi(float x, float distance)
 {
@@ -457,7 +457,7 @@ int rotate(float angle, int8_t is_radian){
 
 		yaw_centering_term = MIN((distance_traveled_R - distance_traveled_L) * 0.05, 1); // the coefficient is tunable
 		yaw_centering_term = MAX(yaw_centering_term, -1);
-		if (x < 0.1 * x1 || 1){
+		if (x < 0.1 * x1){
 			yaw_centering_term = 0;
 		}
 		speed = calculate_instant_target_speed_R_full(x, distance, rotating_ramping_acceleration, rotating_breaking_acceleration);
@@ -525,6 +525,7 @@ int orientate(float orientation, int8_t is_radian)
 int go_to(float x, float y, float speed)
 {
 	debugger = 300;
+	wait_for_idle();
 	float target_angle = get_angle_to(x, y);
 	wait_for_idle();
 	debugger = 400;
