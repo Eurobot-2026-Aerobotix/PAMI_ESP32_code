@@ -28,6 +28,7 @@ float distance_to_ticks(int32_t distance, float wheel_diameter);
 float rad_to_deg(float radian);
 float deg_to_rad(float degrees);
 float normalize_angle(float angle);
+float get_target_phi(float t,float x0, float y0,float x1, float y1,float x2, float y2,float x3, float y3);
 float get_bezier_distance(float t ,float x0, float y0,float x1, float y1,float x2 , float y2 ,float x3, float y3);
 void bezier(float t, float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3, float *x, float *y);
 void bezier_derivative(float t, float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3, float *x, float *y);
