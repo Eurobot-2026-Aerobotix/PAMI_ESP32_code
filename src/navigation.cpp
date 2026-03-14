@@ -249,7 +249,14 @@ int bezier_curve(float x1, float y1, float x2, float y2, float x3, float y3, flo
 	    speed = direction * calculate_instant_target_speed_R(d, distance);
 
 		float signed_distance = direction * signed_distance_to_bezier(current_x, current_y, x0, y0, x1, y1, x2, y2, x3, y3, t);
-		lane_correction_term = MIN(fabs(SQR(signed_distance) * (0.008f)), 0.5)*SGN(signed_distance);// this coefficient is tunable
+		float phi_error = get_target_phi(t, x0, y0, x1, y1, x2, y2, x3, y3) + (PI*(1-direction) )/2 - current_phi ;
+		if(phi_error > PI)
+			phi_error -= 2*PI ;
+		else if (phi_error < -PI)
+			phi_error += 2*PI ;
+		float phi_correction_term = (phi_error) * ( 1.5 / ( MAX( ( abs(target_speed_R) + abs(target_speed_L) )/2, 100.0) /500.0) ); // 3 the first coefficient is tunable
+
+		lane_correction_term = MIN(fabs(SQR(signed_distance) * (0.04f)), 0.5)*SGN(signed_distance) + phi_correction_term;// this coefficient is tunable
 		if (d < 0.1*d_1){ // 0.002f;
 			lane_correction_term = 0;
 		}
@@ -374,7 +381,7 @@ float calculate_instant_target_speed_R(float x, float distance)
 }
 float calculate_instant_target_speed_L(float x, float distance)
 {
-	return calculate_instant_target_speed_R_full(x, distance, ramping_acceleration, breaking_acceleration);
+	return calculate_instant_target_speed_L_full(x, distance, ramping_acceleration, breaking_acceleration);
 }
 float calculate_instant_target_phi(float x, float distance)
 {
@@ -457,7 +464,7 @@ int rotate(float angle, int8_t is_radian){
 
 		yaw_centering_term = MIN((distance_traveled_R - distance_traveled_L) * 0.05, 1); // the coefficient is tunable
 		yaw_centering_term = MAX(yaw_centering_term, -1);
-		if (x < 0.1 * x1 || 1){
+		if (x < 0.1 * x1){
 			yaw_centering_term = 0;
 		}
 		speed = calculate_instant_target_speed_R_full(x, distance, rotating_ramping_acceleration, rotating_breaking_acceleration);
@@ -525,6 +532,7 @@ int orientate(float orientation, int8_t is_radian)
 int go_to(float x, float y, float speed)
 {
 	debugger = 300;
+	wait_for_idle();
 	float target_angle = get_angle_to(x, y);
 	wait_for_idle();
 	debugger = 400;
