@@ -57,7 +57,7 @@ void strategy()
   // int commands[] = {
   //                   set_position_cmd, 0, 0, 0,
   //                   bezier_cmd, 550, 0, 250, 1000, 1000, 500, 600, 1,
-  //                   // goto_cmd, 400, 200, 500,
+  //                   // goto_cmd, 1000, 0, 500,
   //                   // goto_cmd, 0, 0, 500,
   //                   // orientate_cmd, 0, 0,
   //                   // set_position_cmd, 357, 199, 0,
@@ -67,7 +67,7 @@ void strategy()
   //                   //  orientate_cmd, 88, 0,
   //                   //  goto_cmd, 1900, 550, 400,
   //                   }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
-  //int num_commands = sizeof(commands) / sizeof(commands[0]);
+  // int num_commands = sizeof(commands) / sizeof(commands[0]);
   int num_commands = commands_count;
   int i = 0;
   strategy_start_time = millis();
@@ -328,7 +328,7 @@ void setup()
   set_PWM_min_max(1023, 250, 250, -260, -260);
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(57.342589790462290093200767685685, 57.342589790462290093200767685685, 97.788909734121198848723335959861);
+  set_wheel_diameter_and_spacing(56.941191661929054, 56.941191661929054, 96.31739399256807);
   HAL_setup();
   
   // Initialize agent LED
