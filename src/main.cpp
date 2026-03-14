@@ -49,7 +49,6 @@ void strategy()
   // move_forward(100, 50); // Move 100mm at 50mm/s speed
   //custom_delay(500);
   int delay_cmd = 0, goto_cmd = 1, orientate_cmd = 2, set_position_cmd = 3, bezier_cmd = 4, wait_for_cmd = 5;
-  int delay_cmd = 0, goto_cmd = 1, orientate_cmd = 2, set_position_cmd = 3, bezier_cmd = 4, wait_for_cmd = 5;
   
   // Use global commands array received from ROS2
   extern int commands[];
@@ -57,8 +56,8 @@ void strategy()
 
   // int commands[] = {
   //                   set_position_cmd, 0, 0, 0,
-  //                   bezier_cmd, 550, 0, 250, 1000, 1000, 500, 600, 1,
-  //                   // goto_cmd, 400, 200, 500,
+  //                   // bezier_cmd, 550, 0, 250, 1000, 1000, 500, 600, 1,
+  //                   goto_cmd, 1000, 0, 450,
   //                   // goto_cmd, 0, 0, 500,
   //                   // orientate_cmd, 0, 0,
   //                   // set_position_cmd, 357, 199, 0,
@@ -329,7 +328,7 @@ void setup()
   set_PWM_min_max(1023, 240, 210, -240, -210);
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(57.515983564443332492627069881652, 57.515983564443332492627069881652, 95.374285225261880853538908880684);
+  set_wheel_diameter_and_spacing(57.17088766305667, 57.17088766305667, 94.95693363702039);
   //set_wheel_diameter_and_spacing(57.767349714836084834631884483357, 58.416421059946602641762579814631, 92.938153961874487863117321276497);
   HAL_setup();
   
