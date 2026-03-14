@@ -49,7 +49,6 @@ void strategy()
   // move_forward(100, 50); // Move 100mm at 50mm/s speed
   //custom_delay(500);
   int delay_cmd = 0, goto_cmd = 1, orientate_cmd = 2, set_position_cmd = 3, bezier_cmd = 4, wait_for_cmd = 5;
-  int delay_cmd = 0, goto_cmd = 1, orientate_cmd = 2, set_position_cmd = 3, bezier_cmd = 4, wait_for_cmd = 5;
   
   // Use global commands array received from ROS2
   extern int commands[];
@@ -57,8 +56,8 @@ void strategy()
 
   // int commands[] = {
   //                   set_position_cmd, 0, 0, 0,
-  //                   bezier_cmd, 550, 0, 250, 1000, 1000, 500, 600, 1,
-  //                   // goto_cmd, 400, 200, 500,
+  //                   bezier_cmd, 550, 0, 250, 1000, 1000, 500, 500, 1,
+  //                   // goto_cmd, 1000, 0, 500,
   //                   // goto_cmd, 0, 0, 500,
   //                   // orientate_cmd, 0, 0,
   //                   // set_position_cmd, 357, 199, 0,
@@ -103,12 +102,6 @@ void strategy()
       set_position(x, y, deg_to_rad(phi), deg_to_rad(phi)); 
       i += 4; 
     }
-    else if (command_type == wait_for_cmd) {
-      int flag = commands[i + 1];
-      while(millis() - strategy_start_time < flag){
-        custom_delay(5);
-      }
-      i += 2;
     else if (command_type == wait_for_cmd) {
       int flag = commands[i + 1];
       while(millis() - strategy_start_time < flag){
@@ -332,7 +325,7 @@ void setup()
   set_PWM_min_max(1023, 240, 210, -240, -210);
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(57.814457791555129755173136668791, 57.57543160947118089830420380401, 97.898273135542852506579071027061);
+  set_wheel_diameter_and_spacing(56.31128188897469, 56.49050072805914, 93.42991389249661);
   HAL_setup();
   
   // Initialize agent LED

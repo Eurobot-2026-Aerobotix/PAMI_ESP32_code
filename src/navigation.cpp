@@ -399,7 +399,7 @@ int rotate(float angle, int8_t is_radian){
 	wait_for_idle();
 	reset_speed_control_variables();
 	float rotating_breaking_acceleration = breaking_acceleration;
-	float rotating_ramping_acceleration = 4;
+	float rotating_ramping_acceleration = 2;
 	angle = is_radian ? angle : deg_to_rad(angle);
 	float arc_length = (wheels_spacing / 2) * angle;
 
