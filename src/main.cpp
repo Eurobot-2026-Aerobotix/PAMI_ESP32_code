@@ -56,8 +56,8 @@ void strategy()
 
   // int commands[] = {
   //                   set_position_cmd, 0, 0, 0,
-  //                   bezier_cmd, 550, 0, 250, 1000, 1000, 500, 600, 1,
-  //                   // goto_cmd, 400, 200, 500,
+  //                   bezier_cmd, 550, 0, 250, 1000, 1000, 500, 500, 1,
+  //                   // goto_cmd, 1000, 0, 500,
   //                   // goto_cmd, 0, 0, 500,
   //                   // orientate_cmd, 0, 0,
   //                   // set_position_cmd, 357, 199, 0,
@@ -108,6 +108,20 @@ void strategy()
         custom_delay(5);
       }
       i += 2;
+    }else if (command_type == bezier_cmd){
+      int x1 = commands[i + 1];
+      int y1 = commands[i + 2];
+      int x2 = commands[i + 3];
+      int y2 = commands[i + 4];
+      int x3 = commands[i + 5];
+      int y3 = commands[i + 6];
+      int speed = commands[i + 7];
+      int direction = commands[i + 8];
+      while(bezier_curve(x1, y1, x2, y2, x3, y3, speed, direction)){
+        wait_for_obstacle_clearance();
+        Serial.println("obstacle cleared, resuming...");
+      }
+      i += 9;
     }else if (command_type == delay_cmd){
       custom_delay(commands[i+1]);
       i += 2;
@@ -312,7 +326,7 @@ void setup()
   set_PWM_min_max(1023, 250, 250, -260, -260);
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(57.342589790462290093200767685685, 57.342589790462290093200767685685, 92.955321133370625432418497719492);
+  set_wheel_diameter_and_spacing(57.342589790462290093200767685685, 56.97559721580333, 92.69925375032575);
   HAL_setup();
   
   // Initialize agent LED
