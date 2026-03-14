@@ -49,17 +49,24 @@ void strategy()
   // move_forward(100, 50); // Move 100mm at 50mm/s speed
   //custom_delay(500);
   int delay_cmd = 0, goto_cmd = 1, orientate_cmd = 2, set_position_cmd = 3, bezier_cmd = 4, wait_for_cmd = 5;
+  int delay_cmd = 0, goto_cmd = 1, orientate_cmd = 2, set_position_cmd = 3, bezier_cmd = 4, wait_for_cmd = 5;
   
   // Use global commands array received from ROS2
   extern int commands[];
   extern size_t commands_count;
-  // int commands[] = { //set_position_cmd, 100, 140, 0,
-  //                    //bezier_cmd, 220, 140, 250, 190, 240, 370, 500, 1,
-  //                    set_position_cmd, 0, 0, 0,
-  //                    goto_cmd, 400, 200, 600,
-  //                    goto_cmd, 0, 0, 600,
-  //                    orientate_cmd, 90, 0,
-  //                    orientate_cmd, 0, 0,
+
+  // int commands[] = {
+  //                   set_position_cmd, 0, 0, 0,
+  //                   bezier_cmd, 550, 0, 250, 1000, 1000, 500, 600, 1,
+  //                   // goto_cmd, 400, 200, 500,
+  //                   // goto_cmd, 0, 0, 500,
+  //                   // orientate_cmd, 0, 0,
+  //                   // set_position_cmd, 357, 199, 0,
+  //                   //  goto_cmd, 900, 400, 600,
+  //                   //  goto_cmd, 1650, 380, 600,
+  //                   //  goto_cmd, 1922, 50, 600,
+  //                   //  orientate_cmd, 88, 0,
+  //                   //  goto_cmd, 1900, 550, 400,
   //                   }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
   // int num_commands = sizeof(commands) / sizeof(commands[0]);
   int num_commands = commands_count;
@@ -222,7 +229,7 @@ void PIDTask(void *pvParameters){
 
       previous_speed_error_L = error;
 
-      PWM_L = PWM_L * 0.95 + 0.05 * (PWM_offset_L + kpS_L * error + kdS_L * speed_derivative_L + kiS_L * speed_integral_L);
+      PWM_L = PWM_L * 0.0 + 1.0 * (PWM_offset_L + kpS_L * error + kdS_L * speed_derivative_L + kiS_L * speed_integral_L);
       PWM_L = (PWM_L > PWM_max) ? PWM_max : (PWM_L < -PWM_max) ? -PWM_max : PWM_L;
       PWM_L = (target_speed_L == 0) ? 0 : PWM_L;
 
@@ -244,7 +251,7 @@ void PIDTask(void *pvParameters){
       position_integral_R = ( (PWM_R == PWM_max) || (PWM_R == -PWM_max) )? (position_integral_R - 2*error*dt) : position_integral_R;
 
       // left motor position control
-      error = (target_encoder_count_L - encoder_count_L);
+      error = (target_encoder_count_L - encoder_count_L)*2;
 
       position_derivative_L = (error - previous_position_error_L)/dt; // unit = mm/s²
       position_integral_L = ( SGN(error) == SGN( previous_position_error_L) )? position_integral_L + error*dt : 0;
@@ -433,6 +440,6 @@ void loop(){
   //   send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
   //   delay(10);
   // }
-  // send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, debugger);
+  // send_values_to_usart(encoder_count_R , encoder_count_L, 0, 0);
   // custom_delay(10);
 }
