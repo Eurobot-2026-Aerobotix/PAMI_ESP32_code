@@ -87,6 +87,15 @@ float normalize_angle(float angle){
 	}
 	return a;
 }
+float get_target_phi(float t,float x0, float y0,float x1, float y1,float x2, float y2,float x3, float y3){
+    float mt = 1.0f - t;
+
+    float dx = 3*mt*mt*(x1-x0) + 6*mt*t*(x2-x1) + 3*t*t*(x3-x2);
+    float dy = 3*mt*mt*(y1-y0) + 6*mt*t*(y2-y1) + 3*t*t*(y3-y2);
+
+    return atan2f(dy, dx);
+}
+
 float get_bezier_distance(float t ,float x0, float y0,float x1, float y1,float x2 , float y2 ,float x3, float y3){
     int N = 150 * sqrt(SQR(x3-x0)+SQR(y3-y0)) / 150.0;
     float length = 0.0f;

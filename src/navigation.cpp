@@ -69,8 +69,8 @@ int move_forward(float distance, float speed, float target_point_x, float target
 		float phi_error = normalize_angle(calculate_instant_target_phi(x, distance) - current_phi);
 		float deviation_angle = normalize_angle(atan2(current_y - starting_y, current_x - starting_x) - atan2(target_point_y - starting_y, target_point_x - starting_x) );
 		float deviation_distance = (-1) * sqrt(SQR(current_y - starting_y) + SQR(current_x - starting_x)) * sin(deviation_angle); // positive to the left and negative to the right
-		float phi_correction_term = (phi_error) * ( 1.5 / ( MAX( ( abs(target_speed_R) + abs(target_speed_L) )/2, 100.0) /500.0) ); // the first coefficient is tunable
-		lane_correction_term = (deviation_distance) * ( 0.04 / ( MAX( ( abs(target_speed_R) + abs(target_speed_L) )/2, 100.0) /500.0)) + phi_correction_term; // the first coefficient is tunable
+		float phi_correction_term = (phi_error) * ( 2 / ( MAX( ( abs(target_speed_R) + abs(target_speed_L) )/2, 100.0) /500.0) ); // the first coefficient is tunable
+		lane_correction_term = (deviation_distance) * ( 0.01 / ( MAX( ( abs(target_speed_R) + abs(target_speed_L) )/2, 100.0) /500.0)) + phi_correction_term; // the first coefficient is tunable
 		lane_correction_term = MIN(MAX(lane_correction_term, -0.1), 0.1); // the coefficient is tunable
 
 		set_target_speeds(fabs(calculate_instant_target_speed_R(x, distance)) * (1 + lane_correction_term), fabs(calculate_instant_target_speed_L(x, distance)) * (1 - lane_correction_term));
@@ -88,7 +88,7 @@ int move_forward(float distance, float speed, float target_point_x, float target
 		float deviation_angle = normalize_angle(atan2(current_y - starting_y, current_x - starting_x) - atan2(target_point_y - starting_y, target_point_x - starting_x) );
 		float deviation_distance = (-1) * sqrt(SQR(current_y - starting_y) + SQR(current_x - starting_x)) * sin(deviation_angle); // positive to the left and negative to the right
 		float phi_correction_term = (phi_error) * ( 1.5 / ( MAX( ( abs(target_speed_R) + abs(target_speed_L) )/2, 100.0) /500.0) ); // the first coefficient is tunable
-		lane_correction_term = (deviation_distance) * ( 0.04 / ( MAX( ( abs(target_speed_R) + abs(target_speed_L) )/2, 100.0) /500.0)) + phi_correction_term; // the first coefficient is tunable
+		lane_correction_term = (deviation_distance) * ( 0.01 / ( MAX( ( abs(target_speed_R) + abs(target_speed_L) )/2, 100.0) /500.0)) + phi_correction_term; // the first coefficient is tunable
 		lane_correction_term = MIN(MAX(lane_correction_term, -0.1), 0.1); // the coefficient is tunable
 
 		set_target_speeds(speed * (1 + lane_correction_term), speed * (1 - lane_correction_term));
@@ -251,7 +251,14 @@ int bezier_curve(float x1, float y1, float x2, float y2, float x3, float y3, flo
 	    speed = direction * calculate_instant_target_speed_R(d, distance);
 
 		float signed_distance = direction * signed_distance_to_bezier(current_x, current_y, x0, y0, x1, y1, x2, y2, x3, y3, t);
-		lane_correction_term = MIN(fabs(SQR(signed_distance) * (0.008f)), 0.5)*SGN(signed_distance);// this coefficient is tunable
+		float phi_error = get_target_phi(t, x0, y0, x1, y1, x2, y2, x3, y3) + (PI*(1-direction) )/2 - current_phi ;
+		if(phi_error > PI)
+			phi_error -= 2*PI ;
+		else if (phi_error < -PI)
+			phi_error += 2*PI ;
+		float phi_correction_term = (phi_error) * ( 1.5 / ( MAX( ( abs(target_speed_R) + abs(target_speed_L) )/2, 100.0) /500.0) ); // 3 the first coefficient is tunable
+
+		lane_correction_term = MIN(fabs(SQR(signed_distance) * (0.04f)), 0.5)*SGN(signed_distance) + phi_correction_term;// this coefficient is tunable
 		if (d < 0.1*d_1){ // 0.002f;
 			lane_correction_term = 0;
 		}
@@ -459,7 +466,7 @@ int rotate(float angle, int8_t is_radian){
 
 		yaw_centering_term = MIN((distance_traveled_R - distance_traveled_L) * 0.05, 1); // the coefficient is tunable
 		yaw_centering_term = MAX(yaw_centering_term, -1);
-		if (x < 0.1 * x1 || 1){
+		if (x < 0.1 * x1){
 			yaw_centering_term = 0;
 		}
 		speed = calculate_instant_target_speed_R_full(x, distance, rotating_ramping_acceleration, rotating_breaking_acceleration);

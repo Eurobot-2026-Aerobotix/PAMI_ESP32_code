@@ -63,10 +63,10 @@ void strategy()
                     //  goto_cmd, 900, 400, 600,
                     //  goto_cmd, 1650, 380, 600,
                     //  goto_cmd, 1922, 50, 600,
-                     orientate_cmd, 88, 0,
+                    //  orientate_cmd, 88, 0,
                      backwards_cmd, 180, 200,
                      set_position_cmd, 1900, 0, 90,
-                     goto_cmd, 1900, 550, 400,
+                     goto_cmd, 1900, 540, 400,
                     };
   int blue_commands[] = { 
                     //  delay_cmd, first_delay,
@@ -74,10 +74,10 @@ void strategy()
                     //  goto_cmd, 900, 2560, 600,
                     //  goto_cmd, 1680, 2550, 600,
                     //  goto_cmd, 1962, 2780, 600,
-                     orientate_cmd, -94, 0,
+                    //  orientate_cmd, -94, 0,
                      backwards_cmd, 180, 200,
                      set_position_cmd, 1900, 3000, -90,
-                     goto_cmd, 1890, 2450, 400,
+                     goto_cmd, 1890, 2460, 400,
                     };
   int commands[100];
   for (int i = 0; i < received_floats_count && i < 100; i++){
@@ -95,6 +95,19 @@ void strategy()
       commands[i + received_floats_count] = blue_commands[i];
     }
   }
+  // int commands[] = {
+  //                   //  delay_cmd, first_delay,
+  //                   set_position_cmd, 0, 0, 0,
+  //                   goto_cmd, 1500, 0, 500,
+  //                   //  goto_cmd, 1650, 380, 600,
+  //                   //  goto_cmd, 1922, 50, 600,
+  //                   //  orientate_cmd, 88, 0,
+  //                   //  backwards_cmd, 180, 200,
+  //                   //  set_position_cmd, 1900, 0, 90,
+  //                   //  goto_cmd, 1900, 550, 400,
+  //                   };
+  
+  // int num_commands = sizeof(commands) / sizeof(commands[0]);
   
   // Calculate total commands: ROS commands + yellow/blue strategy commands
   int total_commands = received_floats_count + num_commands;
@@ -282,7 +295,7 @@ void PIDTask(void *pvParameters){
 
       previous_speed_error_L = error;
 
-      PWM_L = PWM_L * 0.95 + 0.05 * (PWM_offset_L + kpS_L * error + kdS_L * speed_derivative_L + kiS_L * speed_integral_L);
+      PWM_L = PWM_L * 0.0 + 1.0 * (PWM_offset_L + kpS_L * error + kdS_L * speed_derivative_L + kiS_L * speed_integral_L);
       PWM_L = (PWM_L > PWM_max) ? PWM_max : (PWM_L < -PWM_max) ? -PWM_max : PWM_L;
       PWM_L = (target_speed_L == 0) ? 0 : PWM_L;
 
@@ -304,7 +317,7 @@ void PIDTask(void *pvParameters){
       position_integral_R = ( (PWM_R == PWM_max) || (PWM_R == -PWM_max) )? (position_integral_R - 2*error*dt) : position_integral_R;
 
       // left motor position control
-      error = (target_encoder_count_L - encoder_count_L);
+      error = (target_encoder_count_L - encoder_count_L)*2;
 
       position_derivative_L = (error - previous_position_error_L)/dt; // unit = mm/s²
       position_integral_L = ( SGN(error) == SGN( previous_position_error_L) )? position_integral_L + error*dt : 0;
@@ -380,7 +393,7 @@ void setup()
   set_PWM_min_max(1023, 240, 210, -240, -210);
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(57.26808944785478669422072940648, 57.472618338739982360985803440075, 92.294108582965129097502004452009);
+  set_wheel_diameter_and_spacing(56.809944732271944, 56.647955232721074 , 91.05600939322017);
   HAL_setup();
   
   // Initialize agent LED
