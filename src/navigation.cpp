@@ -427,17 +427,17 @@ int orientate(float orientation, int8_t is_radian)
 }
 int go_to(float x, float y, float speed)
 {
-	debugger = 300;
+	//debugger = 300;
 	float target_angle = get_angle_to(x, y);
 	wait_for_idle();
-	debugger = 400;
+	//debugger = 400;
 
 	if (orientate(target_angle, 1)){
 		return 1;
 	}
-	debugger = 500;
+	//debugger = 500;
 	wait_for_idle();
-	debugger = 600;
+	//debugger = 600;
 	int result = move_forward(get_distance_to(x, y), speed, x, y) * 2; // why *2 ? cause fuck you
 	return result;
 }
@@ -496,26 +496,28 @@ void prepare_emergency_break(){
 	wheel_state_R = EMERGENCY_BREAK;
 	wheel_state_L = EMERGENCY_BREAK;
 }
-void resumeBezier()
-{
-    if (!savedBezier.valid)
-        return;
-    reset_speed_control_variables();
-    bezier_curve(
-        savedBezier.x1, savedBezier.y1,
-        savedBezier.x2, savedBezier.y2,
-        savedBezier.x3, savedBezier.y3,
-        savedBezier.speed,
-        savedBezier.direction,
-        savedBezier.t      
-    );
-    savedBezier.valid = 0;
-}
-int bezier_curve(float x1, float y1, float x2, float y2, float x3, float y3, float speed, int direction, float t){
+// void resumeBezier()
+// {
+//     if (!savedBezier.valid)
+//         return;
+//     reset_speed_control_variables();
+//     bezier_curve(
+//         savedBezier.x1, savedBezier.y1,
+//         savedBezier.x2, savedBezier.y2,
+//         savedBezier.x3, savedBezier.y3,
+//         savedBezier.speed,
+//         savedBezier.direction,
+//         savedBezier.t      
+//     );
+//     savedBezier.valid = 0;
+// }
+int bezier_curve(float x1, float y1, float x2, float y2, float x3, float y3, float speed, int direction, float saved_t){
+	is_valid = 1;
+
 	float x0 = current_x;
 	float y0 = current_y;
    
-    float distance = get_bezier_distance(t, x0, y0, x1, y1, x2, y2, x3, y3);
+    float distance = get_bezier_distance(saved_t, x0, y0, x1, y1, x2, y2, x3, y3);
 
 	float d_1 = speed/ramping_acceleration;
 	float d_2 = speed/breaking_acceleration + distance ;
@@ -527,7 +529,7 @@ int bezier_curve(float x1, float y1, float x2, float y2, float x3, float y3, flo
 		d_1 = speed/ramping_acceleration;
 		d_2 = speed/breaking_acceleration + distance;
 	}
-    if (t == 0.0){
+    if (saved_t == 0.0){
 	   orientate(atan2(y1-y0, x1-x0) + PI*(-direction+1)/2, 1);
     }
 
@@ -555,7 +557,7 @@ int bezier_curve(float x1, float y1, float x2, float y2, float x3, float y3, flo
 	float speed_R , speed_L;
 
 
-	while (distance_to_target >= 1.0f && t < 1.0000f){
+	while (distance_to_target >= 1.0f && saved_t < 1.0000f){
 		d = distance - distance_to_target;
 
 		if (wheel_state_R == ACCELERATING && d > d_1 ){
@@ -566,18 +568,28 @@ int bezier_curve(float x1, float y1, float x2, float y2, float x3, float y3, flo
 			wheel_state_L = CONTROLLED_BREAK;
 		}else if (wheel_state_R == EMERGENCY_BREAK){
             emergency_break();
+			x1 = savedBezier.x1;
+			y1 = savedBezier.y1;
+            x2 = savedBezier.x2; 
+			y2 = savedBezier.y2;
+            x3 = savedBezier.x3; 
+		    y3 = savedBezier.y3;
+            speed = savedBezier.speed;
+            direction = savedBezier.direction;
+            saved_t = savedBezier.t;
+			is_valid = 0;
 			//resume_bezier(x1, y1, x2, y2, x3, y3, speed, direction, t);
-			savedBezier.valid = 1;
-			resumeBezier();
+			//savedBezier.valid = 1;
+			//resumeBezier();
             //return 1;
         }
 		
-   		t = project_bezier(current_x, current_y, x0, y0, x1, y1, x2, y2, x3, y3);
+   		saved_t = project_bezier(current_x, current_y, x0, y0, x1, y1, x2, y2, x3, y3);
        
-		float radius = get_bezier_radius(t, x0, y0, x1, y1, x2, y2, x3, y3);
+		float radius = get_bezier_radius(saved_t, x0, y0, x1, y1, x2, y2, x3, y3);
 	    speed = direction * calculate_instant_target_speed_R(d, distance);
 
-		float signed_distance = direction * signed_distance_to_bezier(current_x, current_y, x0, y0, x1, y1, x2, y2, x3, y3, t);
+		float signed_distance = direction * signed_distance_to_bezier(current_x, current_y, x0, y0, x1, y1, x2, y2, x3, y3, saved_t);
 		lane_correction_term = MIN(fabs(SQR(signed_distance) * (0.008f)), 0.5)*SGN(signed_distance);// this coefficient is tunable
 		if (d < 0.1*d_1){ // 0.002f;
 			lane_correction_term = 0;
@@ -597,7 +609,7 @@ int bezier_curve(float x1, float y1, float x2, float y2, float x3, float y3, flo
 			speed_L = ( speed * (radius - direction * (wheels_spacing / 2.0f)) / (radius));
 		}
 
-		distance_to_target = get_bezier_distance(t, x0, y0, x1, y1, x2, y2,x3 ,y3);
+		distance_to_target = get_bezier_distance(saved_t, x0, y0, x1, y1, x2, y2,x3 ,y3);
 
 		set_target_speeds(speed_R*(1 + lane_correction_term) ,speed_L* (1 - lane_correction_term));
 		//send_values_to_usart(current_speed_R, current_speed_L, target_speed_R, target_speed_L);

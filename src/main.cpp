@@ -27,6 +27,7 @@ TaskHandle_t emergencyBreakTaskHandle;
 int websocket=0;
 volatile int emergency_paused = 0; 
 SavedBezier savedBezier;
+int is_valid;
 //SavedBezier savedBezier = {0};
 // Custom strategy implementation
 void strategy()
@@ -56,9 +57,9 @@ void strategy()
   // extern int commands[];
   // extern size_t commands_count;
 
-   int commands[] = { goto_cmd, 400, 0, 600,
-                      set_position_cmd, 0, 140, 0,
-                      bezier_cmd, 220, 140, 250, 190, 240, 370, 500, 1, 0,
+   int commands[] = {// goto_cmd, 300, 0, 600,
+                      // set_position_cmd, 0, 140, 0,
+                      // bezier_cmd, 220, 140, 250, 190, 240, 370, 500, 1, 0,
                       //bezier_cmd, 220, 140, 250, 200, 250, 500, 
   //                   // set_position_cmd, 357, 199, 0,
                       //goto_cmd, 300, 0, 600,
@@ -121,13 +122,25 @@ void strategy()
       int y3 = commands[i + 6];
       int speed = commands[i + 7];
       int direction = commands[i + 8];
-      bezier_curve(x1, y1, x2, y2, x3, y3, speed, direction, 0.0);
-    //   while(bezier_curve(x1, y1, x2, y2, x3, y3, speed, direction))
-    // {
+      int start_t = commands[i + 9];
+      while(bezier_curve(x1, y1, x2, y2, x3, y3, speed, direction, start_t) && is_valid==1){
+          wait_for_obstacle_clearance();
+      }
+      //start_t = savedBezier.t;
+      bezier_curve(x1, y1, x2, y2, x3, y3, speed, direction, start_t);
+
+      //bezier_curve(x1, y1, x2, y2, x3, y3, speed, direction, 0.0);
+    //   while(is_valid)
+    // { 
+    //   start_t = 0.0f;
+    //   bezier_curve(x1, y1, x2, y2, x3, y3, speed, direction, start_t);
     //   wait_for_obstacle_clearance();
-     
+    //   if(!is_valid){
+    //     start_t = savedBezier.t;
+    //     bezier_curve(x1, y1, x2, y2, x3, y3, speed, direction, start_t);
+    //   }
     // }
-      i += 9;
+      i += 10;
     }
   }
   // 3. Send completion signal
@@ -180,12 +193,11 @@ void emergencyBreakTask(void *pvParameters)
     {
       prepare_emergency_break();
       emergency_paused = 1;
-    }
 
     vTaskDelayUntil(&xLastWakeTime, xDelay);
   }
 }
-
+}
 void PIDTask(void *pvParameters){
   const TickType_t xDelay = pdMS_TO_TICKS(1);
   TickType_t xLastWakeTime = xTaskGetTickCount();
@@ -313,6 +325,8 @@ void setup()
 {
   // Initialize Serial for debugging
   Serial.begin(115200);
+  
+  Serial.println("SERIAL WORKS BEFORE TASKS");
 
   Serial.println("=== PAMI ESP32 Setup ===");
 
@@ -328,7 +342,7 @@ void setup()
   set_PWM_min_max(1023, 240, 210, -240, -210);
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(57.814457791555129755173136668791, 57.57543160947118089830420380401, 97.898273135542852506579071027061);
+  set_wheel_diameter_and_spacing(56.31128188897469, 56.49050072805914, 93.42991389249661);
   HAL_setup();
   
   // Initialize agent LED
@@ -406,10 +420,18 @@ void setup()
   Serial.println("All tasks created successfully!");
   control_loop_state = DISACTIVATED;
   delay(1000);
-  strategy_waiting = 1;
+  strategy_waiting = 0;
+  go_to(500, 0, 400);
+  //prepare_go_to(500, 0, 400);
 }
 
 void loop(){
+  // float distance = get_ultrasonic_distance();
+  // Serial.print("distance = ");
+  // Serial.print(distance);
+  // Serial.println("test");
+  // delay(1000);
+   //  send_values_to_usart(get_ultrasonic_distance(), 0, 0, 0);
   // for(int i=0; i<100; i++){
   //   set_target_speeds(i*2, 0);
   //   send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);

@@ -230,7 +230,6 @@ float get_ultrasonic_distance(){
     if (duration == 0) {
         return 500.0;
     }
-
     return distance;
 }
 
