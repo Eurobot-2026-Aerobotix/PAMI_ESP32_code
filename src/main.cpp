@@ -91,9 +91,8 @@ void strategy()
     else if (command_type == orientate_cmd)
     {
       int angle = commands[i + 1];
-      int is_radian = commands[i + 2];
-      orientate(angle, is_radian);
-      i += 3;
+      orientate(angle, 0);
+      i += 2;
     }
     else if (command_type == set_position_cmd) { 
       int x = commands[i + 1];
