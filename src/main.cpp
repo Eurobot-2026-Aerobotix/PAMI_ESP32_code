@@ -63,7 +63,7 @@ void strategy()
                     //  goto_cmd, 900, 400, 600,
                     //  goto_cmd, 1650, 380, 600,
                     //  goto_cmd, 1922, 50, 600,
-                    //  orientate_cmd, 88, 0,
+                    //  orientate_cmd, 88,
                      backwards_cmd, 180, 200,
                      set_position_cmd, 1900, 0, 90,
                      goto_cmd, 1900, 540, 400,
@@ -74,7 +74,7 @@ void strategy()
                     //  goto_cmd, 900, 2560, 600,
                     //  goto_cmd, 1680, 2550, 600,
                     //  goto_cmd, 1962, 2780, 600,
-                    //  orientate_cmd, -94, 0,
+                    //  orientate_cmd, -94,
                      backwards_cmd, 180, 200,
                      set_position_cmd, 1900, 3000, -90,
                      goto_cmd, 1890, 2460, 400,
@@ -134,9 +134,8 @@ void strategy()
     else if (command_type == orientate_cmd)
     {
       int angle = commands[i + 1];
-      int is_radian = commands[i + 2];
-      orientate(angle, is_radian);
-      i += 3;
+      orientate(angle, 0);
+      i += 2;
     }
     else if (command_type == set_position_cmd) { 
       int x = commands[i + 1];
