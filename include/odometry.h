@@ -15,6 +15,8 @@ extern float current_phi; // angle between x axis and the robot's center axis, i
 extern float absolute_phi; // phi without modulo 2PI
 extern int32_t previous_encoder_count_R;
 extern int32_t previous_encoder_count_L;
+extern int32_t previous_encoder_PCNT_count_R;
+extern int32_t previous_encoder_PCNT_count_L;
 
 void update_speed(float dt);
 void update_position(float dt);
