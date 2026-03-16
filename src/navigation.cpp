@@ -530,18 +530,13 @@ int orientate(float orientation, int8_t is_radian)
 }
 int go_to(float x, float y, float speed)
 {
-	debugger = 300;
 	wait_for_idle();
 	float target_angle = get_angle_to(x, y);
-	wait_for_idle();
-	debugger = 400;
 
 	if (orientate(target_angle, 1)){
 		return 1;
 	}
-	debugger = 500;
 	wait_for_idle();
-	debugger = 600;
 	int result = move_forward(get_distance_to(x, y), speed, x, y) * 2; // why *2 ? cause fuck you
 	return result;
 }
