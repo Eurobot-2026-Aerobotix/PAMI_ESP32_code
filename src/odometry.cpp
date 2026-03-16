@@ -6,6 +6,8 @@ float current_phi = 0;
 float absolute_phi = 0;
 int32_t previous_encoder_count_R = 0;
 int32_t previous_encoder_count_L = 0;
+int32_t previous_encoder_PCNT_count_R = 0;
+int32_t previous_encoder_PCNT_count_L = 0;
 float phi_offset = 0;
 
 void update_speed(float dt){
@@ -14,10 +16,23 @@ void update_speed(float dt){
 	speedCalculationPreviousTime = micros();
 }
 
+void update_encoder_counts(){
+    int32_t current_R = encoder_get_R();
+    int32_t current_L = encoder_get_L();
+    int32_t delta = current_R - previous_encoder_PCNT_count_R;
+	delta = (delta>20000)? delta-32768 : (delta<-20000)? delta+32768 : delta; // handling overflow
+	encoder_count_R += delta;
+
+	delta = current_L - previous_encoder_PCNT_count_L;
+	delta = (delta>20000)? delta-32768 : (delta<-20000)? delta+32768 : delta;
+	encoder_count_L += delta;
+
+	previous_encoder_PCNT_count_R = current_R;
+	previous_encoder_PCNT_count_L = current_L;
+}
+
 void update_position(float dt){
-	
-	encoder_count_L = encoder_get_L();
-	encoder_count_R = encoder_get_R();
+	update_encoder_counts();
 
 	update_speed(dt);
 	float dR = ticks_to_distance(encoder_count_R - previous_encoder_count_R, wheel_diameter_R);
