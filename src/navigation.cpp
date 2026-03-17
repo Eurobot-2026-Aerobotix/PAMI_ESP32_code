@@ -255,7 +255,7 @@ int bezier_curve(float x1, float y1, float x2, float y2, float x3, float y3, flo
 			phi_error += 2*PI ;
 		float phi_correction_term = (phi_error) * ( 1.5 / ( MAX( ( abs(target_speed_R) + abs(target_speed_L) )/2, 100.0) /500.0) ); // 3 the first coefficient is tunable
 
-		lane_correction_term = MIN(fabs(SQR(signed_distance) * (0.01f)), 0.5)*SGN(signed_distance) + phi_correction_term;// this coefficient is tunable
+		lane_correction_term = MIN(fabs(SQR(signed_distance) * (0.04f)), 0.5)*SGN(signed_distance) + phi_correction_term;// this coefficient is tunable
 		if (d < 0.1*d_1){ // 0.002f;
 			lane_correction_term = 0;
 		}

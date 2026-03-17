@@ -157,7 +157,7 @@ void communicationTask(void *pvParameters)
     } else {
       // If WiFi disconnected, try to reconnect
       Serial.println("WiFi disconnected in task, attempting reconnection...");
-      connect_wifi("hrissa", "harissaharissa2026");
+      connect_wifi("harissa", "harissaharissa2026");
       vTaskDelay(pdMS_TO_TICKS(5000)); // Wait 5 seconds before next attempt
     }
 
@@ -314,7 +314,7 @@ void setup()
   Serial.println("=== PAMI ESP32 Setup ===");
 
   Serial.println("Setting motor pins...");
-  set_motor_pins(22, 21, 18, 19, 23, 17);
+  set_motor_pins(22, 21, 18, 19, 23, 26);
 
   set_ultrasonic_pins(14, 12);
 
@@ -322,10 +322,10 @@ void setup()
   set_encoder_channels(4, 16, 15, 2, 350);
 
   Serial.println("Setting PWM parameters...");
-  set_PWM_min_max(1023, 250, 250, -260, -260);
+  set_PWM_min_max(1023, 240, 210, -240, -210);
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(57.342589790462290093200767685685, 56.97559721580333, 92.69925375032575);
+  set_wheel_diameter_and_spacing(56.8838490721385917724551615442, 58.363460303135798387099654552859, 92.146905981078862140426417061303);
   HAL_setup();
   
   // Initialize agent LED
