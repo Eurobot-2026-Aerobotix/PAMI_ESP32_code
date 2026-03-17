@@ -57,8 +57,8 @@ void strategy()
   // int commands[] = {
   //                   set_position_cmd, 0, 0, 0,
   //                   // bezier_cmd, 550, 0, 250, 1000, 1000, 500, 600, 1,
-  //                   goto_cmd, 1000, 0, 450,
-  //                   // goto_cmd, 0, 0, 500,
+  //                   goto_cmd, 1000, 200, 450,
+  //                   goto_cmd, 0, 0, 500,
   //                   // orientate_cmd, 0, 0,
   //                   // set_position_cmd, 357, 199, 0,
   //                   //  goto_cmd, 900, 400, 600,
@@ -174,9 +174,9 @@ void emergencyBreakTask(void *pvParameters)
   
   for (;;)
   {
-    if (( ((get_ultrasonic_distance() < min_distance && trajectory != ROTATIN) || (millis() - strategy_start_time >= max_running_time)) && wheel_state_R != EMERGENCY_BREAK && wheel_state_L != EMERGENCY_BREAK) ) 
+    if (( ((get_ultrasonic_distance() < min_distance && trajectory != ROTATING) || (millis() - strategy_start_time >= max_running_time)) && wheel_state_R != EMERGENCY_BREAK && wheel_state_L != EMERGENCY_BREAK) ) 
     {
-      //prepare_emergency_break();
+      prepare_emergency_break();
     }
 
     vTaskDelayUntil(&xLastWakeTime, xDelay);
