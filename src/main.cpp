@@ -56,9 +56,9 @@ void strategy()
 
   // int commands[] = {
   //                   set_position_cmd, 0, 0, 0,
-  //                   bezier_cmd, 550, 0, 250, 1000, 1000, 500, 500, 1,
-  //                   // goto_cmd, 1000, 0, 500,
-  //                   // goto_cmd, 0, 0, 500,
+  //                   // bezier_cmd, 550, 0, 250, 1000, 1000, 500, 500, 1,
+  //                   goto_cmd, 1000, 0, 500,
+  //                   goto_cmd, 0, 0, 500,
   //                   // orientate_cmd, 0, 0,
   //                   // set_position_cmd, 357, 199, 0,
   //                   //  goto_cmd, 900, 400, 600,
@@ -167,12 +167,12 @@ void communicationTask(void *pvParameters)
 
 void emergencyBreakTask(void *pvParameters)
 {
-  const TickType_t xDelay = pdMS_TO_TICKS(30);
+  const TickType_t xDelay = pdMS_TO_TICKS(10);
   TickType_t xLastWakeTime = xTaskGetTickCount();
   
   for (;;)
   {
-    if (( ((get_ultrasonic_distance() < min_distance && trajectory != ROTATIN) || (millis() - strategy_start_time >= max_running_time)) && wheel_state_R != EMERGENCY_BREAK && wheel_state_L != EMERGENCY_BREAK) ) 
+    if (( ((get_ultrasonic_distance() < (min_distance * max(max(fabs(current_speed_R), fabs(current_speed_L)), 200.0f)/200)) && trajectory != ROTATING) || (millis() - strategy_start_time >= max_running_time)) && wheel_state_R != EMERGENCY_BREAK && wheel_state_L != EMERGENCY_BREAK)
     {
       prepare_emergency_break();
     }
