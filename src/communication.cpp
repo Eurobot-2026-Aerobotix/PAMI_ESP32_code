@@ -154,8 +154,8 @@ void communication_loop()
     switch (comm_state)
     {
     case WAITING_AGENT:
-        // Reduced timeout from 500ms to 200ms, and attempts from 3 to 2 for faster detection
-        EXECUTE_EVERY_N_MS(1000 + check_offset, comm_state = (RMW_RET_OK == rmw_uros_ping_agent(200, 2)) ? AGENT_AVAILABLE : WAITING_AGENT; if (comm_state == AGENT_AVAILABLE) { Serial.println("Agent detected!"); });
+        // Relaxed timeout to 300ms with 3 attempts for more reliable detection
+        EXECUTE_EVERY_N_MS(1000 + check_offset, comm_state = (RMW_RET_OK == rmw_uros_ping_agent(300, 3)) ? AGENT_AVAILABLE : WAITING_AGENT; if (comm_state == AGENT_AVAILABLE) { Serial.println("Agent detected!"); });
         break;
 
     case AGENT_AVAILABLE:
@@ -187,10 +187,11 @@ void communication_loop()
 
     case AGENT_CONNECTED:
         EXECUTE_EVERY_N_MS(1000,
-                           comm_state = (RMW_RET_OK == rmw_uros_ping_agent(200, 2)) ? AGENT_CONNECTED : AGENT_DISCONNECTED;);
+                           comm_state = (RMW_RET_OK == rmw_uros_ping_agent(300, 3)) ? AGENT_CONNECTED : AGENT_DISCONNECTED;);
         if (comm_state == AGENT_CONNECTED)
         {
-            rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100));
+            // Reduced timeout to allow faster callback processing and prevent blocking
+            rclc_executor_spin_some(&executor, RCL_MS_TO_NS(50));
             
         }
         else
@@ -409,12 +410,11 @@ void destroy_entities()
     Serial.println("DEBUG: Entity cleanup complete");
 }
 
-// LED blink function
+// LED blink function - non-blocking version
 void LED_BLINK()
 {
+   
     digitalWrite(AGENT_LED_PIN, LOW);
-    //vTaskDelay(pdMS_TO_TICKS(100));
-    //digitalWrite(AGENT_LED_PIN, HIGH);
 }
 
 // Callback for start topic subscription
