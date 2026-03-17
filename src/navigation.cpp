@@ -14,7 +14,7 @@ float cruise_speed_R;
 float cruise_speed_L;
 float starting_phi;
 float turning_radius;
-int min_distance = 70;
+int min_distance = 120;
 
 int32_t previous_speed_control_time = 0;
 
@@ -210,7 +210,6 @@ int bezier_curve(float x1, float y1, float x2, float y2, float x3, float y3, flo
 	acc_linearization_coef = sqrt(d_1);
 
 	wait_for_idle();
-	delay(200);
 	reset_speed_control_variables();
 
 	direction_R = 1;
@@ -256,7 +255,7 @@ int bezier_curve(float x1, float y1, float x2, float y2, float x3, float y3, flo
 			phi_error += 2*PI ;
 		float phi_correction_term = (phi_error) * ( 1.5 / ( MAX( ( abs(target_speed_R) + abs(target_speed_L) )/2, 100.0) /500.0) ); // 3 the first coefficient is tunable
 
-		lane_correction_term = MIN(fabs(SQR(signed_distance) * (0.04f)), 0.5)*SGN(signed_distance) + phi_correction_term;// this coefficient is tunable
+		lane_correction_term = MIN(fabs(SQR(signed_distance) * (0.01f)), 0.5)*SGN(signed_distance) + phi_correction_term;// this coefficient is tunable
 		if (d < 0.1*d_1){ // 0.002f;
 			lane_correction_term = 0;
 		}
@@ -274,7 +273,7 @@ int bezier_curve(float x1, float y1, float x2, float y2, float x3, float y3, flo
 			speed_R = ( speed * (radius + direction * (wheels_spacing / 2.0f)) / (radius));
 			speed_L = ( speed * (radius - direction * (wheels_spacing / 2.0f)) / (radius));
 		}
-
+  
 		distance_to_target = get_bezier_distance(t, x0, y0, x1, y1, x2, y2,x3 ,y3);
 
 		set_target_speeds(speed_R*(1 + lane_correction_term) ,speed_L* (1 - lane_correction_term));
@@ -578,8 +577,16 @@ void set_target_encoder_counts(int32_t encoder__count_R, int32_t encoder__count_
 	control_loop_state = POSITION;
 }
 void wait_for_obstacle_clearance() {
-	while (get_ultrasonic_distance() < min_distance) {
-		custom_delay(100); // wait for 100 ms before checking again
+	for(int i=0; i<2; i++){
+		while(1){
+			if (get_ultrasonic_distance() >= min_distance + 20){ // adding a hysteresis of 20 mm to prevent the robot from stopping and starting repeatedly if the obstacle is on the edge of the ultrasonic sensor range
+				custom_delay(10);
+				if (get_ultrasonic_distance() >= min_distance + 20){ // adding a hysteresis of 20 mm to prevent the robot from stopping and starting repeatedly if the obstacle is on the edge of the ultrasonic sensor range
+					break;
+				}
+			}
+			custom_delay(100); // wait for 100 ms before checking again
+		}
 	}
 	while(millis() - strategy_start_time >= max_running_time);
 }
