@@ -107,6 +107,20 @@ void strategy()
         custom_delay(5);
       }
       i += 2;
+    }else if (command_type == bezier_cmd){
+      int x1 = commands[i + 1];
+      int y1 = commands[i + 2];
+      int x2 = commands[i + 3];
+      int y2 = commands[i + 4];
+      int x3 = commands[i + 5];
+      int y3 = commands[i + 6];
+      int speed = commands[i + 7];
+      int direction = commands[i + 8];
+      while(bezier_curve(x1, y1, x2, y2, x3, y3, speed, direction)){
+        wait_for_obstacle_clearance();
+        Serial.println("obstacle cleared, resuming...");
+      }
+      i += 9;
     }else if (command_type == delay_cmd){
       custom_delay(commands[i+1]);
       i += 2;
@@ -169,12 +183,12 @@ void communicationTask(void *pvParameters)
 
 void emergencyBreakTask(void *pvParameters)
 {
-  const TickType_t xDelay = pdMS_TO_TICKS(30);
+  const TickType_t xDelay = pdMS_TO_TICKS(10);
   TickType_t xLastWakeTime = xTaskGetTickCount();
   
   for (;;)
   {
-    if (( ((get_ultrasonic_distance() < min_distance && trajectory != ROTATIN) || (millis() - strategy_start_time >= max_running_time)) && wheel_state_R != EMERGENCY_BREAK && wheel_state_L != EMERGENCY_BREAK) ) 
+    if (( ((get_ultrasonic_distance() < (min_distance * max(max(fabs(current_speed_R), fabs(current_speed_L)), 200.0f)/200)) && trajectory != ROTATING) || (millis() - strategy_start_time >= max_running_time)) && wheel_state_R != EMERGENCY_BREAK && wheel_state_L != EMERGENCY_BREAK)
     {
       prepare_emergency_break();
     }
