@@ -494,6 +494,7 @@ void prepare_emergency_break(){
 }
 int resume_bezier(float x1, float y1, float x2, float y2, float x3, float y3, float speed, int direction, float saved_t){
 	reset_speed_control_variables();
+	orientate(get_target_phi(saved_t, current_x, current_y, x1, y1, x2, y2, x3, y3) + (PI*(1-direction) )/2, 1);
 	bezier_curve(x1, y1, x2, y2, x3, y3, speed, direction, saved_t);
 	return 0;
 }
@@ -502,7 +503,10 @@ int bezier_curve(float x1, float y1, float x2, float y2, float x3, float y3, flo
 	bool should_resume = false;
     float original_speed = speed;
 	float x0 = current_x;
-	float y0 = current_y;    float original_ramping = ramping_acceleration;	//float ramping_acceleration_1;
+	float y0 = current_y;
+	float saved_x0 = x0;
+	float saved_y0 = y0; 
+    float original_ramping = ramping_acceleration;	//float ramping_acceleration_1;
 	//if(is_valid == 1){
 	//ramping_acceleration_1 = 2;
 	// }
@@ -521,9 +525,10 @@ int bezier_curve(float x1, float y1, float x2, float y2, float x3, float y3, flo
 		d_1 = speed/ramping_acceleration;
 		d_2 = speed/breaking_acceleration + distance;
 	}
-    if (saved_t == 0.0){
-	   orientate(atan2(y1-y0, x1-x0) + PI*(-direction+1)/2, 1);
-    }
+    // if (saved_t == 0.0){
+	//    orientate(atan2(y1-y0, x1-x0) + PI*(-direction+1)/2, 1);
+    // }
+    orientate(get_target_phi(saved_t, current_x, current_y, x1, y1, x2, y2, x3, y3) + (PI*(1-direction) )/2, 1);
 
 	acc_linearization_coef = sqrt(d_1);
 
@@ -592,11 +597,17 @@ int bezier_curve(float x1, float y1, float x2, float y2, float x3, float y3, flo
 	    speed = direction * calculate_instant_target_speed_R(d, distance);
 
 		float signed_distance = direction * signed_distance_to_bezier(current_x, current_y, x0, y0, x1, y1, x2, y2, x3, y3, saved_t);
-		lane_correction_term = MIN(fabs(SQR(signed_distance) * (0.008f)), 0.5)*SGN(signed_distance);// this coefficient is tunable
+		float phi_error = get_target_phi(saved_t, x0, y0, x1, y1, x2, y2, x3, y3) + (PI*(1-direction) )/2 - current_phi ;
+		if(phi_error > PI)
+			phi_error -= 2*PI ;
+		else if (phi_error < -PI)
+			phi_error += 2*PI ;
+		float phi_correction_term = (phi_error) * ( 1.5 / ( MAX( ( abs(target_speed_R) + abs(target_speed_L) )/2, 100.0) /500.0) ); // 3 the first coefficient is tunable
+
+		lane_correction_term = MIN(fabs(SQR(signed_distance) * (0.04f)), 0.5)*SGN(signed_distance) + phi_correction_term;// this coefficient is tunable
 		if (d < 0.1*d_1){ // 0.002f;
 			lane_correction_term = 0;
 		}
-
 		if (fabs(radius) < 100000){
 			speed_R = ( speed * (radius + direction * (wheels_spacing / 2.0f)) / radius );
 			speed_L = ( speed * (radius - direction * (wheels_spacing / 2.0f)) / radius );

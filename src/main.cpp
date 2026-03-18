@@ -58,9 +58,9 @@ void strategy()
 
   int commands[] = {
                        //set_position_cmd, 0, 0, 0,
-                      //  bezier_cmd, 0, 0, 280, 350, 280, 350, 400, 1, 0,
+                      bezier_cmd, 550, 0, 250, 1000, 1000, 500, 500, 1, 0,
                       //goto_cmd, 200, 0, 400,
-                       bezier_cmd, 220, 140, 250, 190, 250, 320, 400, 1, 0,
+                      // bezier_cmd, 220, 140, 250, 190, 250, 320, 400, 1, 0,
                        //goto_cmd, 400, 0, 500,
   //                   // goto_cmd, 0, 0, 500,
   //                   // orientate_cmd, 0, 0,
