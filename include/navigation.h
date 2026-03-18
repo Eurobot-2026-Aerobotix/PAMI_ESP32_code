@@ -28,7 +28,15 @@ enum Control_loop {
 	SPEED,
 	POSITION
 };
+typedef struct {
+    float x1,y1,x2,y2,x3,y3;
+    float speed;
+    int direction;
+    float t;
+   // int valid;
+} SavedBezier;
 
+extern SavedBezier savedBezier;
 extern enum Control_loop control_loop_state;
 extern enum Wheel_state wheel_state_R;
 extern enum Wheel_state wheel_state_L;
@@ -44,7 +52,7 @@ extern float starting_phi;
 extern float turning_radius;
 extern int32_t previous_speed_control_time;
 extern int min_distance;
-
+extern int is_valid;
 int move_forward(float distance, float speed, float target_point_x, float target_point_y	);	// will return 0 if target has been reached successfully or 1 if it could not be reached
 int move_backwards(float distance, float speed);
 float calculate_instant_target_speed_R_full(float x, float distance, float ramping__acceleration, float breaking__acceleration);
@@ -62,4 +70,5 @@ void set_target_encoder_counts(int32_t encoder__count_R, int32_t encoder__count_
 void wait_for_obstacle_clearance();
 void wait_for_idle();
 void prepare_emergency_break();
-int bezier_curve(float x1, float y1, float x2, float y2, float x3, float y3, float speed, int direction);
+int bezier_curve(float x1, float y1, float x2, float y2, float x3, float y3, float speed, int direction, float saved_t);
+int resume_bezier(float x1, float y1, float x2, float y2, float x3, float y3, float speed, int direction, float saved_t);
