@@ -140,7 +140,7 @@ void communicationTask(void *pvParameters)
   Serial.println("Communication task started");
   
   // Setup micro-ROS (will handle WiFi connection internally)
-  if (setup_micro_ros("hrissa", "harissaharissa2026", "10.42.2.1", 8888))
+  if (setup_micro_ros("harissa", "harissaharissa2026", "10.42.2.1", 8888))
   {
     Serial.println("micro-ROS setup successful");
   }
