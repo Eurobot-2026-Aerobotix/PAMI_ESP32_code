@@ -588,7 +588,10 @@ void wait_for_obstacle_clearance() {
 			custom_delay(100); // wait for 100 ms before checking again
 		}
 	}
-	while(millis() - strategy_start_time >= max_running_time);
+	while(millis() - strategy_start_time >= max_running_time){
+		control_loop_state = DISACTIVATED;
+		stop_motors();
+	}
 }
 void wait_for_idle(){
 	int start_time = millis();
