@@ -56,8 +56,8 @@ void strategy()
 
   // int commands[] = {
   //                   set_position_cmd, 0, 0, 0,
-  //                   bezier_cmd, 550, 0, 250, 1000, 1000, 500, 500, 1,
-  //                   // goto_cmd, 1000, 0, 500,
+  //                   // bezier_cmd, 550, 0, 250, 1000, 1000, 500, 500, 1,
+  //                   goto_cmd, 1000, 0, 300,
   //                   // goto_cmd, 0, 0, 500,
   //                   // orientate_cmd, 0, 0,
   //                   // set_position_cmd, 357, 199, 0,
@@ -327,7 +327,7 @@ void setup()
   set_PWM_min_max(1023, 250, 250, -260, -260);
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(56.31128188897469, 56.49050072805914, 93.42991389249661);
+  set_wheel_diameter_and_spacing(56.31128188897469, 56.02162957201625, 94.17365039646123);
   HAL_setup();
   
   // Initialize agent LED
