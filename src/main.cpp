@@ -126,6 +126,8 @@ void strategy()
       i += 2;
     }
   }
+  control_loop_state = DISACTIVATED;
+	stop_motors();
   // 3. Send completion signal
   send_action_done(1);
 
