@@ -79,35 +79,36 @@ void strategy()
                      set_position_cmd, 1900, 3000, -90,
                      goto_cmd, 1890, 2460, 400,
                     };
-  int commands[100];
-  for (int i = 0; i < received_floats_count && i < 100; i++){
-    commands[i] = recieved_commands[i];
-  }
-  int num_commands = 0;
-  if (is_yellow){
-    num_commands = sizeof(yellow_commands) / sizeof(yellow_commands[0]);
-    for (int i = 0; i < num_commands && i < 100; i++){
-      commands[i + received_floats_count] = yellow_commands[i];
-    }
-  }else{
-    num_commands = sizeof(blue_commands) / sizeof(blue_commands[0]);
-    for (int i = 0; i < num_commands && i < 100; i++){
-      commands[i + received_floats_count] = blue_commands[i];
-    }
-  }
-  // int commands[] = {
-  //                   //  delay_cmd, first_delay,
-  //                   set_position_cmd, 0, 0, 0,
-  //                   goto_cmd, 1500, 0, 500,
-  //                   //  goto_cmd, 1650, 380, 600,
-  //                   //  goto_cmd, 1922, 50, 600,
-  //                   //  orientate_cmd, 88, 0,
-  //                   //  backwards_cmd, 180, 200,
-  //                   //  set_position_cmd, 1900, 0, 90,
-  //                   //  goto_cmd, 1900, 550, 400,
-  //                   };
+  // int commands[100];
+  // for (int i = 0; i < received_floats_count && i < 100; i++){
+  //   commands[i] = recieved_commands[i];
+  // }
+  // int num_commands = 0;
+  // if (is_yellow){
+  //   num_commands = sizeof(yellow_commands) / sizeof(yellow_commands[0]);
+  //   for (int i = 0; i < num_commands && i < 100; i++){
+  //     commands[i + received_floats_count] = yellow_commands[i];
+  //   }
+  // }else{
+  //   num_commands = sizeof(blue_commands) / sizeof(blue_commands[0]);
+  //   for (int i = 0; i < num_commands && i < 100; i++){
+  //     commands[i + received_floats_count] = blue_commands[i];
+  //   }
+  // }
+  int commands[] = {
+                    //  delay_cmd, first_delay,
+                    set_position_cmd, 0, 0, 0,
+                    goto_cmd, 1000, 0, 300,
+                    goto_cmd, 0, 0, 300,
+                    //  goto_cmd, 1650, 380, 600,
+                    //  goto_cmd, 1922, 50, 600,
+                    //  orientate_cmd, 88, 0,
+                    //  backwards_cmd, 180, 200,
+                    //  set_position_cmd, 1900, 0, 90,
+                    //  goto_cmd, 1900, 550, 400,
+                    };
   
-  // int num_commands = sizeof(commands) / sizeof(commands[0]);
+  int num_commands = sizeof(commands) / sizeof(commands[0]);
   
   // Calculate total commands: ROS commands + yellow/blue strategy commands
   int total_commands = received_floats_count + num_commands;
@@ -244,7 +245,7 @@ void emergencyBreakTask(void *pvParameters)
   
   for (;;)
   {
-    if (( ((get_ultrasonic_distance() < (min_distance * max(max(fabs(current_speed_R), fabs(current_speed_L)), 200.0f)/200) && trajectory != ROTATING && current_x < 1700 && current_x > 5000) || (millis() - strategy_start_time >= max_running_time)) && wheel_state_R != EMERGENCY_BREAK && wheel_state_L != EMERGENCY_BREAK) ){
+    if (( ((get_ultrasonic_distance() < (min_distance * max(max(fabs(current_speed_R), fabs(current_speed_L)), 200.0f)/200) && trajectory != ROTATING) || (millis() - strategy_start_time >= max_running_time)) && wheel_state_R != EMERGENCY_BREAK && wheel_state_L != EMERGENCY_BREAK) ){
       prepare_emergency_break();
     }
 
@@ -472,7 +473,7 @@ void setup()
   Serial.println("All tasks created successfully!");
   control_loop_state = DISACTIVATED;
   delay(1000);
-  strategy_waiting = 0;
+  strategy_waiting = 1;
 }
 
 void loop(){
