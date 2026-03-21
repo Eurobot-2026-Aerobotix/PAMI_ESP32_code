@@ -51,24 +51,24 @@ void strategy()
   int delay_cmd = 0, goto_cmd = 1, orientate_cmd = 2, set_position_cmd = 3, bezier_cmd = 4, wait_for_cmd = 5;
   
   // Use global commands array received from ROS2
-  extern int commands[];
-  extern size_t commands_count;
+  // extern int commands[];
+  // extern size_t commands_count;
 
-  // int commands[] = {
-  //                   set_position_cmd, 0, 0, 0,
-  //                   // bezier_cmd, 550, 0, 250, 1000, 1000, 500, 500, 1,
-  //                   goto_cmd, 1000, 0, 500,
-  //                   goto_cmd, 0, 0, 500,
-  //                   // orientate_cmd, 0, 0,
-  //                   // set_position_cmd, 357, 199, 0,
-  //                   //  goto_cmd, 900, 400, 600,
-  //                   //  goto_cmd, 1650, 380, 600,
-  //                   //  goto_cmd, 1922, 50, 600,
-  //                   //  orientate_cmd, 88, 0,
-  //                   //  goto_cmd, 1900, 550, 400,
-  //                   }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
-  // int num_commands = sizeof(commands) / sizeof(commands[0]);
-  int num_commands = commands_count;
+  int commands[] = {
+                    set_position_cmd, 0, 0, 0,
+                    // bezier_cmd, 550, 0, 250, 1000, 1000, 500, 500, 1,
+                    goto_cmd, 1000, 0, 300,
+                    goto_cmd, 0, 0, 300,
+                    // orientate_cmd, 0, 0,
+                    // set_position_cmd, 357, 199, 0,
+                    //  goto_cmd, 900, 400, 600,
+                    //  goto_cmd, 1650, 380, 600,
+                    //  goto_cmd, 1922, 50, 600,
+                    //  orientate_cmd, 88, 0,
+                    //  goto_cmd, 1900, 550, 400,
+                    }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
+  int num_commands = sizeof(commands) / sizeof(commands[0]);
+  // int num_commands = commands_count;
   int i = 0;
   strategy_start_time = millis();
   // rotate(1800, 0);
@@ -174,7 +174,7 @@ void emergencyBreakTask(void *pvParameters)
   
   for (;;)
   {
-    if (( ((get_ultrasonic_distance() < (min_distance * max(max(fabs(current_speed_R), fabs(current_speed_L)), 200.0f)/200)) && trajectory != ROTATING && current_x > 5000) || (millis() - strategy_start_time >= max_running_time)) && wheel_state_R != EMERGENCY_BREAK && wheel_state_L != EMERGENCY_BREAK)
+    if (( ((get_ultrasonic_distance() < (min_distance * max(max(fabs(current_speed_R), fabs(current_speed_L)), 200.0f)/200)) && trajectory != ROTATING) || (millis() - strategy_start_time >= max_running_time)) && wheel_state_R != EMERGENCY_BREAK && wheel_state_L != EMERGENCY_BREAK)
     {
       prepare_emergency_break();
     }
@@ -405,7 +405,7 @@ void setup()
   Serial.println("All tasks created successfully!");
   control_loop_state = DISACTIVATED;
   delay(1000);
-  strategy_waiting = 0;
+  strategy_waiting = 1;
 }
 
 void loop(){
