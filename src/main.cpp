@@ -196,6 +196,8 @@ void strategy()
       i += 9;
     }
   }
+  control_loop_state = DISACTIVATED;
+	stop_motors();
   // 3. Send completion signal
   send_action_done(1);
 
@@ -242,7 +244,7 @@ void emergencyBreakTask(void *pvParameters)
   
   for (;;)
   {
-    if (( ((get_ultrasonic_distance() < (min_distance * max(max(fabs(current_speed_R), fabs(current_speed_L)), 200.0f)/200) && trajectory != ROTATING && current_x < 1700 && current_x > 500) || (millis() - strategy_start_time >= max_running_time)) && wheel_state_R != EMERGENCY_BREAK && wheel_state_L != EMERGENCY_BREAK) ){
+    if (( ((get_ultrasonic_distance() < (min_distance * max(max(fabs(current_speed_R), fabs(current_speed_L)), 200.0f)/200) && trajectory != ROTATING && current_x < 1700 && current_x > 5000) || (millis() - strategy_start_time >= max_running_time)) && wheel_state_R != EMERGENCY_BREAK && wheel_state_L != EMERGENCY_BREAK) ){
       prepare_emergency_break();
     }
 
