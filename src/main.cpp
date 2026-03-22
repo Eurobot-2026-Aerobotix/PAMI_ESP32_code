@@ -51,24 +51,24 @@ void strategy()
   int delay_cmd = 0, goto_cmd = 1, orientate_cmd = 2, set_position_cmd = 3, bezier_cmd = 4, wait_for_cmd = 5;
   
   // Use global commands array received from ROS2
-  extern int commands[];
-  extern size_t commands_count;
+  // extern int commands[];
+  // extern size_t commands_count;
 
-  // int commands[] = {
-  //                   set_position_cmd, 0, 0, 0,
-  //                   // bezier_cmd, 550, 0, 250, 1000, 1000, 500, 600, 1,
-  //                   goto_cmd, 1000, 200, 450,
-  //                   goto_cmd, 0, 0, 500,
-  //                   // orientate_cmd, 0, 0,
-  //                   // set_position_cmd, 357, 199, 0,
-  //                   //  goto_cmd, 900, 400, 600,
-  //                   //  goto_cmd, 1650, 380, 600,
-  //                   //  goto_cmd, 1922, 50, 600,
-  //                   //  orientate_cmd, 88, 0,
-  //                   //  goto_cmd, 1900, 550, 400,
-  //                   }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
-  // int num_commands = sizeof(commands) / sizeof(commands[0]);
-  int num_commands = commands_count;
+  int commands[] = {
+                    set_position_cmd, 0, 0, 0,
+                    // bezier_cmd, 550, 0, 250, 1000, 1000, 500, 600, 1,
+                    goto_cmd, 1000, 0, 300,
+                    goto_cmd, 0, 0, 300,
+                    // orientate_cmd, 0, 0,
+                    // set_position_cmd, 357, 199, 0,
+                    //  goto_cmd, 900, 400, 600,
+                    //  goto_cmd, 1650, 380, 600,
+                    //  goto_cmd, 1922, 50, 600,
+                    //  orientate_cmd, 88, 0,
+                    //  goto_cmd, 1900, 550, 400,
+                    }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
+  int num_commands = sizeof(commands) / sizeof(commands[0]);
+  // int num_commands = commands_count;
   int i = 0;
   strategy_start_time = millis();
   // rotate(1800, 0);
@@ -147,7 +147,7 @@ void communicationTask(void *pvParameters)
   Serial.println("Communication task started");
   
   // Setup micro-ROS (will handle WiFi connection internally)
-  if (setup_micro_ros("hrissa", "harissaharissa2026", "10.42.2.1", 8888))
+  if (setup_micro_ros("harissa", "harissaharissa2026", "10.42.1.1", 8888))
   {
     Serial.println("micro-ROS setup successful");
   }
@@ -164,7 +164,7 @@ void communicationTask(void *pvParameters)
     } else {
       // If WiFi disconnected, try to reconnect
       Serial.println("WiFi disconnected in task, attempting reconnection...");
-      connect_wifi("hrissa", "harissaharissa2026");
+      connect_wifi("harissa", "harissaharissa2026");
       vTaskDelay(pdMS_TO_TICKS(5000)); // Wait 5 seconds before next attempt
     }
 
@@ -321,7 +321,7 @@ void setup()
   Serial.println("=== PAMI ESP32 Setup ===");
 
   Serial.println("Setting motor pins...");
-  set_motor_pins(22, 26, 19, 18, 23, 17);
+  set_motor_pins(22, 21, 18, 19, 23, 26);
 
   set_ultrasonic_pins(14, 12);
 
@@ -329,11 +329,10 @@ void setup()
   set_encoder_channels(4, 16, 15, 2, 350);
 
   Serial.println("Setting PWM parameters...");
-  set_PWM_min_max(1023, 250, 250, -260, -260);
+  set_PWM_min_max(1023, 240, 210, -240, -210);
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(57.17088766305667, 57.17088766305667, 94.95693363702039);
-  //set_wheel_diameter_and_spacing(57.767349714836084834631884483357, 58.416421059946602641762579814631, 92.938153961874487863117321276497);
+  set_wheel_diameter_and_spacing(56.883849072138595, 58.363460303135795, 92.14690598107886);
   HAL_setup();
   
   // Initialize agent LED
@@ -411,7 +410,7 @@ void setup()
   Serial.println("All tasks created successfully!");
   control_loop_state = DISACTIVATED;
   delay(1000);
-  strategy_waiting = 0;
+  strategy_waiting = 1;
 }
 
 void loop(){
