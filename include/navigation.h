@@ -44,6 +44,7 @@ extern float starting_phi;
 extern float turning_radius;
 extern int32_t previous_speed_control_time;
 extern int min_distance;
+extern float deviation_distance;
 
 int move_forward(float distance, float speed, float target_point_x, float target_point_y	);	// will return 0 if target has been reached successfully or 1 if it could not be reached
 int move_backwards(float distance, float speed);

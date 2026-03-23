@@ -25,6 +25,7 @@ TaskHandle_t commandExecutionTaskHandle;
 TaskHandle_t websocketTaskHandle;
 TaskHandle_t emergencyBreakTaskHandle;
 int websocket=0;
+float deviation_distance;
 
 // Custom strategy implementation
 void strategy()
@@ -55,9 +56,9 @@ void strategy()
   extern size_t commands_count;
 
   // int commands[] = {
-  //                   set_position_cmd, 0, 0, 0,
-  //                   // bezier_cmd, 550, 0, 250, 1000, 1000, 500, 500, 1,
-  //                   goto_cmd, 1000, 0, 500,
+  // //                   set_position_cmd, 0, 0, 0,
+  //                      bezier_cmd, 550, 0, 250, 1000, 1000, 500, 500, 1,
+                       //goto_cmd, 500, 0, 500,
   //                   goto_cmd, 0, 0, 500,
   //                   // orientate_cmd, 0, 0,
   //                   // set_position_cmd, 357, 199, 0,
@@ -66,7 +67,7 @@ void strategy()
   //                   //  goto_cmd, 1922, 50, 600,
   //                   //  orientate_cmd, 88, 0,
   //                   //  goto_cmd, 1900, 550, 400,
-  //                   }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
+                    // }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
   // int num_commands = sizeof(commands) / sizeof(commands[0]);
   int num_commands = commands_count;
   int i = 0;
@@ -318,7 +319,7 @@ void setup()
   Serial.println("Setting motor pins...");
   set_motor_pins(22, 21, 18, 19, 23, 26);
 
-  set_ultrasonic_pins(14, 12);
+  set_ultrasonic_pins(14, 27);
 
   Serial.println("Setting encoder channels...");
   set_encoder_channels(4, 16, 15, 2, 350);
@@ -459,4 +460,5 @@ void loop(){
   // }
   //send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, debugger);
   // custom_delay(10);
+  send_values_to_usart(deviation_distance * 100, 0, 0, 0);
 }
