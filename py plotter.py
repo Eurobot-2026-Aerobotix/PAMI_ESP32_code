@@ -6,7 +6,7 @@ import numpy as np
 import struct
 
 # --- Serial setup ---
-ser = serial.Serial('COM13', 115200, timeout=0.01)  # short timeout to prevent blocking
+ser = serial.Serial('COM15', 115200, timeout=0.01)  # short timeout to prevent blocking
 
 # --- Plot setup ---
 win = pg.GraphicsLayoutWidget(show=True, title="Real-Time ESP32 Data", size=(1850, 1000))

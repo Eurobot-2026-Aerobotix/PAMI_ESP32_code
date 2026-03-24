@@ -96,7 +96,7 @@ float kiP_L = 400;
 volatile float debugger = 0;
 int strategy_start_time = 1000000;
 
-int servo_positions[9] = {0, 130, 48, 85, 50, 15, 110, 50, 130};
+int servo_positions[9] = {0, 135, 70, 110, 70, 15, 120,70,140 };    //0, 130, 48, 85, 50, 15, 110, 50, 130
 bool ultrasonic_blocked = true;
 
 void set_motor_pins(int right_forward, int right_backward, int left_forward, int left_backward, int right_enable, int left_enable)
@@ -361,7 +361,7 @@ void pickup(int pick_right, int pick_left, int up_or_down){
     set_pump_state(1);
     set_EV_states(1 - pick_right, 1 - pick_left);
     ultrasonic_blocked = up_or_down;
-    move_servo(up_or_down? 3 : 1);
+   move_servo(up_or_down? 3 : 1);
     if (up_or_down==1){
         custom_delay(500);
         move_servo(7);
@@ -388,7 +388,7 @@ void putdown(int bechwaya, int nid_lot){
 void letgo(){
     set_pump_state(0);
     //set_EV_states(1, 1);
-    move_servo(5);
+   move_servo(5);
     custom_delay(500);
 }
 void walking_position(int position){
@@ -454,7 +454,7 @@ void custom_delay(int ms)
 }
 void party_time(){
     while(1){
-        move_servo(0);
+      move_servo(0);
         custom_delay(1000);
         move_servo(1);
         custom_delay(1000);
