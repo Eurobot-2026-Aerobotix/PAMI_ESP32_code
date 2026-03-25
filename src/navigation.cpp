@@ -553,6 +553,10 @@ int rotate(float angle, int8_t is_radian){
 }
 int orientate(float orientation, int8_t is_radian)
 {
+	if (wheel_state_R == EMERGENCY_BREAK || wheel_state_L == EMERGENCY_BREAK){
+		emergency_break();
+		return 1;
+	}
 	orientation = (is_radian) ? orientation : deg_to_rad(orientation);
 	int result = 0;
 	wait_for_idle();
@@ -641,6 +645,7 @@ void wait_for_obstacle_clearance() {
 	}
 	if (millis() - strategy_start_time >= max_running_time) {
 		stop_motors();
+		party_time();
 		return;
 	}
 }

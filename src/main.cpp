@@ -50,30 +50,32 @@ void strategy(){
                               pickup_cmd, 1, 1, 0,    // pick up 1 close
                               goto_cmd, 80, 668, 550, 1,
                               orientate_cmd, -90, 0,
-                              putdown_cmd, 1, 1,      // drop 1 close
+                              putdown_cmd, 1, 1,  // drop 1 close
                               goto_cmd, 80, 771, 400, -1,
-                              goto_cmd, 10, 771, 400, -1, 
-                              set_position_cmd, 64, 771, 0, // homing 1'
-                              goto_cmd, 75, 771, 300, 1,
-                              goto_cmd, 175, 708, 300, 1,
+                              orientate_cmd, 0, 0,
+                            // goto_cmd, 10, 771, 400, -1, 
+                              //set_position_cmd, 70, 771, 0, // homing 1'
+                            // goto_cmd, 75, 771, 300, 1,
+                              goto_cmd, 160, 708, 300, 1,
                               walking_position_cmd, 0,
                               orientate_cmd, 20, 0,      // push niggas aside
-                              goto_cmd,195, 715, 300, 1,
-                              goto_cmd, 120, 740, 300, -1,
+                              goto_cmd,180, 715, 300, 1,
+                              goto_cmd, 105, 740, 300, -1,
                               walking_position_cmd, 1,
-                              goto_cmd, 120, 620, 300, -1,
-                              set_position_cmd, 120, 672, 90, // homing 2'
-                              goto_cmd, 120, 740, 300, 1,
+                              goto_cmd, 105, 620, 300, -1,
+                              set_position_cmd, 105, 672, 90, // homing 2'
+                              goto_cmd, 105, 740, 300, 1,
                               walking_position_cmd, 0,
-                              goto_cmd, 220, 740, 400, 1,
+                              goto_cmd, 205, 740, 400, 1,
                               pickup_cmd, 1, 1, 0, // pick up 2 yellow  
-                              goto_cmd, 200, 740, 200, -1,
-                              orientate_cmd, -100, 0,
+                             // goto_cmd, 185, 740, 200, -1,
+                              
+                              //orientate_cmd, -100, 0,
                               goto_cmd, 20, 740, 200, -1,
                               set_position_cmd, 25, 740, 0, // homing 3'
                               goto_cmd, 65, 740, 400, 1,
-                              goto_cmd, 65, 500, 150, 1,
-                              set_position_cmd, 65, 668, -90,
+                             // goto_cmd, 65, 500, 150, 1,
+                              //set_position_cmd, 65, 668, -90,
                               goto_cmd, 65, 1200, 400, -1,
                               goto_cmd, 330, 1200, 500, 1,
                               putdown_cmd, 1, 0,     // drop yellows
@@ -384,22 +386,40 @@ void communicationTask(void *pvParameters)
   }
 }
 
-// void emergencyBreakTask(void *pvParameters)
-// {
-//   const TickType_t xDelay = pdMS_TO_TICKS(30);
-//   TickType_t xLastWakeTime = xTaskGetTickCount();
+void emergencyBreakTask(void *pvParameters)
+{
+  const TickType_t xDelay = pdMS_TO_TICKS(30);
+  TickType_t xLastWakeTime = xTaskGetTickCount();
   
-//   for (;;)
-//   {
-//     if (( (( (!ultrasonic_blocked) && get_ultrasonic_distance() < min_distance && trajectory == STRAIGHT) || (millis() - strategy_start_time >= max_running_time)) && wheel_state_R != EMERGENCY_BREAK && wheel_state_L != EMERGENCY_BREAK) ) 
-//     {
-//    //   prepare_emergency_break();
-//     }
-//       //send_values_to_usart(encoder_count_L, encoder_count_R, current_phi*100,0);
+  for (;;)
+  {
+    if (( (( (!ultrasonic_blocked) && get_ultrasonic_distance() < min_distance && trajectory == STRAIGHT) || (millis() - strategy_start_time >= max_running_time)) && wheel_state_R != EMERGENCY_BREAK && wheel_state_L != EMERGENCY_BREAK) ) 
+    {
+     prepare_emergency_break();
+    }
+      //send_values_to_usart(encoder_count_L, encoder_count_R, current_phi*100,0);
 
-//     vTaskDelayUntil(&xLastWakeTime, xDelay);
-//   }
-// }
+    vTaskDelayUntil(&xLastWakeTime, xDelay);
+  }
+}
+
+void emergencyBreakTaskWithoutUltrason(void *pvParameters)
+{
+  const TickType_t xDelay = pdMS_TO_TICKS(30);
+  TickType_t xLastWakeTime = xTaskGetTickCount();
+
+  for (;;)
+  {
+    if ((millis() - strategy_start_time >= max_running_time) &&
+        wheel_state_R != EMERGENCY_BREAK &&
+        wheel_state_L != EMERGENCY_BREAK)
+    {
+      prepare_emergency_break();
+    }
+
+    vTaskDelayUntil(&xLastWakeTime, xDelay);
+  }
+}
 
 void PIDTask(void *pvParameters){
   const TickType_t xDelay = pdMS_TO_TICKS(1);
@@ -596,17 +616,17 @@ void websocketTask(void *pvParameters)
   Serial.println("Creating tasks...");
   
   // Create communication task
-  xTaskCreatePinnedToCore(
-      communicationTask,
-      "communicationTask",
-      8192,
-      NULL,
-      1, // Lower priority
-      &communicationTaskHandle,
-      0); // Pin to core 0
+  // xTaskCreatePinnedToCore(
+  //     communicationTask,
+  //     "communicationTask",
+  //     8192,
+  //     NULL,
+  //     1, // Lower priority
+  //     &communicationTaskHandle,
+  //     0); // Pin to core 0
 
-  delay(500); // Delay between task creation
-  Serial.println("Communication task created");
+  // delay(500); // Delay between task creation
+  // Serial.println("Communication task created");
 
 
   xTaskCreatePinnedToCore(
@@ -630,14 +650,14 @@ void websocketTask(void *pvParameters)
       1); // Pin to core 1
   Serial.println("PID task created");
 
-  // xTaskCreatePinnedToCore(
-  //     emergencyBreakTask,
-  //     "emergencyBreakTask",
-  //     2048, // Stack size
-  //     NULL,
-  //     2, // High priority
-  //     &emergencyBreakTaskHandle,
-  //     1); // Pin to core 1
+  xTaskCreatePinnedToCore(
+      emergencyBreakTaskWithoutUltrason,
+      "emergencyBreakTask",
+      2048, // Stack size
+      NULL,
+      2, // High priority
+      &emergencyBreakTaskHandle,
+      1); // Pin to core 1
 
   // Create WebSocket task if enabled
  /* if (websocket_enabled == 1) {
