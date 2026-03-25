@@ -181,7 +181,9 @@ void strategy(){
   //int num_commands = commands_count;
   //int num_commands = sizeof(commands) / sizeof(commands[0]); // For testing, replace with commands_count in production
   if (communicationTaskHandle != NULL) {
-      vTaskSuspend(communicationTaskHandle);
+      vTaskDelete(communicationTaskHandle);
+      communicationTaskHandle = NULL;
+      Serial.println("Communication task deleted, strategy is now in control.");
   }
   int i = 0;
   strategy_start_time = millis();
@@ -356,7 +358,7 @@ void communicationTask(void *pvParameters)
   Serial.println("Communication task started");
   
   // Setup micro-ROS (will handle WiFi connection internally)
-  if (setup_micro_ros("hrissa", "harissaharissa2026", "10.42.2.1", 8888))
+  if (setup_micro_ros("harissa", "harissaharissa2026", "10.42.1.1", 8888))
   {
     Serial.println("micro-ROS setup successful");
   }
@@ -611,17 +613,17 @@ void websocketTask(void *pvParameters)
   Serial.println("Creating tasks...");
   
   // Create communication task
-  // xTaskCreatePinnedToCore(
-  //     communicationTask,
-  //     "communicationTask",
-  //     8192,
-  //     NULL,
-  //     1, // Lower priority
-  //     &communicationTaskHandle,
-  //     0); // Pin to core 0
+  xTaskCreatePinnedToCore(
+      communicationTask,
+      "communicationTask",
+      8192,
+      NULL,
+      1, // Lower priority
+      &communicationTaskHandle,
+      0); // Pin to core 0
 
-  // delay(500); // Delay between task creation
-  // Serial.println("Communication task created");
+  delay(500); // Delay between task creation
+  Serial.println("Communication task created");
 
 
   xTaskCreatePinnedToCore(
@@ -672,7 +674,7 @@ void websocketTask(void *pvParameters)
   Serial.println("All tasks created successfully!");
   control_loop_state = DISACTIVATED;
   delay(100);
-  strategy_waiting = true; // Start the strategy after setup;
+  strategy_waiting = false; // Start the strategy after setup;
 
 }
 void loop(){
