@@ -20,12 +20,22 @@ float deceleration_offset = 10;// eli ybda menou deceleratiuon //40
 float deceleration_offset_fast = 10;
 float acc_linearization_coef = 15;
 int8_t reached_destination = 1;
+bool first_motion_softstart_done = false;
 
 int move_forward(float distance, float speed, float target_x, float target_y, float direction){
 	
+    // Suspend communication task to prevent interference during navigation
+    extern TaskHandle_t communicationTaskHandle;
+    if (communicationTaskHandle != NULL) {
+        vTaskSuspend(communicationTaskHandle);
+    }
+    
 	distance = fabs(distance);
 
 	speed = fabs(speed);
+	if (!first_motion_softstart_done){
+		speed = MIN(speed, 320.0f);
+	}
 	wait_for_idle();
 	reset_speed_control_variables();
 	direction_R = 1;
@@ -72,6 +82,10 @@ int move_forward(float distance, float speed, float target_x, float target_y, fl
 			wheel_state_L = CONTROLLED_BREAK;
 		}else if (wheel_state_R == EMERGENCY_BREAK){
 			emergency_break();
+            extern TaskHandle_t communicationTaskHandle;
+            if (communicationTaskHandle != NULL) {
+                vTaskResume(communicationTaskHandle);
+            }
 			return 0;
 		}
 
@@ -91,14 +105,6 @@ int move_forward(float distance, float speed, float target_x, float target_y, fl
 		if (distance_to_target < 100){
 			reached_destination = 1;
 		}
-		if (direction == -1 && wheel_diameter_L == CRUISING && x > distance/2 && fabs(PWM_L)/(MAX(fabs(current_speed_L), 10)) > 3 && current_y > 1150){
-			wheel_state_R = EMERGENCY_BREAK;
-			wheel_state_L = EMERGENCY_BREAK;
-			stop_motors();
-			custom_delay(200);
-			return 0;
-		}
-
 	}
 	// completing the last part of distance separately, so the break happens on point
 	// calculating the distance to move that  results in the robot being the closest to target point, i can't explain the math in code unfortunately
@@ -135,6 +141,10 @@ int move_forward(float distance, float speed, float target_x, float target_y, fl
 		}
 		if (wheel_state_R == EMERGENCY_BREAK){
 			emergency_break();
+            extern TaskHandle_t communicationTaskHandle;
+            if (communicationTaskHandle != NULL) {
+                vTaskResume(communicationTaskHandle);
+            }
 			return 0;
 		}
 	}
@@ -143,6 +153,11 @@ int move_forward(float distance, float speed, float target_x, float target_y, fl
 	set_target_encoder_counts(encoder_count_R, encoder_count_L - (phi_error)*wheels_spacing*CPR / (wheel_diameter_L*PI) ); // the second part is there to fix any last minute fuck ups, concerning the phi
 	wheel_state_R = DEAD_STOP;
 	wheel_state_L = DEAD_STOP;
+	first_motion_softstart_done = true;
+    extern TaskHandle_t communicationTaskHandle;
+    if (communicationTaskHandle != NULL) {
+        vTaskResume(communicationTaskHandle);
+    }
 	return 0;
 }
 
@@ -406,7 +421,7 @@ float calculate_instant_target_speed_R(float x, float distance)
 }
 float calculate_instant_target_speed_L(float x, float distance)
 {
-	return calculate_instant_target_speed_R_full(x, distance, ramping_acceleration, breaking_acceleration);
+	return calculate_instant_target_speed_L_full(x, distance, ramping_acceleration, breaking_acceleration);
 }
 float calculate_instant_target_phi(float x, float distance)
 {
@@ -549,20 +564,33 @@ int orientate(float orientation, int8_t is_radian)
 }
 int go_to(float x, float y, float speed, float direction)
 {   
-	float target_angle = get_angle_to(x, y);
+    // Suspend communication task for the entire navigation sequence
+    extern TaskHandle_t communicationTaskHandle;
+    if (communicationTaskHandle != NULL) {
+        vTaskSuspend(communicationTaskHandle);
+    }
+    
     wait_for_idle();
+	float target_angle = get_angle_to(x, y);
 	if(direction == -1){
 		target_angle = normalize_angle(target_angle - PI);
 	}
    while (fabs(normalize_angle(target_angle - current_phi)) > deg_to_rad(2))
 	{
 		if (orientate(target_angle, 1)){
+            if (communicationTaskHandle != NULL) {
+                vTaskResume(communicationTaskHandle);
+            }
 			return 1;
 		}
 		wait_for_idle();
 	}
 	int result = move_forward(fabs(get_distance_to(x, y)), speed, x, y, direction) * 2; // why *2 ? cause fuck you
 
+    // Resume communication task
+    if (communicationTaskHandle != NULL) {
+        vTaskResume(communicationTaskHandle);
+    }
 	return result;
 }
 void emergency_break()

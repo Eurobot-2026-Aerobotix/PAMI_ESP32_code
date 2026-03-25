@@ -9,6 +9,7 @@ int32_t previous_encoder_count_R = 0;
 int32_t previous_encoder_count_L = 0;
 int32_t previous_encoder_timer_CNT_R = 0;
 int32_t previous_encoder_timer_CNT_L = 0;
+bool odometry_encoder_initialized = false;
 
 void update_speed(float dt){
     current_speed_L = current_speed_L*0.95 + 0.05*(encoder_count_L - previous_encoder_count_L)*(wheel_diameter_L * PI / CPR * directionL) / dt;
@@ -16,6 +17,14 @@ void update_speed(float dt){
 	speedCalculationPreviousTime = micros();
 }
 void update_encoder_counts(){
+    if (!odometry_encoder_initialized){
+        previous_encoder_timer_CNT_R = encoder_get_R();
+        previous_encoder_timer_CNT_L = encoder_get_L();
+        previous_encoder_count_R = encoder_count_R;
+        previous_encoder_count_L = encoder_count_L;
+        odometry_encoder_initialized = true;
+        return;
+    }
 
 	int32_t delta = encoder_get_R() - previous_encoder_timer_CNT_R;
 	delta = (delta>15000)? delta-32768 : (delta<-15000)? delta+32768 : delta; // handling overflow
@@ -60,6 +69,7 @@ void reset_position(){
 	current_phi = 0;
 	absolute_phi = 0;
 	phi_offset = 0;
+    odometry_encoder_initialized = false;
 }
 void set_position(float current__x, float current__y, float current__phi, float absolute__phi){
 	current_x = current__x;
@@ -69,6 +79,8 @@ void set_position(float current__x, float current__y, float current__phi, float 
 	// Calculate offset between desired angle and current encoder angle
 	float encoder_phi = ( ticks_to_distance(encoder_get_R(), wheel_diameter_R) - ticks_to_distance(encoder_get_L(), wheel_diameter_L) )/wheels_spacing;
 	phi_offset = absolute__phi - encoder_phi;
+    previous_encoder_count_R = encoder_count_R;
+    previous_encoder_count_L = encoder_count_L;
 }
 float get_distance_to(float x, float y){
 	return sqrt(SQR(current_x - x) + SQR(current_y - y));

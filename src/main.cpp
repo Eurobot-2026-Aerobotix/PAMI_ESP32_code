@@ -137,7 +137,7 @@ void strategy(){
                              // orientate_cmd, -30, 0,
                               goto_cmd, 200, 740, 200, -1,
                               goto_cmd, 270, 690, 300, 1,
-                              goto_cmd, 70, 690, 200, -1,
+                              goto_cmd, 20, 690, 200, -1,
                               set_position_cmd, 25, 690, 0, // homing 3'
                               goto_cmd, 65, 690, 400, 1,
                               goto_cmd, 65, 500, 150, 1,
@@ -623,7 +623,7 @@ void websocketTask(void *pvParameters)
   set_encoder_channels(2, 15, 4, 16, 1400); // badalthom  2, 15, 4, 16, 
 
   Serial.println("Setting PWM parameters...");
-  set_ultrasonic_pins(34, 14); // badalthom //14
+  set_ultrasonic_pins(14, 34); // badalthom //14
 
   set_PWM_min_max(1023, 100, 100, -100, -100); //yess    //130  120
 
@@ -647,18 +647,18 @@ void websocketTask(void *pvParameters)
 
   Serial.println("Creating tasks...");
   
- // Create tasks with lower stack sizes first
-    xTaskCreatePinnedToCore(
-     communicationTask,
+  // Create communication task
+  xTaskCreatePinnedToCore(
+      communicationTask,
       "communicationTask",
       8192,
       NULL,
       1, // Lower priority
-       &communicationTaskHandle,
-       0); // Pin to core 0
+      &communicationTaskHandle,
+      0); // Pin to core 0
 
-   delay(500); // Delay between task creation
-   Serial.println("Communication task created");
+  delay(500); // Delay between task creation
+  Serial.println("Communication task created");
 
 
   xTaskCreatePinnedToCore(
@@ -668,7 +668,7 @@ void websocketTask(void *pvParameters)
       NULL,
       1, // Lower priority
       &commandExecutionTaskHandle,
-      1); // Pin to core 0
+      0); // Pin to core 0
   Serial.println("Command execution task created");
 
   // Create PID task last (it might be causing issues)
@@ -708,7 +708,7 @@ void websocketTask(void *pvParameters)
 */
   Serial.println("All tasks created successfully!");
   control_loop_state = DISACTIVATED;
-  delay(1000);
+  delay(100);
   strategy_waiting = true; // Start the strategy after setup;
 
 }
