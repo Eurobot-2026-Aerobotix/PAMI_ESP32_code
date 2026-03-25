@@ -1,5 +1,7 @@
 #include "odometry.h"
 
+static portMUX_TYPE odom_lock = portMUX_INITIALIZER_UNLOCKED;
+
 float current_x = 0;
 float current_y = 0;
 double current_phi = 0;
@@ -39,47 +41,100 @@ void update_position(float dt){
 	previous_encoder_count_R = encoder_count_R;
 	previous_encoder_count_L = encoder_count_L;
 
-	double previous_absolute_phi = absolute_phi;
-	double encoder_phi = ( ticks_to_distance(encoder_count_R, wheel_diameter_R) - ticks_to_distance(encoder_count_L, wheel_diameter_L) )/wheels_spacing;
-	absolute_phi = encoder_phi + phi_offset;
+    double previous_absolute_phi;
+    double new_absolute_phi;
+    double mid_phi;
 
-	current_x += dC*cos( ( previous_absolute_phi + absolute_phi ) / 2 );
-	current_y += dC*sin( ( previous_absolute_phi + absolute_phi ) / 2 );
+    portENTER_CRITICAL(&odom_lock);
+    previous_absolute_phi = absolute_phi;
+    double encoder_phi = 0.0;
+    if (fabs(wheels_spacing) > 1e-6) {
+        encoder_phi = (ticks_to_distance(encoder_count_R, wheel_diameter_R) - ticks_to_distance(encoder_count_L, wheel_diameter_L)) / wheels_spacing;
+    }
+    new_absolute_phi = encoder_phi + phi_offset;
+    mid_phi = (previous_absolute_phi + new_absolute_phi) / 2.0;
 
-	current_phi = absolute_phi;
-	while (current_phi > PI){
-		current_phi -= 2*PI;
-	}
-	while (current_phi <= -PI){
-		current_phi += 2*PI;
-	}
+    if (!isfinite(mid_phi) || !isfinite(dC) || fabs(mid_phi) > 1e6 || fabs(dC) > 1e6) {
+        mid_phi = 0.0;
+        new_absolute_phi = 0.0;
+        dC = 0.0;
+    }
+
+    absolute_phi = new_absolute_phi;
+    current_phi = absolute_phi;
+    while (current_phi > PI){
+        current_phi -= 2*PI;
+    }
+    while (current_phi <= -PI){
+        current_phi += 2*PI;
+    }
+    portEXIT_CRITICAL(&odom_lock);
+
+    float dC_f = (float)dC;
+    float mid_phi_f = (float)mid_phi;
+    float dx = dC_f * cosf(mid_phi_f);
+    float dy = dC_f * sinf(mid_phi_f);
+    if (!isfinite(dx) || !isfinite(dy)) {
+        dx = 0.0f;
+        dy = 0.0f;
+    }
+
+    portENTER_CRITICAL(&odom_lock);
+    current_x += dx;
+    current_y += dy;
+    portEXIT_CRITICAL(&odom_lock);
 }
 void reset_position(){
+    portENTER_CRITICAL(&odom_lock);
 	current_x = 0;
 	current_y = 0;
 	current_phi = 0;
 	absolute_phi = 0;
 	phi_offset = 0;
+    portEXIT_CRITICAL(&odom_lock);
 }
 void set_position(float current__x, float current__y, float current__phi, float absolute__phi){
+    portENTER_CRITICAL(&odom_lock);
 	current_x = current__x;
 	current_y = current__y;
 	current_phi = current__phi;
 	absolute_phi = absolute__phi;
 	// Calculate offset between desired angle and current encoder angle
-	float encoder_phi = ( ticks_to_distance(encoder_get_R(), wheel_diameter_R) - ticks_to_distance(encoder_get_L(), wheel_diameter_L) )/wheels_spacing;
+    float encoder_phi = 0.0f;
+    if (fabs(wheels_spacing) > 1e-6) {
+        encoder_phi = (ticks_to_distance(encoder_get_R(), wheel_diameter_R) - ticks_to_distance(encoder_get_L(), wheel_diameter_L)) / wheels_spacing;
+    }
 	phi_offset = absolute__phi - encoder_phi;
+    portEXIT_CRITICAL(&odom_lock);
 }
 float get_distance_to(float x, float y){
-	return sqrt(SQR(current_x - x) + SQR(current_y - y));
+    float x_local;
+    float y_local;
+    portENTER_CRITICAL(&odom_lock);
+    x_local = current_x;
+    y_local = current_y;
+    portEXIT_CRITICAL(&odom_lock);
+    return sqrt(SQR(x_local - x) + SQR(y_local - y));
 }
 float get_arc_distance_to(float target_point__x, float target_point__y, float center_point__x, float center_point__y, float R){
-	float projection_angle = atan2(current_y - center_point__y , current_x - center_point__x);
+    float x_local;
+    float y_local;
+    portENTER_CRITICAL(&odom_lock);
+    x_local = current_x;
+    y_local = current_y;
+    portEXIT_CRITICAL(&odom_lock);
+    float projection_angle = atan2(y_local - center_point__y , x_local - center_point__x);
 	float target_angle = atan2(target_point__y - center_point__y , target_point__x - center_point__x);
 	return fabs(R * (projection_angle - target_angle));
 }
 float get_angle_to(float x, float y){
-	return atan2(y - current_y, x - current_x);
+    float x_local;
+    float y_local;
+    portENTER_CRITICAL(&odom_lock);
+    x_local = current_x;
+    y_local = current_y;
+    portEXIT_CRITICAL(&odom_lock);
+    return atan2(y - y_local, x - x_local);
 }
 double ticks_to_distance(int32_t ticks, double wheel_diameter){
 	return (ticks*wheel_diameter*PI/CPR);

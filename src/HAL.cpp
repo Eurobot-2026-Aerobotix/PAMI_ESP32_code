@@ -1,4 +1,5 @@
 #include "HAL.h"
+#include "freertos/semphr.h"
 
 // motor pins
 int motorLa;
@@ -26,6 +27,7 @@ int electrovalve_L_pin;
 int pump_pin;
 int servo_pin;
 Servo servo;
+SemaphoreHandle_t motor_io_mutex = NULL;
 
 // global constants
 int PWM_R_forward_min;
@@ -142,11 +144,22 @@ void set_wheel_diameter_and_spacing(double wheel__diameter_R, double wheel__diam
 }
 void run_right_motor()
 {   
-    
+    if (motor_io_mutex == NULL)
+    {
+        return;
+    }
+    if (xSemaphoreTake(motor_io_mutex, pdMS_TO_TICKS(5)) != pdTRUE)
+    {
+        return;
+    }
+
     int pwm = (PWM_R > 0) ? ((PWM_R < PWM_R_forward_min) ? 0 : PWM_R) : ((PWM_R > PWM_R_backward_min) ? 0 : PWM_R);
     pwm = constrain(pwm, -PWM_max, PWM_max);
-    
-    ledcWrite(motorREN_channel, abs(pwm));
+
+    if (motorREN_channel >= 0 && motorREN_channel <= 15)
+    {
+        ledcWrite(motorREN_channel, abs(pwm));
+    }
     if (pwm > 0){
         digitalWrite(motorRa, 1);
         digitalWrite(motorRb, 0);
@@ -158,12 +171,26 @@ void run_right_motor()
         digitalWrite(motorRa, 0);
         digitalWrite(motorRb, 0);
     }
+
+    xSemaphoreGive(motor_io_mutex);
 }
 void run_left_motor()
 {
+    if (motor_io_mutex == NULL)
+    {
+        return;
+    }
+    if (xSemaphoreTake(motor_io_mutex, pdMS_TO_TICKS(5)) != pdTRUE)
+    {
+        return;
+    }
+
     int pwm = (PWM_L > 0) ? ((PWM_L < PWM_L_forward_min) ? 0 : PWM_L) : ((PWM_L > PWM_L_backward_min) ? 0 : PWM_L);
     pwm = constrain(pwm, -PWM_max, PWM_max);
-    ledcWrite(motorLEN_channel, abs(pwm));
+    if (motorLEN_channel >= 0 && motorLEN_channel <= 15)
+    {
+        ledcWrite(motorLEN_channel, abs(pwm));
+    }
     if (pwm > 0){
 
         digitalWrite(motorLa, 1);
@@ -176,6 +203,8 @@ void run_left_motor()
         digitalWrite(motorLa, 0);
         digitalWrite(motorLb, 0);
     }
+
+    xSemaphoreGive(motor_io_mutex);
 }
 void set_target_speeds(float target__speed_R, float target__speed_L)
 {
@@ -402,6 +431,11 @@ void prepare_servo_up(){
 }
 void HAL_setup()
 {
+    if (motor_io_mutex == NULL)
+    {
+        motor_io_mutex = xSemaphoreCreateMutex();
+    }
+
     pinMode(motorRa, OUTPUT);
     pinMode(motorRb, OUTPUT);
     pinMode(motorLa, OUTPUT);
@@ -423,8 +457,8 @@ void HAL_setup()
     servo.attach(servo_pin);
     move_servo(0);
 
-    motorREN_channel = 8;
-    motorLEN_channel = 9;
+    motorREN_channel = 0;
+    motorLEN_channel = 1;
     ledcSetup(motorREN_channel, 20000, 10);
     ledcSetup(motorLEN_channel, 20000, 10);
     ledcAttachPin(motorREN, motorREN_channel);

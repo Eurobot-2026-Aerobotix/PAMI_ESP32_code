@@ -242,7 +242,6 @@ int bezier_curve(float x1, float y1, float x2, float y2, float x3, float y3, flo
 	acc_linearization_coef = sqrt(d_1);
 
 	wait_for_idle();
-	delay(200);
 	reset_speed_control_variables();
 
 	direction_R = 1;

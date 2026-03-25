@@ -1,5 +1,7 @@
 #include "communication.h"
 #include <std_msgs/msg/float32_multi_array.h>
+#include <stdlib.h>
+#include <string.h>
 
 // Micro-ROS name constant
 
@@ -44,28 +46,34 @@ const unsigned long WIFI_CHECK_INTERVAL = 5000; // Check every 5 seconds
 const int MAX_WIFI_RETRY = 10;
 
 // Store WiFi credentials for reconnection
-static String stored_wifi_ssid = "";
-static String stored_wifi_password = "";
+static char stored_wifi_ssid[33] = {0};
+static char stored_wifi_password[65] = {0};
 bool pami_status=false;
 // WiFi connection function with retry logic
 bool connect_wifi(const char *ssid, const char *password) {
     // Store credentials for reconnection
-    stored_wifi_ssid = String(ssid);
-    stored_wifi_password = String(password);
+    strncpy(stored_wifi_ssid, ssid, sizeof(stored_wifi_ssid) - 1);
+    stored_wifi_ssid[sizeof(stored_wifi_ssid) - 1] = '\0';
+    strncpy(stored_wifi_password, password, sizeof(stored_wifi_password) - 1);
+    stored_wifi_password[sizeof(stored_wifi_password) - 1] = '\0';
     
     Serial.print("Connecting to WiFi: ");
     Serial.println(ssid);
     
-    WiFi.disconnect(true);
-    WiFi.mode(WIFI_STA);
-    
-    // Disable WiFi sleep for reliable real-time communication
-    WiFi.setSleep(false);
-    
-    // Configure WiFi to be more aggressive with reconnection
-    WiFi.setAutoReconnect(true);
-    WiFi.persistent(false);
-    
+    if (WiFi.status() == WL_CONNECTED) {
+        return true;
+    }
+
+    // Configure WiFi stack once; repeated hard disconnect/reinit can destabilize the driver.
+    static bool wifi_configured = false;
+    if (!wifi_configured) {
+        WiFi.mode(WIFI_STA);
+        WiFi.setSleep(false);
+        WiFi.setAutoReconnect(true);
+        WiFi.persistent(false);
+        wifi_configured = true;
+    }
+
     WiFi.begin(ssid, password);
     
     int retry_count = 0;
@@ -74,16 +82,11 @@ bool connect_wifi(const char *ssid, const char *password) {
         Serial.print(".");
         retry_count++;
         
-        // If connection attempt fails, try again
         if (retry_count % 5 == 0) {
             Serial.println("\nRetrying connection...");
-            WiFi.disconnect();
-            delay(100);
-            WiFi.begin(ssid, password);
         }
     }
     
-    // Reduced stabilization time from 2000ms to 500ms
     if (WiFi.status() != WL_CONNECTED) {
         Serial.println("\nWaiting for WiFi to stabilize...");
         delay(500);
@@ -396,6 +399,14 @@ void destroy_entities()
         Serial.print("WARN: Failed to destroy status service, code: ");
         Serial.println(rc);
     }
+
+    // Free dynamic string storage used by status service responses.
+    if (status_res.message.data != NULL) {
+        free(status_res.message.data);
+        status_res.message.data = NULL;
+        status_res.message.size = 0;
+        status_res.message.capacity = 0;
+    }
     
     // Free allocated memory for strategy message
     if (strategy_msg.data.data != NULL) {
@@ -495,17 +506,27 @@ void strategy_callback(const void *msgin)
 void status_service_callback(const void *req, void *res)
 {
     std_srvs__srv__Trigger_Response *response = (std_srvs__srv__Trigger_Response *)res;
-    static char ready_msg[] = "PAMI is ready";
-    static char busy_msg[] = "PAMI is busy";
+    (void)req;
     
     // Set response success to pami_status
     response->success = pami_status;
     
-    // Use static storage to avoid heap churn in frequently-called service callbacks.
-    char *msg = pami_status ? ready_msg : busy_msg;
-    response->message.data = msg;
-    response->message.size = strlen(msg);
-    response->message.capacity = strlen(msg) + 1;
+    const char *msg = pami_status ? "PAMI is ready" : "PAMI is busy";
+    size_t needed = strlen(msg) + 1;
+    if (response->message.data == NULL || response->message.capacity < needed) {
+        char *new_buf = (char *)realloc(response->message.data, needed);
+        if (new_buf == NULL) {
+            response->message.data = NULL;
+            response->message.size = 0;
+            response->message.capacity = 0;
+            Serial.println("Status service response allocation failed");
+            return;
+        }
+        response->message.data = new_buf;
+        response->message.capacity = needed;
+    }
+    memcpy(response->message.data, msg, needed);
+    response->message.size = needed - 1;
     
     Serial.print("Status service called - returning: ");
     Serial.println(pami_status ? "true" : "false");

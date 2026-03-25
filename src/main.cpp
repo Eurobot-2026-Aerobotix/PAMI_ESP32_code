@@ -44,73 +44,6 @@ void strategy(){
   int goto_cmd = 0, orientate_cmd = 1, set_position_cmd = 2, pickup_cmd = 3, putdown_cmd = 4, walking_position_cmd = 5, prepare_cmd = 6 , letgo_cmd = 7, go_backward_cmd = 8, forward_cmd = 9, move_linear_cmd = 10, rotate_cmd = 11, party_time_cmd = 12, fix_x_cmd = 13, delay_cmd = 14, print_analog12_cmd = 15; 
 
   static const int master_cina_yellow[] = { 
-                            //  set_position_cmd, 66, 680, 90,
-                            //   goto_cmd, 66, 1105, 550, 1,
-                            //    goto_cmd, 150, 1105, 400, 1,
-                            //  pickup_cmd, 1, 1, 0,    // pick up 1 close
-                            //   goto_cmd, 80, 668, 450, 1,
-                            //   orientate_cmd, -90, 0,
-                            //  putdown_cmd, 1, 1,      // drop 1 close
-                            //   goto_cmd, 80, 771, 400, -1,
-                            //   goto_cmd, 10, 771, 400, -1, 
-                            //   set_position_cmd, 64, 771, 0, // homing 1'
-                            //   goto_cmd, 75, 771, 300, 1,
-                            //   goto_cmd, 175, 708, 300, 1,
-                            //   walking_position_cmd, 0,
-                            //   orientate_cmd, 20, 0,      // push niggas aside
-                            //   goto_cmd,195, 715, 300, 1,
-                            //   goto_cmd, 30, 715, 300, -1,
-                            //   walking_position_cmd, 1,
-                            //  // goto_cmd, 120, 600, 300, -1,
-                            //  // set_position_cmd, 120, 672, 90, // homing 2'
-                            //    set_position_cmd, 90, 715, 0,
-                            //  // goto_cmd, 90, 740, 300, 1,
-                            //   goto_cmd, 120, 740, 400, 1,
-                            //   walking_position_cmd, 0,
-                            //   goto_cmd, 220, 740, 400, 1,
-                            //   pickup_cmd, 1, 1, 0, // pick up 2 yellow  
-                            //  // orientate_cmd, -30, 0,
-                            //   goto_cmd, 200, 740, 200, -1,
-                            //   goto_cmd, 270, 690, 300, 1,
-                            //   goto_cmd,30, 690, 200, -1,
-                            //   set_position_cmd, 25, 690, 0, // homing 3'
-                            //   goto_cmd, 65, 690, 400, 1,
-                            //   goto_cmd, 65, 500, 150, 1,
-                            //   set_position_cmd, 65, 668, -90,
-                            //   goto_cmd, 65, 1200, 500, -1,
-                            //   goto_cmd, 330, 1200, 500, 1,
-                            //   putdown_cmd, 1, 0,     // drop yellows
-                            //   goto_cmd,10, 1200, 250, -1,
-                            //   set_position_cmd, 25, 1200, 0, // homing 3
-                            //   goto_cmd, 35, 1200, 400, 1,
-                            //   goto_cmd, 40, 1365, 500, 1,
-                            //   goto_cmd, 80, 1365, 500, 1,
-                            //   pickup_cmd, 1, 1, 0, // pick up 2 far
-                            //   goto_cmd, -30, 1365, 500, -1,
-                            //   set_position_cmd, 25, 1365, 0, // homing 5
-                            //   goto_cmd, 50, 1365, 400, 1,
-                            //   goto_cmd, 100, 720, 550, 1,
-                            //   goto_cmd, 310, 700, 500, -1,
-                            //   orientate_cmd, -90, 0,
-                            //   goto_cmd, 310, 600, 500, 1,
-                            //    putdown_cmd, 1, 1,      //drop 2 far
-                            //   set_position_cmd, 300, 668, -90, // homing 3
-                            //   goto_cmd, 300, 1200, 200, -1,
-                            //   goto_cmd, 300, 1100, 500, 1,
-                            //   walking_position_cmd, 0,
-                            //   goto_cmd, 300, 1220, 500, 1, // throwing niggas
-                            //   pickup_cmd, 1, 1, 0,
-                            //   putdown_cmd, 1, 1,
-                            //   goto_cmd, 300, 1170, 500, -1,
-                            //   walking_position_cmd, 1,
-                            //   goto_cmd, 120, 1170, 500, 1,
-                            //   goto_cmd, 120, 1300, 500, 1,
-                            //   goto_cmd, 380, 1300, 500, 1,  
-                            //   goto_cmd, 140, 1300, 450, -1,
-                            //   set_position_cmd, 140, 1300, 0,
-                            //   goto_cmd, 340, 1500, 500, 1,
-                            //   party_time_cmd
-
                              set_position_cmd, 66, 680, 90,
                               goto_cmd, 66, 1105, 550, 1,
                                goto_cmd, 160, 1105, 400, 1,
@@ -125,7 +58,7 @@ void strategy(){
                               goto_cmd, 175, 708, 300, 1,
                               walking_position_cmd, 0,
                               orientate_cmd, 20, 0,      // push niggas aside
-                                   goto_cmd,195, 715, 300, 1,
+                              goto_cmd,195, 715, 300, 1,
                               goto_cmd, 120, 740, 300, -1,
                                walking_position_cmd, 1,
                               goto_cmd, 120, 620, 300, -1,
@@ -261,6 +194,10 @@ void strategy(){
     Serial.println(i);
     int command_type = commands[i];
     if (command_type == goto_cmd){
+      if (i + 4 >= num_commands) {
+        Serial.println("[ERR] goto_cmd truncated, stopping strategy");
+        break;
+      }
       int x = commands[i + 1];
       int y = commands[i + 2];
       int speed = commands[i + 3];
@@ -275,6 +212,10 @@ void strategy(){
       i += 5;
     }
     else if (command_type == rotate_cmd) {
+      if (i + 2 >= num_commands) {
+        Serial.println("[ERR] rotate_cmd truncated, stopping strategy");
+        break;
+      }
       int angle = commands[i + 1];
       int is_radian = commands[i + 2];
       Serial.printf("[CMD] rotate_cmd: angle=%d, is_radian=%d\n", angle, is_radian);
@@ -283,6 +224,10 @@ void strategy(){
       i += 3;
     }
     else if (command_type == orientate_cmd){
+      if (i + 2 >= num_commands) {
+        Serial.println("[ERR] orientate_cmd truncated, stopping strategy");
+        break;
+      }
       int angle = commands[i + 1];
       int is_radian = commands[i + 2];
       Serial.printf("[CMD] orientate_cmd: angle=%d, is_radian=%d\n", angle, is_radian);
@@ -291,6 +236,10 @@ void strategy(){
       i += 3;
     }
     else if (command_type == set_position_cmd){
+      if (i + 3 >= num_commands) {
+        Serial.println("[ERR] set_position_cmd truncated, stopping strategy");
+        break;
+      }
       int x = commands[i + 1];
       int y = commands[i + 2];
       int phi_degrees = commands[i + 3];
@@ -301,12 +250,20 @@ void strategy(){
       i += 4;
     }
     else if (command_type == pickup_cmd){
+      if (i + 3 >= num_commands) {
+        Serial.println("[ERR] pickup_cmd truncated, stopping strategy");
+        break;
+      }
       Serial.printf("[CMD] pickup_cmd: arg1=%d, arg2=%d, arg3=%d\n", commands[i + 1], commands[i + 2], commands[i + 3]);
       pickup(commands[i + 1], commands[i + 2], commands[i + 3]);
       Serial.printf("[POS] After pickup: robot_x=%.1f, robot_y=%.1f, robot_phi=%.1f deg\n", current_x, current_y, rad_to_deg(current_phi));
       i += 4;
     }
     else if (command_type == putdown_cmd){
+      if (i + 2 >= num_commands) {
+        Serial.println("[ERR] putdown_cmd truncated, stopping strategy");
+        break;
+      }
       int bechwaya = commands[i+1];
       int nid_lot = commands[i+2];
       Serial.println("[CMD] putdown_cmd");
@@ -314,6 +271,10 @@ void strategy(){
       i += 3;
     }
     else if (command_type == walking_position_cmd){
+      if (i + 1 >= num_commands) {
+        Serial.println("[ERR] walking_position_cmd truncated, stopping strategy");
+        break;
+      }
       int position = commands[i + 1];
       Serial.println("[CMD] walking_position_cmd");
       walking_position(position);
@@ -330,6 +291,10 @@ void strategy(){
       i++;
     }
     else if(command_type == forward_cmd){
+      if (i + 5 >= num_commands) {
+        Serial.println("[ERR] forward_cmd truncated, stopping strategy");
+        break;
+      }
       int distance = commands[i + 1];
       int speed = commands[i + 2];
       int x = commands[i + 3];
@@ -347,6 +312,10 @@ void strategy(){
       party_time();
     }
     else if (command_type == fix_x_cmd){
+      if (i + 1 >= num_commands) {
+        Serial.println("[ERR] fix_x_cmd truncated, stopping strategy");
+        break;
+      }
       double new_x = commands[i + 1];
       control_loop_state = DISACTIVATED;
       set_position(new_x, current_y, current_phi, absolute_phi);
@@ -368,6 +337,10 @@ void strategy(){
     // }
 
     else if (command_type == delay_cmd) {
+      if (i + 1 >= num_commands) {
+        Serial.println("[ERR] delay_cmd truncated, stopping strategy");
+        break;
+      }
       int delay_time = commands[i + 1];
       Serial.printf("[CMD] delay_cmd: custom_delay(%d)\n", delay_time);
       custom_delay(delay_time);
@@ -407,6 +380,8 @@ void communicationTask(void *pvParameters)
 {
   const TickType_t xDelay = pdMS_TO_TICKS(50); // 50ms delay for responsive communication
   TickType_t xLastWakeTime = xTaskGetTickCount();
+  const bool wifi_reconnect_enabled = false;
+  bool wifi_disabled_notice_printed = false;
 
   Serial.println("Communication task started");
   
@@ -424,11 +399,24 @@ void communicationTask(void *pvParameters)
   {
     // Only run communication loop if WiFi is connected
     if (WiFi.status() == WL_CONNECTED) {
+      wifi_disabled_notice_printed = false;
       communication_loop();
     } else {
+      if (!wifi_reconnect_enabled) {
+        if (!wifi_disabled_notice_printed) {
+          Serial.println("WiFi is down; running without reconnect attempts.");
+          wifi_disabled_notice_printed = true;
+        }
+        vTaskDelayUntil(&xLastWakeTime, xDelay);
+        continue;
+      }
+      if (control_loop_state != DISACTIVATED) {
+        vTaskDelayUntil(&xLastWakeTime, xDelay);
+        continue;
+      }
       // If WiFi disconnected, try to reconnect
       Serial.println("WiFi disconnected in task, attempting reconnection...");
-      connect_wifi("harissa", "harissaharissa2026");
+      connect_wifi("hrissa", "harissaharissa2026");
       vTaskDelay(pdMS_TO_TICKS(5000)); // Wait 5 seconds before next attempt
     }
 
@@ -436,22 +424,25 @@ void communicationTask(void *pvParameters)
   }
 }
 
-// void emergencyBreakTask(void *pvParameters)
-// {
-//   const TickType_t xDelay = pdMS_TO_TICKS(30);
-//   TickType_t xLastWakeTime = xTaskGetTickCount();
+void emergencyBreakTask(void *pvParameters)
+{
+  const TickType_t xDelay = pdMS_TO_TICKS(100);
+  TickType_t xLastWakeTime = xTaskGetTickCount();
+  const bool emergency_obstacle_check_enabled = false;
   
-//   for (;;)
-//   {
-//     if (( (( (!ultrasonic_blocked) && get_ultrasonic_distance() < min_distance && trajectory == STRAIGHT) || (millis() - strategy_start_time >= max_running_time)) && wheel_state_R != EMERGENCY_BREAK && wheel_state_L != EMERGENCY_BREAK) ) 
-//     {
-//    //   prepare_emergency_break();
-//     }
-//       //send_values_to_usart(encoder_count_L, encoder_count_R, current_phi*100,0);
+  for (;;)
+  {
+    if (emergency_obstacle_check_enabled &&
+        ((((!ultrasonic_blocked) && get_ultrasonic_distance() < min_distance && trajectory == STRAIGHT) ||
+          (millis() - strategy_start_time >= max_running_time)) &&
+         wheel_state_R != EMERGENCY_BREAK && wheel_state_L != EMERGENCY_BREAK))
+    {
+   //   prepare_emergency_break();
+    }
 
-//     vTaskDelayUntil(&xLastWakeTime, xDelay);
-//   }
-// }
+    vTaskDelayUntil(&xLastWakeTime, xDelay);
+  }
+}
 
 void PIDTask(void *pvParameters){
   const TickType_t xDelay = pdMS_TO_TICKS(1);
@@ -623,7 +614,7 @@ void websocketTask(void *pvParameters)
   set_encoder_channels(2, 15, 4, 16, 1400); // badalthom  2, 15, 4, 16, 
 
   Serial.println("Setting PWM parameters...");
-  set_ultrasonic_pins(34, 14); // badalthom //14
+  set_ultrasonic_pins(14, 34); // trigger must be output-capable, echo can be input-only
 
   set_PWM_min_max(1023, 100, 100, -100, -100); //yess    //130  120
 
@@ -668,28 +659,28 @@ void websocketTask(void *pvParameters)
       NULL,
       1, // Lower priority
       &commandExecutionTaskHandle,
-      1); // Pin to core 0
+      0); // Pin to core 0
   Serial.println("Command execution task created");
 
   // Create PID task last (it might be causing issues)
   xTaskCreatePinnedToCore(
       PIDTask,
       "PIDTask",
-      4096, // Back to smaller stack
+      8192, // Back to smaller stack
       NULL,
       2, // Medium priority
       &PIDTaskHandle,
       1); // Pin to core 1
   Serial.println("PID task created");
 
-  // xTaskCreatePinnedToCore(
-  //     emergencyBreakTask,
-  //     "emergencyBreakTask",
-  //     2048, // Stack size
-  //     NULL,
-  //     2, // High priority
-  //     &emergencyBreakTaskHandle,
-  //     1); // Pin to core 1
+  xTaskCreatePinnedToCore(
+      emergencyBreakTask,
+      "emergencyBreakTask",
+      4096, // Stack size
+      NULL,
+      2, // High priority
+      &emergencyBreakTaskHandle,
+      1); // Pin to core 1
 
   // Create WebSocket task if enabled
  /* if (websocket_enabled == 1) {
