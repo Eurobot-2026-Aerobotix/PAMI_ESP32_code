@@ -34,7 +34,7 @@ int commands[200];
 size_t commands_count = 0;
 bool micro_ros_init_successful = false;
 enum CommunicationState comm_state = WAITING_AGENT;
-bool strategy_waiting=false ;
+volatile bool strategy_waiting = false;
 bool crate_colors[8] = {false}; // Initialize all as blue (0 = blue, 1 = yellow)
 bool is_yellow = true;
 
@@ -495,25 +495,17 @@ void strategy_callback(const void *msgin)
 void status_service_callback(const void *req, void *res)
 {
     std_srvs__srv__Trigger_Response *response = (std_srvs__srv__Trigger_Response *)res;
+    static char ready_msg[] = "PAMI is ready";
+    static char busy_msg[] = "PAMI is busy";
     
     // Set response success to pami_status
     response->success = pami_status;
     
-    // Set message based on status
-    const char* msg = pami_status ? "PAMI is ready" : "PAMI is busy";
-    
-    // Allocate memory for the string
-    response->message.data = (char*)malloc(strlen(msg) + 1);
-    if (response->message.data != NULL) {
-        strcpy(response->message.data, msg);
-        response->message.size = strlen(msg);
-        response->message.capacity = strlen(msg) + 1;
-    } else {
-        // Fallback if allocation fails
-        response->message.data = (char*)"";
-        response->message.size = 0;
-        response->message.capacity = 0;
-    }
+    // Use static storage to avoid heap churn in frequently-called service callbacks.
+    char *msg = pami_status ? ready_msg : busy_msg;
+    response->message.data = msg;
+    response->message.size = strlen(msg);
+    response->message.capacity = strlen(msg) + 1;
     
     Serial.print("Status service called - returning: ");
     Serial.println(pami_status ? "true" : "false");

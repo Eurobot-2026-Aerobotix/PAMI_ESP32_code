@@ -43,7 +43,7 @@ void strategy(){
 
   int goto_cmd = 0, orientate_cmd = 1, set_position_cmd = 2, pickup_cmd = 3, putdown_cmd = 4, walking_position_cmd = 5, prepare_cmd = 6 , letgo_cmd = 7, go_backward_cmd = 8, forward_cmd = 9, move_linear_cmd = 10, rotate_cmd = 11, party_time_cmd = 12, fix_x_cmd = 13, delay_cmd = 14, print_analog12_cmd = 15; 
 
-  int master_cina_yellow[] = { 
+  static const int master_cina_yellow[] = { 
                             //  set_position_cmd, 66, 680, 90,
                             //   goto_cmd, 66, 1105, 550, 1,
                             //    goto_cmd, 150, 1105, 400, 1,
@@ -178,7 +178,7 @@ void strategy(){
                               party_time_cmd
 
                             };
-  int master_cina_blue[] =   {
+  static const int master_cina_blue[] =   {
   set_position_cmd, 66, 2320, -90,        
 
   goto_cmd, 70, 1900, 500, 1,              
@@ -245,19 +245,10 @@ void strategy(){
 };
 
 
-  int commands[300];
-  int num_commands = 0;
-  if (is_yellow){
-    num_commands = sizeof(master_cina_yellow) / sizeof(master_cina_yellow[0]);
-    for (int i = 0; i < num_commands && i < num_commands; i++){
-      commands[i] = master_cina_yellow[i];
-    }
-  }else{
-    num_commands = sizeof(master_cina_blue) / sizeof(master_cina_blue[0]);
-    for (int i = 0; i < num_commands && i < num_commands; i++){
-      commands[i] = master_cina_blue[i];
-    }
-  }
+  const int *commands = is_yellow ? master_cina_yellow : master_cina_blue;
+  int num_commands = is_yellow
+      ? (int)(sizeof(master_cina_yellow) / sizeof(master_cina_yellow[0]))
+      : (int)(sizeof(master_cina_blue) / sizeof(master_cina_blue[0]));
   extern size_t commands_count;
   //int num_commands = commands_count;
   //int num_commands = sizeof(commands) / sizeof(commands[0]); // For testing, replace with commands_count in production

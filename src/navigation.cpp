@@ -612,9 +612,16 @@ void set_target_encoder_counts(int32_t encoder__count_R, int32_t encoder__count_
 }
 void wait_for_obstacle_clearance() {
 	while (get_ultrasonic_distance() < min_distance) {
+		if (millis() - strategy_start_time >= max_running_time) {
+			stop_motors();
+			return;
+		}
 		custom_delay(100); // wait for 100 ms before checking again
 	}
-	while(millis() - strategy_start_time >= max_running_time);
+	if (millis() - strategy_start_time >= max_running_time) {
+		stop_motors();
+		return;
+	}
 }
 void prepare_emergency_break(){
 	wheel_state_R = EMERGENCY_BREAK;
