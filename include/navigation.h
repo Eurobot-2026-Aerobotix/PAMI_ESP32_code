@@ -54,8 +54,6 @@ float calculate_instant_target_phi(float x, float distance);
 int rotate(float angle, int8_t is_radian);									   // is_radian should be set to 1 if the angle is expressed in radians and to 0 if in degrees
 int orientate(float orientation, int8_t is_radian);
 int go_to(float x, float y, float speed ,float direction); // will return 0 if target has been reached successfully or 1 if some error happened in rotation, 2 if some error happened in moving forward
-int go_backward_to(float x, float y, float speed);
-int move_backward(float distance, float speed, float target_point_x, float target_point_y);
 // int move_linear(float distance, float speed, float target_point_x, float target_point_y, int direction);
 void emergency_break();
 void reset_speed_control_variables();

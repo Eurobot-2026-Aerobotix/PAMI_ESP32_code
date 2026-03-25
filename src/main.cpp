@@ -41,7 +41,7 @@ void strategy(){
   }
   
 
-  int goto_cmd = 0, orientate_cmd = 1, set_position_cmd = 2, pickup_cmd = 3, putdown_cmd = 4, walking_position_cmd = 5, prepare_cmd = 6 , letgo_cmd = 7, go_backward_cmd = 8, forward_cmd = 9, move_linear_cmd = 10, rotate_cmd = 11, party_time_cmd = 12, fix_x_cmd = 13, delay_cmd = 14, print_analog12_cmd = 15; 
+  int goto_cmd = 0, orientate_cmd = 1, set_position_cmd = 2, pickup_cmd = 3, putdown_cmd = 4, walking_position_cmd = 5, prepare_cmd = 6 , letgo_cmd = 7, go_backward_cmd = 8, forward_cmd = 9, move_linear_cmd = 10, rotate_cmd = 11, party_time_cmd = 12, fix_x_cmd = 13, delay_cmd = 14, print_analog12_cmd = 15, bezier_cmd = 16; 
 
   static const int master_cina_yellow[] = {      
                               set_position_cmd, 66, 680, 90,
@@ -285,6 +285,20 @@ void strategy(){
       control_loop_state = DISACTIVATED;
       set_position(new_x, current_y, current_phi, absolute_phi);
       i += 2;
+    }else if (command_type == bezier_cmd){
+      int x1 = commands[i + 1];
+      int y1 = commands[i + 2];
+      int x2 = commands[i + 3];
+      int y2 = commands[i + 4];
+      int x3 = commands[i + 5];
+      int y3 = commands[i + 6];
+      int speed = commands[i + 7];
+      int direction = commands[i + 8];
+      while(bezier_curve(x1, y1, x2, y2, x3, y3, speed, direction)){
+        wait_for_obstacle_clearance();
+        Serial.println("obstacle cleared, resuming...");
+      }
+      i += 9;
     }
     
     // else if(command_type == move_linear_cmd){
