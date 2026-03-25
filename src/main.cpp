@@ -183,6 +183,9 @@ void strategy(){
   extern size_t commands_count;
   //int num_commands = commands_count;
   //int num_commands = sizeof(commands) / sizeof(commands[0]); // For testing, replace with commands_count in production
+  if (communicationTaskHandle != NULL) {
+      vTaskSuspend(communicationTaskHandle);
+  }
   int i = 0;
   strategy_start_time = millis();
   // rotate(1800, 0);

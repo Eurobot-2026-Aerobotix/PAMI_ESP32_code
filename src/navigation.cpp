@@ -564,12 +564,6 @@ int orientate(float orientation, int8_t is_radian)
 }
 int go_to(float x, float y, float speed, float direction)
 {   
-    // Suspend communication task for the entire navigation sequence
-    extern TaskHandle_t communicationTaskHandle;
-    if (communicationTaskHandle != NULL) {
-        vTaskSuspend(communicationTaskHandle);
-    }
-    
     wait_for_idle();
 	float target_angle = get_angle_to(x, y);
 	if(direction == -1){
@@ -578,19 +572,12 @@ int go_to(float x, float y, float speed, float direction)
    while (fabs(normalize_angle(target_angle - current_phi)) > deg_to_rad(2))
 	{
 		if (orientate(target_angle, 1)){
-            if (communicationTaskHandle != NULL) {
-                vTaskResume(communicationTaskHandle);
-            }
 			return 1;
 		}
 		wait_for_idle();
 	}
 	int result = move_forward(fabs(get_distance_to(x, y)), speed, x, y, direction) * 2; // why *2 ? cause fuck you
 
-    // Resume communication task
-    if (communicationTaskHandle != NULL) {
-        vTaskResume(communicationTaskHandle);
-    }
 	return result;
 }
 void emergency_break()
