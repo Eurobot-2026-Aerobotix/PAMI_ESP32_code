@@ -43,81 +43,14 @@ void strategy(){
 
   int goto_cmd = 0, orientate_cmd = 1, set_position_cmd = 2, pickup_cmd = 3, putdown_cmd = 4, walking_position_cmd = 5, prepare_cmd = 6 , letgo_cmd = 7, go_backward_cmd = 8, forward_cmd = 9, move_linear_cmd = 10, rotate_cmd = 11, party_time_cmd = 12, fix_x_cmd = 13, delay_cmd = 14, print_analog12_cmd = 15; 
 
-  static const int master_cina_yellow[] = { 
-                            //  set_position_cmd, 66, 680, 90,
-                            //   goto_cmd, 66, 1105, 550, 1,
-                            //    goto_cmd, 150, 1105, 400, 1,
-                            //  pickup_cmd, 1, 1, 0,    // pick up 1 close
-                            //   goto_cmd, 80, 668, 450, 1,
-                            //   orientate_cmd, -90, 0,
-                            //  putdown_cmd, 1, 1,      // drop 1 close
-                            //   goto_cmd, 80, 771, 400, -1,
-                            //   goto_cmd, 10, 771, 400, -1, 
-                            //   set_position_cmd, 64, 771, 0, // homing 1'
-                            //   goto_cmd, 75, 771, 300, 1,
-                            //   goto_cmd, 175, 708, 300, 1,
-                            //   walking_position_cmd, 0,
-                            //   orientate_cmd, 20, 0,      // push niggas aside
-                            //   goto_cmd,195, 715, 300, 1,
-                            //   goto_cmd, 30, 715, 300, -1,
-                            //   walking_position_cmd, 1,
-                            //  // goto_cmd, 120, 600, 300, -1,
-                            //  // set_position_cmd, 120, 672, 90, // homing 2'
-                            //    set_position_cmd, 90, 715, 0,
-                            //  // goto_cmd, 90, 740, 300, 1,
-                            //   goto_cmd, 120, 740, 400, 1,
-                            //   walking_position_cmd, 0,
-                            //   goto_cmd, 220, 740, 400, 1,
-                            //   pickup_cmd, 1, 1, 0, // pick up 2 yellow  
-                            //  // orientate_cmd, -30, 0,
-                            //   goto_cmd, 200, 740, 200, -1,
-                            //   goto_cmd, 270, 690, 300, 1,
-                            //   goto_cmd,30, 690, 200, -1,
-                            //   set_position_cmd, 25, 690, 0, // homing 3'
-                            //   goto_cmd, 65, 690, 400, 1,
-                            //   goto_cmd, 65, 500, 150, 1,
-                            //   set_position_cmd, 65, 668, -90,
-                            //   goto_cmd, 65, 1200, 500, -1,
-                            //   goto_cmd, 330, 1200, 500, 1,
-                            //   putdown_cmd, 1, 0,     // drop yellows
-                            //   goto_cmd,10, 1200, 250, -1,
-                            //   set_position_cmd, 25, 1200, 0, // homing 3
-                            //   goto_cmd, 35, 1200, 400, 1,
-                            //   goto_cmd, 40, 1365, 500, 1,
-                            //   goto_cmd, 80, 1365, 500, 1,
-                            //   pickup_cmd, 1, 1, 0, // pick up 2 far
-                            //   goto_cmd, -30, 1365, 500, -1,
-                            //   set_position_cmd, 25, 1365, 0, // homing 5
-                            //   goto_cmd, 50, 1365, 400, 1,
-                            //   goto_cmd, 100, 720, 550, 1,
-                            //   goto_cmd, 310, 700, 500, -1,
-                            //   orientate_cmd, -90, 0,
-                            //   goto_cmd, 310, 600, 500, 1,
-                            //    putdown_cmd, 1, 1,      //drop 2 far
-                            //   set_position_cmd, 300, 668, -90, // homing 3
-                            //   goto_cmd, 300, 1200, 200, -1,
-                            //   goto_cmd, 300, 1100, 500, 1,
-                            //   walking_position_cmd, 0,
-                            //   goto_cmd, 300, 1220, 500, 1, // throwing niggas
-                            //   pickup_cmd, 1, 1, 0,
-                            //   putdown_cmd, 1, 1,
-                            //   goto_cmd, 300, 1170, 500, -1,
-                            //   walking_position_cmd, 1,
-                            //   goto_cmd, 120, 1170, 500, 1,
-                            //   goto_cmd, 120, 1300, 500, 1,
-                            //   goto_cmd, 380, 1300, 500, 1,  
-                            //   goto_cmd, 140, 1300, 450, -1,
-                            //   set_position_cmd, 140, 1300, 0,
-                            //   goto_cmd, 340, 1500, 500, 1,
-                            //   party_time_cmd
-
-                             set_position_cmd, 66, 680, 90,
+  static const int master_cina_yellow[] = {      
+                              set_position_cmd, 66, 680, 90,
                               goto_cmd, 66, 1105, 550, 1,
-                               goto_cmd, 160, 1105, 400, 1,
-                             pickup_cmd, 1, 1, 0,    // pick up 1 close
+                              goto_cmd, 160, 1105, 400, 1,
+                              pickup_cmd, 1, 1, 0,    // pick up 1 close
                               goto_cmd, 80, 668, 550, 1,
                               orientate_cmd, -90, 0,
-                             putdown_cmd, 1, 1,      // drop 1 close
+                              putdown_cmd, 1, 1,      // drop 1 close
                               goto_cmd, 80, 771, 400, -1,
                               goto_cmd, 10, 771, 400, -1, 
                               set_position_cmd, 64, 771, 0, // homing 1'
@@ -125,24 +58,23 @@ void strategy(){
                               goto_cmd, 175, 708, 300, 1,
                               walking_position_cmd, 0,
                               orientate_cmd, 20, 0,      // push niggas aside
-                                   goto_cmd,195, 715, 300, 1,
+                              goto_cmd,195, 715, 300, 1,
                               goto_cmd, 120, 740, 300, -1,
-                               walking_position_cmd, 1,
+                              walking_position_cmd, 1,
                               goto_cmd, 120, 620, 300, -1,
                               set_position_cmd, 120, 672, 90, // homing 2'
                               goto_cmd, 120, 740, 300, 1,
                               walking_position_cmd, 0,
                               goto_cmd, 220, 740, 400, 1,
                               pickup_cmd, 1, 1, 0, // pick up 2 yellow  
-                             // orientate_cmd, -30, 0,
                               goto_cmd, 200, 740, 200, -1,
-                              goto_cmd, 270, 690, 300, 1,
-                              goto_cmd, 20, 690, 200, -1,
-                              set_position_cmd, 25, 690, 0, // homing 3'
-                              goto_cmd, 65, 690, 400, 1,
+                              orientate_cmd, -100, 0,
+                              goto_cmd, 20, 740, 200, -1,
+                              set_position_cmd, 25, 740, 0, // homing 3'
+                              goto_cmd, 65, 740, 400, 1,
                               goto_cmd, 65, 500, 150, 1,
                               set_position_cmd, 65, 668, -90,
-                              goto_cmd, 65, 1200, 500, -1,
+                              goto_cmd, 65, 1200, 400, -1,
                               goto_cmd, 330, 1200, 500, 1,
                               putdown_cmd, 1, 0,     // drop yellows
                               goto_cmd,0 , 1200, 250, -1,
@@ -151,32 +83,31 @@ void strategy(){
                               goto_cmd, 40, 1365, 500, 1,
                               goto_cmd, 80, 1365, 500, 1,
                               pickup_cmd, 1, 1, 0, // pick up 2 far
-                              goto_cmd, -10, 1365, 500, -1,
+                              goto_cmd, -10, 1365, 400, -1,
                               set_position_cmd, 25, 1365, 0, // homing 5
                               goto_cmd, 50, 1365, 400, 1,
                               goto_cmd, 100, 720, 550, 1,
-                              goto_cmd, 300, 700, 500, -1,
+                              goto_cmd, 310, 700, 500, -1,
                               orientate_cmd, -90, 0,
-                              goto_cmd, 300, 580, 500, 1,
-                               putdown_cmd, 1, 1,      //drop 2 far
-                              set_position_cmd, 300, 668, -90, // homing 6
-                              goto_cmd, 300, 1200, 200, -1,
-                              goto_cmd, 300, 1100, 500, 1,
+                              goto_cmd, 310, 580, 500, 1,
+                              putdown_cmd, 1, 1,      //drop 2 far
+                              set_position_cmd, 310, 668, -90, // homing 6
+                              goto_cmd, 310, 1200, 200, -1,
+                              goto_cmd, 310, 1100, 500, 1,
                               walking_position_cmd, 0,
-                              goto_cmd, 300, 1220, 500, 1, // throwing niggas
+                              goto_cmd, 310, 1220, 500, 1, // throwing niggas
                               pickup_cmd, 1, 1, 0,
                               putdown_cmd, 1, 1,
-                              goto_cmd, 300, 1170, 500, -1,
+                              goto_cmd, 310, 1170, 500, -1,
                               walking_position_cmd, 1,
                               goto_cmd, 120, 1170, 400, 1,
                               goto_cmd, 120, 1300, 400, 1,
-                              goto_cmd, 380, 1300, 400, 1,
-                                goto_cmd, -60, 1300, 500, -1,
+                              goto_cmd, 380, 1300, 200, 1,
+                              goto_cmd, -60, 1300, 500, -1,
                               set_position_cmd, 10, 1300, 0,
                               goto_cmd, 30, 1300, 500, 1,
-                              goto_cmd, 360, 1650, 500, 1,
+                              goto_cmd, 370, 1750, 500, 1,
                               party_time_cmd
-
                             };
   static const int master_cina_blue[] =   {
   set_position_cmd, 66, 2320, -90,        
