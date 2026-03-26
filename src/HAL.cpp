@@ -361,20 +361,22 @@ void pickup(int pick_right, int pick_left, int up_or_down){
     set_pump_state(1);
     set_EV_states(1 - pick_right, 1 - pick_left);
     ultrasonic_blocked = up_or_down;
-   move_servo(up_or_down? 3 : 1);
+   move_servo(up_or_down? 4 : 1);
     if (up_or_down==1){
-        custom_delay(500);
-        move_servo(7);
-        custom_delay(500);
-        move_servo(3);
-        custom_delay(4000);
+        // custom_delay(500);
+        // move_servo(7);
+        // custom_delay(500);
+       // move_servo(4);
+        custom_delay(2000);
     }else{
         custom_delay(1100);
     }
     
-    move_servo(up_or_down? 4 : 2);
+    move_servo(up_or_down? 2 : 2);
     custom_delay(500);
 }
+
+//   {0, 135, 70, 110, 85, 15, 120,70,140 };
 void putdown(int bechwaya, int nid_lot){
     move_servo(nid_lot ? 6 : 8);
     custom_delay(bechwaya? 700 : 1);

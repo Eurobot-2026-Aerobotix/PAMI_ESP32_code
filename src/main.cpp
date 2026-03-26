@@ -88,9 +88,10 @@ void strategy(){
                               goto_cmd, -10, 1365, 400, -1,
                               set_position_cmd, 25, 1365, 0, // homing 5
                               goto_cmd, 50, 1365, 400, 1,
-                              goto_cmd, 100, 720, 550, 1,
-                              goto_cmd, 310, 700, 500, -1,
-                              orientate_cmd, -90, 0,
+                              bezier_cmd ,100, 720, 100, 720, 310, 700, 300, 1,
+                              // goto_cmd, 100, 720, 550, 1,
+                              // goto_cmd, 310, 700, 500, -1,
+                              // orientate_cmd, -90, 0,
                               goto_cmd, 310, 580, 500, 1,
                               putdown_cmd, 1, 1,      //drop 2 far
                               set_position_cmd, 310, 668, -90, // homing 6
@@ -674,7 +675,7 @@ void websocketTask(void *pvParameters)
   Serial.println("All tasks created successfully!");
   control_loop_state = DISACTIVATED;
   delay(100);
-  strategy_waiting = false; // Start the strategy after setup;
+  strategy_waiting = true; // Start the strategy after setup;
 
 }
 void loop(){
