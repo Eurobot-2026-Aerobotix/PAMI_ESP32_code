@@ -10,7 +10,9 @@ enum Wheel_state
 	ACCELERATING,
 	CONTROLLED_BREAK,
 	EMERGENCY_BREAK,
+	
 	CRUISING // holding the same speed
+
 };
 
 enum Trajectory

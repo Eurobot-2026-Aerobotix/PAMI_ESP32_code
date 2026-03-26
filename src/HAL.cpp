@@ -380,7 +380,7 @@ void putdown(int bechwaya, int nid_lot){
     custom_delay(bechwaya? 700 : 1);
     set_pump_state(0);
     set_EV_states(1, 1);
-    move_servo(0);
+    move_servo(8);
     custom_delay(1000);
    // set_EV_states(0, 0);
 
@@ -392,7 +392,7 @@ void letgo(){
     custom_delay(500);
 }
 void walking_position(int position){
-    move_servo(position? 0 : 3);
+    move_servo(position? 8 : 3);
     custom_delay(500);
     ultrasonic_blocked = false;
 }
@@ -421,7 +421,7 @@ void HAL_setup()
 
     servo.setPeriodHertz(50);
     servo.attach(servo_pin);
-    move_servo(0);
+    move_servo(8);
 
     motorREN_channel = 8;
     motorLEN_channel = 9;
@@ -443,6 +443,7 @@ void HAL_setup()
     //attachInterrupt(digitalPinToInterrupt(encoderRA), encoderRISRA, CHANGE);
     //attachInterrupt(digitalPinToInterrupt(encoderLA), encoderLISRA, CHANGE);
     encoder_init();
+    
 }
 void custom_delay(int ms)
 {
