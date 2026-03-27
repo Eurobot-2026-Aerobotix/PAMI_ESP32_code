@@ -52,7 +52,6 @@ void strategy(){
                                pickup_cmd, 1, 1, 0,    // pick up 1 close
                               goto_cmd, 65, 668, 400, 1,
                                orientate_cmd, -90, 0,
-                              // bezier_cmd , 0, 1000, 65, 1000, 65, 668, 300, 1,
                               putdown_cmd, 1, 1,      // drop 1 close
                                goto_cmd, 80, 770, 400, -1,
                                goto_cmd, -40, 770, 400, -1, 
@@ -72,8 +71,6 @@ void strategy(){
                                 goto_cmd, -60, 732, 300, -1,
                                set_position_cmd, 25, 732, 0, // homing 2'
                               goto_cmd, 55, 732, 400, 1,
-                              //  goto_cmd, 55, 1160, 400, 1,
-                              // goto_cmd, 335, 1160, 400, 1,
                               bezier_cmd ,55, 1100, 120, 1160, 335, 1160, 300, 1,
                                putdown_cmd, 1, 0,     // drop yellows
                               goto_cmd, -40, 1170, 400, -1,
@@ -85,14 +82,11 @@ void strategy(){
                               goto_cmd, -40, 1335, 400, -1,
                                set_position_cmd, 25, 1335, 0, // homing 2 
                                goto_cmd, 80, 1335, 400, 1,
-                              // goto_cmd, 100, 700, 400, -1,
-                              //  goto_cmd, 310, 700, 400, -1,
                               bezier_cmd, 70, 780, 130, 695, 310, 695, 280, 1,
                               orientate_cmd, -90, 0,
                               goto_cmd,310, 600,300,1,
                               putdown_cmd, 1, 1,      //drop 2 far
-                              set_position_cmd,310,672,-90,
-                               //set_position_cmd, 310, 672, 90, // homing 3
+                              set_position_cmd, 310, 672, -90,
                                goto_cmd, 310, 1210, 400, -1,
                                goto_cmd, 310,1190, 400, 1,
                                goto_cmd, 0, 1190, 400, -1,
@@ -101,17 +95,8 @@ void strategy(){
                                goto_cmd, 20, 1280, 400, 1,
                                goto_cmd, 370, 1280, 400, 1, // drop rest yellow
                                goto_cmd, 300, 1280, 400, -1,
-                              //  goto_cmd, 300, 1650, 400, 1,
-                              //  orientate_cmd, 40, 0,
                               bezier_cmd, 300, 1660, 305, 1680, 350, 1720, 280, 1,
                               party_time_cmd
-
-
-
-
-
-
-
 
 
 
@@ -174,64 +159,117 @@ void strategy(){
                               // party_time_cmd
                             };
   static const int master_cina_blue[] =   {
-  set_position_cmd, 66, 2320, -90,
-  goto_cmd, 66, 1895, 550, 1,
-  goto_cmd, 160, 1895, 400, 1,
-  pickup_cmd, 1, 1, 0,
-  goto_cmd, 80, 2332, 550, 1,
-  orientate_cmd, 90, 0,
-  putdown_cmd, 1, 1,
-  goto_cmd, 80, 2229, 400, -1,
-  orientate_cmd, 0, 0,
-  goto_cmd, 160, 2292, 300, 1,
-  walking_position_cmd, 0,
-  orientate_cmd, -20, 0,
-  goto_cmd, 180, 2285, 300, 1,
-  goto_cmd, 105, 2260, 300, -1,
-  walking_position_cmd, 1,
-  goto_cmd, 105, 2380, 300, -1,
-  set_position_cmd, 105, 2328, -90,
-  goto_cmd, 105, 2260, 300, 1,
-  walking_position_cmd, 0,
-  goto_cmd, 205, 2260, 400, 1,
-  pickup_cmd, 1, 1, 0,
-  goto_cmd, 20, 2260, 200, -1,
-  set_position_cmd, 25, 2260, 0,
-  goto_cmd, 65, 2260, 400, 1,
-  goto_cmd, 65, 1800, 400, -1,
-  goto_cmd, 330, 1800, 500, 1,
-  putdown_cmd, 1, 0,
-  goto_cmd, 0, 1800, 250, -1,
-  set_position_cmd, 25, 1800, 0,
-  goto_cmd, 35, 1800, 400, 1,
-  goto_cmd, 40, 1635, 500, 1,
-  goto_cmd, 80, 1635, 500, 1,
-  pickup_cmd, 1, 1, 0,
-  goto_cmd, -10, 1635, 400, -1,
-  set_position_cmd, 25, 1635, 0,
-  goto_cmd, 50, 1635, 400, 1,
-  goto_cmd, 100, 2280, 550, 1,
-  goto_cmd, 310, 2300, 500, -1,
-  orientate_cmd, 90, 0,
-  goto_cmd, 310, 2420, 500, 1,
-  putdown_cmd, 1, 1,
-  set_position_cmd, 310, 2332, 90,
-  goto_cmd, 310, 1800, 200, -1,
-  goto_cmd, 310, 1900, 500, 1,
-  walking_position_cmd, 0,
-  goto_cmd, 310, 1780, 500, 1,
-  pickup_cmd, 1, 1, 0,
-  putdown_cmd, 1, 1,
-  goto_cmd, 310, 1830, 500, -1,
-  walking_position_cmd, 1,
-  goto_cmd, 120, 1830, 400, 1,
-  goto_cmd, 120, 1700, 400, 1,
-  goto_cmd, 380, 1700, 200, 1,
-  goto_cmd, -60, 1700, 500, -1,
-  set_position_cmd, 10, 1700, 0,
-  goto_cmd, 30, 1700, 500, 1,
-  goto_cmd, 370, 1250, 500, 1,
-  party_time_cmd
+                              set_position_cmd, 66, 2320, -90,                // 3000-680
+                              goto_cmd, 75, 1900, 400, 1,                    // 3000-1100
+                              goto_cmd, 150, 1900, 400, 1,
+                              pickup_cmd, 1, 1, 0,    // pick up 1 close
+                              goto_cmd, 65, 2332, 400, 1,                    // 3000-668
+                              orientate_cmd, 90, 0,
+                              putdown_cmd, 1, 1,      // drop 1 close
+                              goto_cmd, 80, 2230, 400, -1,                   // 3000-770
+                              goto_cmd, -40, 2230, 400, -1, 
+                              set_position_cmd, 64, 2230, 0, // homing 2'
+                              goto_cmd, 190, 2230, 300, 1,
+                              pickup_cmd, 1, 1, 1, // pick up 2 niggas
+                              goto_cmd, 130, 2230, 400, -1,
+                              goto_cmd, 100, 2314, 400, -1,                   // 3000-686
+                              orientate_cmd, -120, 0,
+                              orientate_cmd, 90, 0,
+                              putdown_cmd, 0, 1, // drop niggas over close ones
+                              goto_cmd, 100, 2268, 400,-1,                    // 3000-732
+                              goto_cmd, -45, 2268, 400,-1,
+                              set_position_cmd, 30, 2268, 0, // homing 2' 
+                              goto_cmd, 170, 2268, 400, 1,
+                              pickup_cmd, 1, 1, 0, // pick up 2 yellow  
+                              goto_cmd, -60, 2268, 300, -1,
+                              set_position_cmd, 25, 2268, 0, // homing 2'
+                              goto_cmd, 55, 2268, 400, 1,
+                              bezier_cmd ,55, 1900, 120, 1840, 335, 1840, 300, 1,
+                              putdown_cmd, 1, 0,     // drop yellows
+                              goto_cmd, -40, 1830, 400, -1,                  // 3000-1170
+                              set_position_cmd, 25, 1830, 0, // homing 2 
+                              goto_cmd, 40, 1830, 400, 1,
+                              goto_cmd, 40, 1665, 400, 1,                   // 3000-1335
+                              goto_cmd, 80, 1665, 400, 1,
+                              pickup_cmd, 1, 1, 0, // pick up 2 far
+                              goto_cmd, -40, 1665, 400, -1,
+                              set_position_cmd, 25, 1665, 0, // homing 2 
+                              goto_cmd, 80, 1665, 400, 1,
+                              bezier_cmd, 70, 2250, 130, 2335, 300, 2335, 280, 1,
+                              orientate_cmd, 90, 0,
+                              goto_cmd,310, 2400,300,1,                     // 3000-600
+                              putdown_cmd, 1, 1,      //drop 2 far
+                              set_position_cmd, 310, 2328, 90,
+                              goto_cmd, 310, 1790, 400, -1,                 // 3000-1210
+                              goto_cmd, 310,1810, 400, 1,                   // 3000-1190
+                              goto_cmd, 0, 1810, 400, -1,
+                              set_position_cmd, 0 ,1810, 0, // homing 10000 
+                              goto_cmd, 20,1810, 400, 1,
+                              goto_cmd, 20, 1720, 400, 1,                  // 3000-1280
+                              goto_cmd, 370, 1720, 400, 1, // drop rest yellow
+                              goto_cmd, 300, 1720, 400, -1,
+                              bezier_cmd, 300, 1340, 305, 1320, 350, 1280, 280, 1,
+                              party_time_cmd
+
+    // --------------- strategy with up crates ----------------
+  // set_position_cmd, 66, 2320, -90,
+  // goto_cmd, 66, 1895, 550, 1,
+  // goto_cmd, 160, 1895, 400, 1,
+  // pickup_cmd, 1, 1, 0,
+  // goto_cmd, 80, 2332, 550, 1,
+  // orientate_cmd, 90, 0,
+  // putdown_cmd, 1, 1,
+  // goto_cmd, 80, 2229, 400, -1,
+  // orientate_cmd, 0, 0,
+  // goto_cmd, 160, 2292, 300, 1,
+  // walking_position_cmd, 0,
+  // orientate_cmd, -20, 0,
+  // goto_cmd, 180, 2285, 300, 1,
+  // goto_cmd, 105, 2260, 300, -1,
+  // walking_position_cmd, 1,
+  // goto_cmd, 105, 2380, 300, -1,
+  // set_position_cmd, 105, 2328, -90,
+  // goto_cmd, 105, 2260, 300, 1,
+  // walking_position_cmd, 0,
+  // goto_cmd, 205, 2260, 400, 1,
+  // pickup_cmd, 1, 1, 0,
+  // goto_cmd, 20, 2260, 200, -1,
+  // set_position_cmd, 25, 2260, 0,
+  // goto_cmd, 65, 2260, 400, 1,
+  // goto_cmd, 65, 1800, 400, -1,
+  // goto_cmd, 330, 1800, 500, 1,
+  // putdown_cmd, 1, 0,
+  // goto_cmd, 0, 1800, 250, -1,
+  // set_position_cmd, 25, 1800, 0,
+  // goto_cmd, 35, 1800, 400, 1,
+  // goto_cmd, 40, 1635, 500, 1,
+  // goto_cmd, 80, 1635, 500, 1,
+  // pickup_cmd, 1, 1, 0,
+  // goto_cmd, -10, 1635, 400, -1,
+  // set_position_cmd, 25, 1635, 0,
+  // goto_cmd, 50, 1635, 400, 1,
+  // goto_cmd, 100, 2280, 550, 1,
+  // goto_cmd, 310, 2300, 500, -1,
+  // orientate_cmd, 90, 0,
+  // goto_cmd, 310, 2420, 500, 1,
+  // putdown_cmd, 1, 1,
+  // set_position_cmd, 310, 2332, 90,
+  // goto_cmd, 310, 1800, 200, -1,
+  // goto_cmd, 310, 1900, 500, 1,
+  // walking_position_cmd, 0,
+  // goto_cmd, 310, 1780, 500, 1,
+  // pickup_cmd, 1, 1, 0,
+  // putdown_cmd, 1, 1,
+  // goto_cmd, 310, 1830, 500, -1,
+  // walking_position_cmd, 1,
+  // goto_cmd, 120, 1830, 400, 1,
+  // goto_cmd, 120, 1700, 400, 1,
+  // goto_cmd, 380, 1700, 200, 1,
+  // goto_cmd, -60, 1700, 500, -1,
+  // set_position_cmd, 10, 1700, 0,
+  // goto_cmd, 30, 1700, 500, 1,
+  // goto_cmd, 370, 1250, 500, 1,
+  // party_time_cmd
 };
 
 
