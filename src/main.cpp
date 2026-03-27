@@ -343,7 +343,7 @@ void setup()
   set_PWM_min_max(1023, 250, 250, -260, -260);
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(56.941191661929054, 56.941191661929054, 93.585231389319608401822222222222);
+  set_wheel_diameter_and_spacing(56.941191661929054, 56.941191661929054, 93.119633223203590449574350469873);
   HAL_setup();
   
   // Initialize agent LED
