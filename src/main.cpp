@@ -64,14 +64,14 @@ void strategy(){
                               orientate_cmd, 120, 0,
                               orientate_cmd, -90, 0,
                               putdown_cmd, 0, 1, // drop niggas over close ones
-                               goto_cmd, 80, 737, 400,-1,
-                               goto_cmd, -45, 737, 400,-1,
-                               set_position_cmd, 30, 737, 0, // homing 2' 
-                              goto_cmd, 170, 737, 400, 1,
+                               goto_cmd, 80, 732, 400,-1,
+                               goto_cmd, -45, 732, 400,-1,
+                               set_position_cmd, 30, 732, 0, // homing 2' 
+                              goto_cmd, 170, 732, 400, 1,
                                pickup_cmd, 1, 1, 0, // pick up 2 yellow  
-                                goto_cmd, -60, 737, 300, -1,
-                               set_position_cmd, 25, 737, 0, // homing 2'
-                              goto_cmd, 55, 737, 400, 1,
+                                goto_cmd, -60, 732, 300, -1,
+                               set_position_cmd, 25, 732, 0, // homing 2'
+                              goto_cmd, 55, 732, 400, 1,
                               //  goto_cmd, 55, 1160, 400, 1,
                               // goto_cmd, 335, 1160, 400, 1,
                               bezier_cmd ,55, 1100, 120, 1160, 335, 1160, 300, 1,
@@ -79,15 +79,15 @@ void strategy(){
                               goto_cmd, -40, 1170, 400, -1,
                                set_position_cmd, 25, 1170, 0, // homing 2 
                               goto_cmd, 40, 1170, 400, 1,
-                               goto_cmd, 40, 1340, 400, 1,
-                              goto_cmd, 80, 1340, 400, 1,
+                               goto_cmd, 40, 1335, 400, 1,
+                              goto_cmd, 80, 1335, 400, 1,
                              pickup_cmd, 1, 1, 0, // pick up 2 far
-                              goto_cmd, -40, 1340, 400, -1,
-                               set_position_cmd, 25, 1340, 0, // homing 2 
-                               goto_cmd, 80, 1340, 400, 1,
+                              goto_cmd, -40, 1335, 400, -1,
+                               set_position_cmd, 25, 1335, 0, // homing 2 
+                               goto_cmd, 80, 1335, 400, 1,
                               // goto_cmd, 100, 700, 400, -1,
                               //  goto_cmd, 310, 700, 400, -1,
-                              bezier_cmd, 70, 780, 130, 700, 310, 700, 280, 1,
+                              bezier_cmd, 70, 780, 130, 695, 310, 695, 280, 1,
                               orientate_cmd, -90, 0,
                               goto_cmd,310, 600,300,1,
                               putdown_cmd, 1, 1,      //drop 2 far
@@ -103,7 +103,7 @@ void strategy(){
                                goto_cmd, 300, 1280, 400, -1,
                               //  goto_cmd, 300, 1650, 400, 1,
                               //  orientate_cmd, 40, 0,
-                              bezier_cmd, 300, 1660, 300, 1670, 340, 1710, 280, 1,
+                              bezier_cmd, 300, 1660, 305, 1680, 350, 1720, 280, 1,
                               party_time_cmd
 
 
