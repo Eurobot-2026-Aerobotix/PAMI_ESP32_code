@@ -77,7 +77,7 @@ float previous_speed_error_L = 0;
 float previous_position_error_R = 0;
 float previous_position_error_L = 0;
 int32_t previous_position_control_time = 0;
-float position_max_response = 150;
+float position_max_response = 250;
 float position_integral_R = 0;
 float position_derivative_R = 0;
 float position_integral_L = 0;
@@ -95,9 +95,9 @@ float kdP_L = 5;
 float kiP_L = 400;
 volatile float debugger = 0;
 int strategy_start_time = 1000000;
-
-int servo_positions[9] = {0, 135, 70, 110, 70, 15, 120,70,140 };    //0, 130, 48, 85, 50, 15, 110, 50, 130
+int servo_positions[9] =  {0, 135, 70, 110, 95, 15, 120,70,140 };   //0, 130, 48, 85, 50, 15, 110, 50, 130
 bool ultrasonic_blocked = true;
+bool heza = false;
 
 void set_motor_pins(int right_forward, int right_backward, int left_forward, int left_backward, int right_enable, int left_enable)
 {
@@ -374,6 +374,7 @@ void pickup(int pick_right, int pick_left, int up_or_down){
     
     move_servo(up_or_down? 2 : 2);
     custom_delay(500);
+    heza = true;
 }
 
 //   {0, 135, 70, 110, 85, 15, 120,70,140 };
@@ -385,7 +386,7 @@ void putdown(int bechwaya, int nid_lot){
     move_servo(0);
     custom_delay(1000);
    // set_EV_states(0, 0);
-
+    heza = false;
 }
 void letgo(){
     set_pump_state(0);

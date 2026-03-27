@@ -4,7 +4,7 @@ enum Control_loop control_loop_state = SPEED;
 enum Wheel_state wheel_state_R = DEAD_STOP;
 enum Wheel_state wheel_state_L = DEAD_STOP;
 enum Trajectory trajectory = STRAIGHT;
-float ramping_acceleration = 2; // tzid acc tzid fl ramping meloul 
+float ramping_acceleration = 1.7; // tzid acc tzid fl ramping meloul 
 float breaking_acceleration = -2; // tzid break tzid flkher 
 float emergency_breaking_acceleration = -10;
 float rotating_speed = 250;
@@ -29,7 +29,10 @@ int move_forward(float distance, float speed, float target_x, float target_y, fl
     if (communicationTaskHandle != NULL) {
         vTaskSuspend(communicationTaskHandle);
     }
-    
+    if (heza){
+		ramping_acceleration = 1;
+	}else
+	    ramping_acceleration = 1.7;
 	distance = fabs(distance);
 
 	speed = fabs(speed);
@@ -238,12 +241,15 @@ int move_backwards(float distance, float speed){
 int bezier_curve(float x1, float y1, float x2, float y2, float x3, float y3, float speed, int direction){
 	float x0 = current_x;
 	float y0 = current_y;
-
+    if (heza){
+		ramping_acceleration = 1;
+	}else
+	    ramping_acceleration = 1.7;
 	float distance =  get_bezier_distance(0, x0, y0, x1, y1, x2, y2, x3, y3);
 
 	float d_1 = speed/ramping_acceleration;
 	float d_2 = speed/breaking_acceleration + distance ;
-
+    
 	if (d_2 <= d_1){ // correcting the cruising speed if it is too high to reach using the current ramp and break
 		float intersection_x = (breaking_acceleration*distance )/(breaking_acceleration - ramping_acceleration);
 		float intersection_speed = ramping_acceleration * intersection_x;

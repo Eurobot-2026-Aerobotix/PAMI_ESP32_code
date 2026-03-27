@@ -128,6 +128,8 @@ const int max_running_time = 100000; // 100 seconds
 extern int servo_positions[9];
 extern bool ultrasonic_blocked;
 
+extern bool heza;
+
 void set_motor_pins(int right_forward, int right_backward, int left_forward, int left_backward, int right_enable, int left_enable);
 void set_ultrasonic_pins(int trigger_pin, int echo_pin);
 void set_system_pins(int right_electrovalve, int left_electrovalve, int pump, int servo);
