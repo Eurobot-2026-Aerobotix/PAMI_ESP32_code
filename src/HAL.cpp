@@ -369,7 +369,7 @@ void pickup(int pick_right, int pick_left, int up_or_down){
        // move_servo(4);
         custom_delay(2000);
     }else{
-        custom_delay(1100);
+        custom_delay(1400);
     }
     
     move_servo(up_or_down? 2 : 2);
@@ -458,8 +458,8 @@ void custom_delay(int ms)
 void party_time(){
     while(1){
       move_servo(1);
-        custom_delay(1000);
+        custom_delay(300);
         move_servo(3);
-        custom_delay(1000);
+        custom_delay(300);
     }
 }
