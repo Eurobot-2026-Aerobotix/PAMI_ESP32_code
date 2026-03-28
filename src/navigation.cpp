@@ -245,8 +245,8 @@ int bezier_curve(float x1, float y1, float x2, float y2, float x3, float y3, flo
 	float x0 = current_x;
 	float y0 = current_y;
     if (heza){
-		ramping_acceleration = 0.65;
-		deceleration_offset = 3;
+		ramping_acceleration = 0.5;
+		deceleration_offset = 4.5;
 	}else{
 	    ramping_acceleration = 1.7;
 		deceleration_offset = 10;}

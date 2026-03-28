@@ -178,14 +178,14 @@ void strategy(){
                               // orientate_cmd, -120, 0,
                               orientate_cmd, 90, 0,
                               putdown_cmd, 0, 1, // drop niggas over close ones
-                              goto_cmd, 100, 2263, 400,-1,                    // 3000-732
-                              goto_cmd, -20, 2263, 400,-1,
-                              set_position_cmd, 30, 2263, 0, // homing 2' 
-                              goto_cmd, 170, 2263, 400, 1,
+                              goto_cmd, 100, 2258, 400,-1,                    // 3000-732
+                              goto_cmd, -20, 2258, 400,-1,
+                              set_position_cmd, 30, 2258, 0, // homing 2' 
+                              goto_cmd, 170, 2258, 400, 1,
                               pickup_cmd, 1, 1, 0, // pick up 2 yellow  
-                              goto_cmd, -20, 2263, 300, -1,
-                              set_position_cmd, 25, 2263, 0, // homing 2'
-                              goto_cmd, 55, 2263, 400, 1,
+                              goto_cmd, -20, 2258, 300, -1,
+                              set_position_cmd, 25, 2258, 0, // homing 2'
+                              goto_cmd, 55, 2258, 400, 1,
                               bezier_cmd ,55, 1900, 120, 1830, 335, 1830, 280, 1,
                                   /***********/
                               putdown_cmd, 1, 0,     // drop yellows
@@ -783,7 +783,7 @@ void websocketTask(void *pvParameters)
 
 }
 void loop(){
-  
+   
   //  for(int i=0; i<100; i++){
   //    set_target_speeds(i*2, i*2);
 

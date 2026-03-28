@@ -369,7 +369,7 @@ void pickup(int pick_right, int pick_left, int up_or_down){
        // move_servo(4);
         custom_delay(550);
     }else{
-        custom_delay(750);
+        custom_delay(820);
     }
     
     move_servo(up_or_down? 2 : 2);
