@@ -391,7 +391,7 @@ void setup()
   set_encoder_channels(4, 16, 15, 2, 350);
 
   Serial.println("Setting PWM parameters...");
-  set_PWM_min_max(1023, 240, 210, -240, -210);
+  set_PWM_min_max(1023, 270, 270, -270, -270);
 
   Serial.println("Setting wheel parameters...");
   set_wheel_diameter_and_spacing(56.809944732271944, 56.647955232721074 , 91.05600939322017);
