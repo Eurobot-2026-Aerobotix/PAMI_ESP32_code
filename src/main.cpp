@@ -199,7 +199,7 @@ void strategy(){
                               goto_cmd, 60, 1665, 400, 1,
                               bezier_cmd, 50, 2290, 90, 2330, 280, 2330 , 280, 1,/**********/
                               orientate_cmd, 90, 0,
-                              goto_cmd,285, 2400,300,1,                     // 3000-600
+                              goto_cmd,285, 2430,300,1,                     // 3000-600
                               putdown_cmd, 1, 1,      //drop 2 far
                               set_position_cmd, 285, 2328, 90,
                               goto_cmd, 285, 2300, 400, -1,
