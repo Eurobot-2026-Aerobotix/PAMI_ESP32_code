@@ -348,7 +348,7 @@ int16_t encoder_get_L() {
   return count;
 }
 void move_servo(int position){
-    servo.write(servo_positions[position]);
+    //servo.write(servo_positions[position]);
 }
 void set_EV_states(int left_electrovalve_state, int right_electrovalve_state){
     digitalWrite(electrovalve_R_pin, right_electrovalve_state);
@@ -422,6 +422,7 @@ void HAL_setup()
     servo.setPeriodHertz(50);
     servo.attach(servo_pin);
     move_servo(8);
+    delay(3000);
 
     motorREN_channel = 8;
     motorLEN_channel = 9;
@@ -455,9 +456,9 @@ void custom_delay(int ms)
 }
 void party_time(){
     while(1){
-      move_servo(1);
+      servo.write(servo_positions[1]);
         custom_delay(1000);
-        move_servo(3);
+        servo.write(servo_positions[3]);
         custom_delay(1000);
     }
 }

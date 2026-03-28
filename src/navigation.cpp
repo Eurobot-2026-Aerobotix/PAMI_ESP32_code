@@ -67,6 +67,7 @@ int move_forward(float distance, float speed, float target_x, float target_y, fl
 	wheel_state_R = ACCELERATING;
 	wheel_state_L = ACCELERATING;
 	trajectory = STRAIGHT;
+	
 	control_loop_state = SPEED;
 	starting_phi = absolute_phi;
 	float lane_correction_term;
@@ -82,6 +83,7 @@ int move_forward(float distance, float speed, float target_x, float target_y, fl
 			wheel_state_L = CONTROLLED_BREAK;
 		}else if (wheel_state_R == EMERGENCY_BREAK){
 			emergency_break();
+			party_time();
             extern TaskHandle_t communicationTaskHandle;
             if (communicationTaskHandle != NULL) {
                 vTaskResume(communicationTaskHandle);
@@ -141,6 +143,7 @@ int move_forward(float distance, float speed, float target_x, float target_y, fl
 		}
 		if (wheel_state_R == EMERGENCY_BREAK){
 			emergency_break();
+			party_time();
             extern TaskHandle_t communicationTaskHandle;
             if (communicationTaskHandle != NULL) {
                 vTaskResume(communicationTaskHandle);
