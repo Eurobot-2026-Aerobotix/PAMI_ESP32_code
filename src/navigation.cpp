@@ -30,9 +30,12 @@ int move_forward(float distance, float speed, float target_x, float target_y, fl
         vTaskSuspend(communicationTaskHandle);
     }
     if (heza){
-		ramping_acceleration = 1;
+		ramping_acceleration = 0.75;
+		deceleration_offset = 6.5;
 	}else
 	    ramping_acceleration = 1.7;
+		deceleration_offset = 10;
+
 	distance = fabs(distance);
 
 	speed = fabs(speed);
@@ -242,9 +245,11 @@ int bezier_curve(float x1, float y1, float x2, float y2, float x3, float y3, flo
 	float x0 = current_x;
 	float y0 = current_y;
     if (heza){
-		ramping_acceleration = 1;
-	}else
+		ramping_acceleration = 0.75;
+		deceleration_offset = 6.5;
+	}else{
 	    ramping_acceleration = 1.7;
+		deceleration_offset = 10;}
 	float distance =  get_bezier_distance(0, x0, y0, x1, y1, x2, y2, x3, y3);
 
 	float d_1 = speed/ramping_acceleration;
