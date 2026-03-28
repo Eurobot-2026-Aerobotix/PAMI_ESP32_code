@@ -36,7 +36,7 @@ bool micro_ros_init_successful = false;
 enum CommunicationState comm_state = WAITING_AGENT;
 volatile bool strategy_waiting = false;
 bool crate_colors[8] = {false}; // Initialize all as blue (0 = blue, 1 = yellow)
-bool is_yellow = true;
+bool is_yellow = false;
 
 // WiFi reconnection variables
 unsigned long last_wifi_check = 0;
