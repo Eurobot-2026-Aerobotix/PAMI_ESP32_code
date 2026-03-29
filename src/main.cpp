@@ -330,10 +330,6 @@ void setup()
   set_wheel_diameter_and_spacing(56.31128188897469, 56.02162957201625, 94.17365039646123);
   HAL_setup();
   
-  // Initialize agent LED
-  pinMode(AGENT_LED_PIN, OUTPUT);
-  digitalWrite(AGENT_LED_PIN, LOW);
-  
   // Initialize WebSocket if enabled
   extern int websocket_enabled;
   websocket_enabled = websocket;  // Set from the main websocket variable
@@ -345,19 +341,6 @@ void setup()
 
 
   Serial.println("Creating tasks...");
-
-  //Create tasks with lower stack sizes first
-    xTaskCreatePinnedToCore(
-     communicationTask,
-      "communicationTask",
-      8192,
-      NULL,
-      1, // Lower priority
-       &communicationTaskHandle,
-       0); // Pin to core 0
-
-   delay(500); // Delay between task creation
-   Serial.println("Communication task created");
 
   xTaskCreatePinnedToCore(
       commandExecutionTask,
@@ -379,25 +362,6 @@ void setup()
       &PIDTaskHandle,
       1); // Pin to core 1
   Serial.println("PID task created");
-
-  xTaskCreatePinnedToCore(
-      emergencyBreakTask,
-      "emergencyBreakTask",
-      2048, // Stack size
-      NULL,
-      2, // High priority
-      &emergencyBreakTaskHandle,
-      1); // Pin to core 1
-
-  // Create WebSocket task if enabled
-  xTaskCreatePinnedToCore(
-      websocketTask,
-      "websocketTask",
-      8192, // Larger stack for WebSocket operations
-      NULL,
-      1, // Lower priority than PID
-      &websocketTaskHandle,
-      0); // Pin to core 0 (same as other communication tasks)
   
   delay(500); // Delay between task creation
   Serial.println("WebSocket task created");
@@ -405,7 +369,7 @@ void setup()
   Serial.println("All tasks created successfully!");
   control_loop_state = DISACTIVATED;
   delay(1000);
-  strategy_waiting = 0;
+  strategy_waiting = 1;
 }
 
 void loop(){

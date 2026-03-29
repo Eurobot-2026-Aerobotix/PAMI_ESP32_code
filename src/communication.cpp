@@ -129,10 +129,6 @@ bool setup_micro_ros(const char *wifi_ssid, const char *wifi_password, const cha
     Serial.println("Setting up micro-ROS transport...");
     set_microros_wifi_transports((char *)wifi_ssid, (char *)wifi_password, (char *)agent_ip, agent_port);
 
-    // Initialize LED pin
-    pinMode(LED_PIN, OUTPUT);
-    digitalWrite(LED_PIN, LOW);
-
     // Initialize message data
     start_msg.data = 0;
     action_done_msg.data = 0;
@@ -211,10 +207,6 @@ void communication_loop()
     default:
         break;
     }
-
-    // Update LED status
-    digitalWrite(LED_PIN, (comm_state == AGENT_CONNECTED) ? HIGH : LOW);
-    digitalWrite(AGENT_LED_PIN, (comm_state == AGENT_CONNECTED) ? HIGH : LOW);
 }
 
 // Create all ROS entities (publishers, subscribers, timers)
@@ -410,13 +402,6 @@ void destroy_entities()
     Serial.println("DEBUG: Entity cleanup complete");
 }
 
-// LED blink function - non-blocking version
-void LED_BLINK()
-{
-   
-    digitalWrite(AGENT_LED_PIN, LOW);
-}
-
 // Callback for start topic subscription
 void start_callback(const void *msgin)
 {
@@ -424,9 +409,6 @@ void start_callback(const void *msgin)
     Serial.print("Received start signal: ");
     Serial.println(msg->data);
 
-    // Blink LED to indicate message received
-    LED_BLINK();
-    
     if (msg->data == 1)
     {
         pami_status = false;  // Set status to false when start signal received
@@ -446,9 +428,6 @@ void strategy_callback(const void *msgin)
     Serial.println("Received float table:");
     received_floats_count = msg->data.size;
     commands_count = msg->data.size;
-    
-    // Blink LED to indicate message received
-    LED_BLINK();
     
     for (size_t i = 0; i < msg->data.size && i < 100; i++)
     {

@@ -13,8 +13,6 @@
 #include "HAL.h"
 
 // Macro definitions
-#define LED_PIN 13
-#define AGENT_LED_PIN 25
 #define RCCHECK(fn)                  \
     {                                \
         rcl_ret_t temp_rc = fn;      \
@@ -88,6 +86,5 @@ void status_service_callback(const void *req, void *res);
 void send_action_done(int value);
 bool is_agent_connected();
 void check_wifi_connection(const char *ssid, const char *password);
-void LED_BLINK();
 // Strategy function (to be implemented by user)
 void strategy();
