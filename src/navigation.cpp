@@ -154,8 +154,7 @@ int move_backwards(float distance, float speed){
 	float lane_correction_term;
 	float phase_two_distance = 30;
 
-	bool right_stopped = false;
-	bool left_stopped = false;
+	int start_time = millis();
 	while (distance_to_target > phase_two_distance){
 		x = distance - distance_to_target;
 		if (wheel_state_R == ACCELERATING && x > x1){
@@ -169,6 +168,10 @@ int move_backwards(float distance, float speed){
 			return 1;
 		}
 
+		if ((millis() - start_time) > 2000){
+			break;
+		}
+
 		set_target_speeds(calculate_instant_target_speed_R(x, distance), calculate_instant_target_speed_R(x, distance));
 		custom_delay(4);
 		previous_distance_to_target = distance_to_target;
@@ -178,7 +181,7 @@ int move_backwards(float distance, float speed){
 	wheel_state_R = EMERGENCY_BREAK;
 	wheel_state_L = EMERGENCY_BREAK;
 	stop_motors();
-	int start_time = millis();
+	start_time = millis();
 	while(fabs(current_speed_L) > 5 || fabs(current_speed_R) > 5){
 		custom_delay(10);
 		if (millis() - start_time > 500){
