@@ -52,14 +52,14 @@ void strategy()
   int delay_cmd = 0, goto_cmd = 1, orientate_cmd = 2, set_position_cmd = 3, bezier_cmd = 4, wait_for_cmd = 5;
   
   // Use global commands array received from ROS2
-  extern int commands[];
-  extern size_t commands_count;
+  // extern int commands[];
+  // extern size_t commands_count;
 
-  // int commands[] = {
+   int commands[] = {
   //                   3, 50, 204, 0, 0, 3000, 1, 365, 204, 400, 5, 15000, 0, 500, 1, 1022, 510, 400, 4, 1793, 427, 1399, 1517, 1776, 1547, 500, 1
   //                   // set_position_cmd, 0, 0, 0,
   //                   // bezier_cmd, 550, 0, 250, 1000, 1000, 500, 380, 1,
-  //                   // goto_cmd, 1000, 0, 400,
+                        goto_cmd, 300, 0, 400,
   //                   // goto_cmd, 0, 0, 400,
   //                   // orientate_cmd, 0, 0,
   //                   // set_position_cmd, 357, 199, 0,
@@ -68,9 +68,9 @@ void strategy()
   //                   //  goto_cmd, 1922, 50, 600,
   //                   //  orientate_cmd, 88, 0,
   //                   //  goto_cmd, 1900, 550, 400,
-                    // }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
-  // int num_commands = sizeof(commands) / sizeof(commands[0]);
-  int num_commands = commands_count;
+                     }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
+  int num_commands = sizeof(commands) / sizeof(commands[0]);
+  //int num_commands = commands_count;
   int i = 0;
   strategy_start_time = millis();
   // rotate(1800, 0);
@@ -407,7 +407,7 @@ void setup()
   Serial.println("All tasks created successfully!");
   control_loop_state = DISACTIVATED;
   delay(1000);
-  strategy_waiting = 0;
+  strategy_waiting = 1;
 }
 
 void loop(){
