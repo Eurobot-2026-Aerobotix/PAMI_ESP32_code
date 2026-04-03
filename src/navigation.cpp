@@ -667,4 +667,9 @@ void wait_for_obstacle_clearance() {
 void prepare_emergency_break(){
 	wheel_state_R = EMERGENCY_BREAK;
 	wheel_state_L = EMERGENCY_BREAK;
+	if (millis() - strategy_start_time >= max_running_time) {
+		stop_motors();
+		party_time();
+		return;
+	}
 }

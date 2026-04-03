@@ -41,8 +41,7 @@ enum command {
 	PUTDOWN,
 	WALKING_POSITION,
 	PREPARE,
-	LETGO,
-	PARTY_TIME
+	LETGO
 };
 
 extern enum Control_loop control_loop_state;

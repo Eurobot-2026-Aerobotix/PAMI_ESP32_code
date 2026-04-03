@@ -123,9 +123,6 @@ void strategy()
       letgo();
       i++;
     }
-    else if (command_type == PARTY_TIME){
-      party_time();
-    }
     else if (command_type == BEZIER){
       int x1 = commands[i + 1];
       int y1 = commands[i + 2];
