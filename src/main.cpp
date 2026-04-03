@@ -59,7 +59,7 @@ void strategy()
   //                   3, 50, 204, 0, 0, 3000, 1, 365, 204, 400, 5, 15000, 0, 500, 1, 1022, 510, 400, 4, 1793, 427, 1399, 1517, 1776, 1547, 500, 1
   //                   // set_position_cmd, 0, 0, 0,
   //                   // bezier_cmd, 550, 0, 250, 1000, 1000, 500, 380, 1,
-                        goto_cmd, 300, 0, 400,
+                         goto_cmd, 300, 0, 400,
   //                   // goto_cmd, 0, 0, 400,
   //                   // orientate_cmd, 0, 0,
   //                   // set_position_cmd, 357, 199, 0,
@@ -176,7 +176,7 @@ void emergencyBreakTask(void *pvParameters)
   
   for (;;)
   {
-    if (( ((get_ultrasonic_distance() < (min_distance * max(max(fabs(current_speed_R), fabs(current_speed_L)), 200.0f)/200)) && trajectory != ROTATING && current_x > 5000) || (millis() - strategy_start_time >= max_running_time)) && wheel_state_R != EMERGENCY_BREAK && wheel_state_L != EMERGENCY_BREAK)
+    if (( ((get_ultrasonic_distance() - (max(fabs(current_speed_R), fabs(current_speed_L)) * max(fabs(current_speed_R), fabs(current_speed_L)) / (2 * fabs(emergency_breaking_acceleration))) < min_distance) && trajectory != ROTATING) || (millis() - strategy_start_time >= max_running_time)) && wheel_state_R != EMERGENCY_BREAK && wheel_state_L != EMERGENCY_BREAK)
     {
       prepare_emergency_break();
     }
@@ -461,5 +461,5 @@ void loop(){
   // }
   //send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, debugger);
   // custom_delay(10);
-  send_values_to_usart(deviation_distance * 100, 0, 0, 0);
+  //send_values_to_usart(deviation_distance * 100, 0, 0, 0);
 }
