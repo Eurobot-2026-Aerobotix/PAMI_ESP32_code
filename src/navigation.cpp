@@ -616,3 +616,32 @@ void prepare_emergency_break(){
 	wheel_state_R = EMERGENCY_BREAK;
 	wheel_state_L = EMERGENCY_BREAK;
 }
+
+int add_fixed_strategy_part(int* strategy, int* output, int start_length, int* output_length){
+	int yellow_commands[] = {
+						BACKWARDS, 180, 200,
+						SET_POSITION, 1900, 0, 90,
+						GOTO, 1900, 540, 400,
+					};
+	int blue_commands[] = { 
+						BACKWARDS, 180, 200,
+						SET_POSITION, 1900, 3000, -90,
+						GOTO, 1890, 2460, 400,
+					};
+	for (int i = 0; i < start_length && i < 100; i++){
+		output[i] = strategy[i];
+	}
+	int num_commands = 0;
+	if (is_yellow){
+		num_commands = sizeof(yellow_commands) / sizeof(yellow_commands[0]);
+		for (int i = 0; i < num_commands && i < 100; i++){
+			output[i + start_length] = yellow_commands[i];
+		}
+	}else{
+		num_commands = sizeof(blue_commands) / sizeof(blue_commands[0]);
+		for (int i = 0; i < num_commands && i < 100; i++){
+			output[i + start_length] = blue_commands[i];
+		}
+	}
+	*output_length = start_length + num_commands;
+}

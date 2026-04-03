@@ -32,7 +32,6 @@ int first_delay = 1;
 size_t commands_count = 0;
 bool micro_ros_init_successful = false;
 enum CommunicationState comm_state = WAITING_AGENT;
-bool is_yellow = true;
 
 // WiFi reconnection variables
 unsigned long last_wifi_check = 0;
@@ -131,10 +130,6 @@ bool setup_micro_ros(const char *wifi_ssid, const char *wifi_password, const cha
     Serial.println("Setting up micro-ROS transport...");
     set_microros_wifi_transports((char *)wifi_ssid, (char *)wifi_password, (char *)agent_ip, agent_port);
 
-    // Initialize LED pin
-    pinMode(LED_PIN, OUTPUT);
-    digitalWrite(LED_PIN, LOW);
-
     // Initialize message data
     start_msg.data = 0;
     action_done_msg.data = 0;
@@ -214,8 +209,7 @@ void communication_loop()
     }
 
     // Update LED status
-    digitalWrite(LED_PIN, (comm_state == AGENT_CONNECTED) ? HIGH : LOW);
-    digitalWrite(AGENT_LED_PIN, (comm_state == AGENT_CONNECTED) ? HIGH : LOW);
+    set_agent_led_state(comm_state == AGENT_CONNECTED);
 }
 
 // Create all ROS entities (publishers, subscribers, timers)
@@ -414,9 +408,9 @@ void destroy_entities()
 // LED blink function
 void LED_BLINK()
 {
-    digitalWrite(AGENT_LED_PIN, LOW);
+    set_agent_led_off();
     //vTaskDelay(pdMS_TO_TICKS(100));
-    //digitalWrite(AGENT_LED_PIN, HIGH);
+    //set_agent_led_on();
 }
 
 // Callback for start topic subscription
@@ -465,10 +459,10 @@ void strategy_callback(const void *msgin)
         Serial.println(recieved_commands[i]);
     }
     is_yellow = (recieved_commands[2] < 1500);
-    first_delay = recieved_commands[1];
-    for(int i=2; i<5; i++){
-        deploy_pos[i-2] = recieved_commands[i+1];
-    }
+
+    add_fixed_strategy_part(recieved_commands, strategy_commands, received_floats_count, &strategy_length);
+    
+    save_strategy(strategy_commands, strategy_length, is_yellow);
     
     pami_status = true;  // Set status to true when strategy received
     Serial.println("Strategy received - pami_status set to TRUE");
