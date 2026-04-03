@@ -56,10 +56,11 @@ void strategy()
   extern size_t commands_count;
 
   // int commands[] = {
-  // //                   set_position_cmd, 0, 0, 0,
-  //                      bezier_cmd, 550, 0, 250, 1000, 1000, 500, 500, 1,
-                       //goto_cmd, 500, 0, 500,
-  //                   goto_cmd, 0, 0, 500,
+  //                   3, 50, 204, 0, 0, 3000, 1, 365, 204, 400, 5, 15000, 0, 500, 1, 1022, 510, 400, 4, 1793, 427, 1399, 1517, 1776, 1547, 500, 1
+  //                   // set_position_cmd, 0, 0, 0,
+  //                   // bezier_cmd, 550, 0, 250, 1000, 1000, 500, 380, 1,
+  //                   // goto_cmd, 1000, 0, 400,
+  //                   // goto_cmd, 0, 0, 400,
   //                   // orientate_cmd, 0, 0,
   //                   // set_position_cmd, 357, 199, 0,
   //                   //  goto_cmd, 900, 400, 600,
@@ -328,7 +329,7 @@ void setup()
   set_PWM_min_max(1023, 240, 210, -240, -210);
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(56.8838490721385917724551615442, 58.363460303135798387099654552859, 92.146905981078862140426417061303);
+  set_wheel_diameter_and_spacing(32.24, 33.1032, 82.94835082132307);
   HAL_setup();
   
   // Initialize agent LED
