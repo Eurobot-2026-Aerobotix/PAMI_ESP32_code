@@ -13,7 +13,8 @@ float cruise_speed_R;
 float cruise_speed_L;
 float starting_phi;
 float turning_radius;
-int min_distance = 70;
+int min_distance = 120;
+
 int32_t previous_speed_control_time = 0;
 float speed_offset = 50;
 float deceleration_offset = 10;// eli ybda menou deceleratiuon //40
@@ -207,8 +208,7 @@ int move_backwards(float distance, float speed){
 	float lane_correction_term;
 	float phase_two_distance = 30;
 
-	bool right_stopped = false;
-	bool left_stopped = false;
+	int start_time = millis();
 	while (distance_to_target > phase_two_distance){
 		x = distance - distance_to_target;
 		if (wheel_state_R == ACCELERATING && x > x1){
@@ -222,6 +222,10 @@ int move_backwards(float distance, float speed){
 			return 1;
 		}
 
+		if ((millis() - start_time) > 2000){
+			break;
+		}
+
 		set_target_speeds(calculate_instant_target_speed_R(x, distance), calculate_instant_target_speed_R(x, distance));
 		custom_delay(4);
 		previous_distance_to_target = distance_to_target;
@@ -231,7 +235,7 @@ int move_backwards(float distance, float speed){
 	wheel_state_R = EMERGENCY_BREAK;
 	wheel_state_L = EMERGENCY_BREAK;
 	stop_motors();
-	int start_time = millis();
+	start_time = millis();
 	while(fabs(current_speed_L) > 5 || fabs(current_speed_R) > 5){
 		custom_delay(10);
 		if (millis() - start_time > 500){
@@ -663,4 +667,33 @@ void wait_for_obstacle_clearance() {
 void prepare_emergency_break(){
 	wheel_state_R = EMERGENCY_BREAK;
 	wheel_state_L = EMERGENCY_BREAK;
+}
+
+int add_fixed_strategy_part(int* strategy, int* output, int start_length, int* output_length){
+	int yellow_commands[] = {
+						BACKWARDS, 180, 200,
+						SET_POSITION, 1900, 0, 90,
+						GOTO, 1900, 540, 400,
+					};
+	int blue_commands[] = { 
+						BACKWARDS, 180, 200,
+						SET_POSITION, 1900, 3000, -90,
+						GOTO, 1890, 2460, 400,
+					};
+	for (int i = 0; i < start_length && i < 100; i++){
+		output[i] = strategy[i];
+	}
+	int num_commands = 0;
+	if (is_yellow){
+		num_commands = sizeof(yellow_commands) / sizeof(yellow_commands[0]);
+		for (int i = 0; i < num_commands && i < 100; i++){
+			output[i + start_length] = yellow_commands[i];
+		}
+	}else{
+		num_commands = sizeof(blue_commands) / sizeof(blue_commands[0]);
+		for (int i = 0; i < num_commands && i < 100; i++){
+			output[i + start_length] = blue_commands[i];
+		}
+	}
+	*output_length = start_length + num_commands;
 }

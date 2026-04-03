@@ -1,5 +1,7 @@
 #include "HAL.h"
 
+Preferences prefs;
+
 // motor pins
 int motorLa;
 int motorLb;
@@ -26,6 +28,10 @@ int electrovalve_L_pin;
 int pump_pin;
 int servo_pin;
 Servo servo;
+// tirette
+int tirette_pin;
+int color_switch_pin;
+int agent_led_pin = -1;
 
 // global constants
 int PWM_R_forward_min;
@@ -99,6 +105,10 @@ int servo_positions[9] =  {0, 135, 70, 110, 95, 15, 120,70,140 };   //0, 130, 48
 bool ultrasonic_blocked = true;
 bool heza = false;
 
+int strategy_commands[300];
+int strategy_length;
+bool is_yellow = true;
+
 void set_motor_pins(int right_forward, int right_backward, int left_forward, int left_backward, int right_enable, int left_enable)
 {
     motorRa = right_forward;
@@ -107,6 +117,10 @@ void set_motor_pins(int right_forward, int right_backward, int left_forward, int
     motorLb = left_backward;
     motorREN = right_enable;
     motorLEN = left_enable;
+}
+void set_tirettes_pins(int tirette__pin, int color__switch_pin){
+    tirette_pin = tirette__pin;
+    color_switch_pin = color__switch_pin;
 }
 void set_ultrasonic_pins(int trigger_pin, int echo_pin){
     trigger = trigger_pin;
@@ -117,6 +131,25 @@ void set_system_pins(int right_electrovalve, int left_electrovalve, int pump, in
     electrovalve_L_pin = left_electrovalve;
     pump_pin = pump;
     servo_pin = servo;
+}
+void set_agent_led_pin(int led_pin)
+{
+    agent_led_pin = led_pin;
+}
+void set_agent_led_state(bool state)
+{
+    if (agent_led_pin >= 0)
+    {
+        digitalWrite(agent_led_pin, state ? HIGH : LOW);
+    }
+}
+void set_agent_led_on()
+{
+    set_agent_led_state(true);
+}
+void set_agent_led_off()
+{
+    set_agent_led_state(false);
 }
 void set_encoder_channels(int _encoderRA, int _encoderRB, int _encoderLA, int _encoderLB, int cpr)
 {
@@ -245,6 +278,39 @@ float get_ultrasonic_distance(){
 
     return distance;
 }
+
+bool get_tirette_state(){
+    return digitalRead(tirette_pin);
+}
+bool get_color_switch_state(){
+    return digitalRead(color_switch_pin) == 0;
+}
+
+void save_strategy(int* strategy, int strategy_length, bool yellow){
+    int buffer[strategy_length + 1];
+    buffer[0] = strategy_length;
+    for (int i = 0; i < strategy_length; i++){
+        buffer[i+1] = strategy[i];
+    }
+    prefs.begin("pami", false);
+    prefs.putBytes(yellow? "strategy_yellow" : "strategy_blue", buffer, sizeof(buffer));
+    prefs.end();
+}
+void load_strategy(int* strategy, int* strategy_length, bool yellow){
+    prefs.begin("pami", true);
+    int buffer[300]; // assuming max strategy length is 99
+    size_t bytesRead = prefs.getBytes(yellow? "strategy_yellow" : "strategy_blue", buffer, sizeof(buffer));
+    prefs.end();
+    if (bytesRead > 0 && bytesRead <= sizeof(buffer)){
+        *strategy_length = buffer[0];
+        for (int i = 0; i < *strategy_length; i++){
+            strategy[i] = buffer[i+1];
+        }
+    }else{
+        *strategy_length = 0; // no strategy found
+    }
+}
+
 void reset_position_control_variables(){
 	previous_position_control_time = micros()-999;
 	position_integral_L = 0;
@@ -425,6 +491,15 @@ void HAL_setup()
     servo.setPeriodHertz(50);
     servo.attach(servo_pin);
     move_servo(0);
+
+    pinMode(tirette_pin, INPUT_PULLUP);
+    pinMode(color_switch_pin, INPUT_PULLUP);
+
+    if (agent_led_pin >= 0)
+    {
+        pinMode(agent_led_pin, OUTPUT);
+        set_agent_led_off();
+    }
 
     motorREN_channel = 8;
     motorLEN_channel = 9;

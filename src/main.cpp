@@ -28,279 +28,27 @@ TaskHandle_t commandExecutionTaskHandle;
 TaskHandle_t websocketTaskHandle;
 TaskHandle_t emergencyBreakTaskHandle;
 int websocket=0;
+
+void kill_comms();
+
 // Custom strategy implementation
-void strategy(){
-  Serial.println("PAMI Robot Strategy Started!");
+void strategy()
+{
+  kill_comms();
 
-  Serial.println("Current crate colors:");
-  for (int i = 0; i < 8; i++){
-    Serial.print("Crate ");
-    Serial.print(i + 1);
-    Serial.print(": ");
-    Serial.println(crate_colors[i] ? "YELLOW" : "BLUE");
-  }
+  // Calculate total commands: ROS commands + yellow/blue strategy commands
   
-
-  int goto_cmd = 0, orientate_cmd = 1, set_position_cmd = 2, pickup_cmd = 3, putdown_cmd = 4, walking_position_cmd = 5, prepare_cmd = 6 , letgo_cmd = 7, go_backward_cmd = 8, forward_cmd = 9, move_linear_cmd = 10, rotate_cmd = 11, party_time_cmd = 12, fix_x_cmd = 13, delay_cmd = 14, print_analog12_cmd = 15, bezier_cmd = 16; 
-
-  static const int master_cina_yellow[] = {  
-        // *************** strategy with  up crates **************************
-
-                              set_position_cmd, 66, 680, 90,
-                               goto_cmd, 66, 1100, 400, 1,
-                              goto_cmd, 150, 1100, 400, 1,
-                               pickup_cmd, 1, 1, 0,    // pick up 1 close
-                              goto_cmd, 65, 668, 400, 1,
-                               orientate_cmd, -90, 0,
-                              putdown_cmd, 1, 1,      // drop 1 close
-                              goto_cmd, 40, 668, 400, 1,
-                              set_position_cmd, 80, 770, -90,
-                               goto_cmd, 80, 770, 400, -1,
-                               goto_cmd, -40, 770, 400, -1, 
-                              set_position_cmd, 64, 770, 0, // homing 2'
-                               goto_cmd, 190, 770, 300, 1,
-                              pickup_cmd, 1, 1, 1, // pick up 2 ²niggas
-                              goto_cmd, 130, 770, 400, -1,
-                              goto_cmd, 100, 686, 400, -1,
-                             // orientate_cmd, 120, 0,
-                              orientate_cmd, -90, 0,
-                              putdown_cmd, 0, 1, // drop niggas over close ones
-                               goto_cmd, 80, 725, 400,-1,
-                               goto_cmd, -45, 725, 400,-1,
-                               set_position_cmd, 30, 725, 0, // homing 2' 
-                              goto_cmd, 170, 725, 400, 1,
-                               pickup_cmd, 1, 1, 0, // pick up 2 yellow  
-                                goto_cmd, -60, 725, 300, -1,
-                               set_position_cmd, 25, 725, 0, // homing 2'
-                              goto_cmd, 55, 725, 400, 1,
-                              bezier_cmd ,55, 1070, 120, 1160, 335, 1160, 300, 1,
-                               putdown_cmd, 1, 0,     // drop yellows
-                              goto_cmd, -40, 1170, 400, -1,
-                               set_position_cmd, 25, 1170, 0, // homing 2 
-                              goto_cmd, 40, 1170, 400, 1,
-                               goto_cmd, 40, 1334, 400, 1,
-                              goto_cmd, 80, 1334, 400, 1,
-                             pickup_cmd, 1, 1, 0, // pick up 2 far
-                              goto_cmd, -40, 1334, 400, -1,
-                               set_position_cmd, 25, 1335, 0, // homing 2 
-                               goto_cmd, 60, 1335, 400, 1,
-                              bezier_cmd, 50, 780, 90, 695, 310, 695, 280, 1,
-                              orientate_cmd, -90, 0,
-                              goto_cmd,310, 570,300,1,
-                              putdown_cmd, 1, 1,      //drop 2 far
-                              set_position_cmd, 310, 672, -90,
-                              goto_cmd, 310, 700, 400, -1,
-                               goto_cmd, 310, 1210, 450, 1,
-                               goto_cmd, 310,1190, 400, -1,
-                               goto_cmd, 0, 1190, 400, -1,
-                               set_position_cmd, 0 ,1190, 0, // homing 10000 
-                               goto_cmd, 20,1190, 400, 1,
-                               bezier_cmd, 20, 1285, 20, 1280, 370, 1280, 200, 1,
-                              //  goto_cmd, 20, 1280, 400, 1,
-                              //  goto_cmd, 370, 1280, 400, 1, // drop rest yellow
-                               goto_cmd, 300, 1280, 400, -1,
-                              bezier_cmd, 300, 1660, 305, 1680, 350, 1720, 330, 1,
-                              party_time_cmd
-
-
-
-        // *************** strategy without up crates **************************
-                              // set_position_cmd, 66, 680, 90,
-                              // goto_cmd, 66, 1105, 550, 1,
-                              // goto_cmd, 160, 1105, 400, 1,
-                              // pickup_cmd, 1, 1, 0,    // pick up 1 close
-                              // goto_cmd, 80, 668, 550, 1,
-                              // orientate_cmd, -90, 0,
-                              // putdown_cmd, 1, 1,  // drop 1 close
-                              // goto_cmd, 80, 771, 400, -1,
-                              // orientate_cmd, 0, 0,
-                              // goto_cmd, 160, 708, 300, 1,
-                              // walking_position_cmd, 0,
-                              // orientate_cmd, 20, 0,      // push niggas aside
-                              // goto_cmd,180, 715, 300, 1,
-                              // goto_cmd, 105, 740, 300, -1,
-                              // walking_position_cmd, 1,
-                              // goto_cmd, 105, 620, 300, -1,
-                              // set_position_cmd, 105, 672, 90, // homing 2'
-                              // goto_cmd, 105, 740, 300, 1,
-                              // walking_position_cmd, 0,
-                              // goto_cmd, 205, 740, 400, 1,
-                              // pickup_cmd, 1, 1, 0, // pick up 2 yellow  
-                              // goto_cmd, 20, 740, 200, -1,
-                              // set_position_cmd, 25, 740, 0, // homing 3'
-                              // goto_cmd, 65, 740, 400, 1,
-                              // goto_cmd, 65, 1200, 400, -1,
-                              // goto_cmd, 330, 1200, 500, 1,
-                              // putdown_cmd, 1, 0,     // drop yellows
-                              // goto_cmd,0 , 1200, 250, -1,
-                              // set_position_cmd, 25, 1200, 0, // homing 4
-                              // goto_cmd, 35, 1200, 400, 1,
-                              // goto_cmd, 40, 1365, 500, 1,
-                              // goto_cmd, 80, 1365, 500, 1,
-                              // pickup_cmd, 1, 1, 0, // pick up 2 far
-                              // goto_cmd, -10, 1365, 400, -1,
-                              // set_position_cmd, 25, 1365, 0, // homing 5
-                              // goto_cmd, 50, 1365, 400, 1,
-                              // bezier_cmd ,100, 720, 100, 720, 310, 700, 300, 1,
-                              // goto_cmd, 310, 580, 500, 1,
-                              // putdown_cmd, 1, 1,      //drop 2 far
-                              // set_position_cmd, 310, 668, -90, // homing 6
-                              // goto_cmd, 310, 1200, 200, -1,
-                              // goto_cmd, 310, 1100, 500, 1,
-                              // walking_position_cmd, 0,
-                              // goto_cmd, 310, 1220, 500, 1, // throwing niggas
-                              // pickup_cmd, 1, 1, 0,
-                              // putdown_cmd, 1, 1,
-                              // goto_cmd, 310, 1170, 500, -1,
-                              // walking_position_cmd, 1,
-                              // goto_cmd, 120, 1170, 400, 1,
-                              // goto_cmd, 120, 1300, 400, 1,
-                              // goto_cmd, 380, 1300, 200, 1,
-                              // goto_cmd, -60, 1300, 500, -1,
-                              // set_position_cmd, 10, 1300, 0,
-                              // goto_cmd, 30, 1300, 500, 1,
-                              // goto_cmd, 370, 1750, 500, 1,
-                              // party_time_cmd
-                            };
-  static const int master_cina_blue[] =   {
-                              set_position_cmd, 68, 2320, -90,                // 3000-680
-                              goto_cmd, 75, 1900, 400, 1,                    // 3000-1100
-                              goto_cmd, 150, 1900, 400, 1,
-                              pickup_cmd, 1, 1, 0,    // pick up 1 close
-                              goto_cmd, 57, 2332, 400, 1,                    // 3000-668
-                              orientate_cmd, 90, 0,
-                              putdown_cmd, 1, 1,  // drop 1 close
-                              goto_cmd, 80, 2230, 400, -1,                   // 3000-770
-                              goto_cmd, -20, 2230, 400, -1, 
-                              set_position_cmd, 64, 2230, 0, // homing 2'
-                              goto_cmd, 190, 2230, 300, 1,
-                              pickup_cmd, 1, 1, 1, // pick up 2 niggas
-                              goto_cmd, 130, 2230, 400, -1,
-                              goto_cmd, 100, 2314, 400, -1,                   // 3000-686
-                              // orientate_cmd, -120, 0,
-                              orientate_cmd, 90, 0,
-                              putdown_cmd, 0, 1, // drop niggas over close ones
-                              goto_cmd, 100, 2258, 400,-1,                    // 3000-732
-                              goto_cmd, -20, 2258, 400,-1,
-                              set_position_cmd, 30, 2258, 0, // homing 2' 
-                              goto_cmd, 170, 2258, 400, 1,
-                              pickup_cmd, 1, 1, 0, // pick up 2 yellow  
-                              goto_cmd, -20, 2258, 300, -1,
-                              set_position_cmd, 25, 2258, 0, // homing 2'
-                              goto_cmd, 55, 2258, 400, 1,
-                              bezier_cmd ,55, 1900, 120, 1830, 335, 1830, 280, 1,
-                                  /***********/
-                              putdown_cmd, 1, 0,     // drop yellows
-                              goto_cmd, -40, 1830, 400, -1,                  // 3000-1170
-                              set_position_cmd, 25, 1830, 0, // homing 2 
-                              goto_cmd, 40, 1830, 400, 1,
-                              goto_cmd, 40, 1640, 400, 1,                   // 3000-1335
-                              goto_cmd, 80, 1640, 400, 1,
-                              pickup_cmd, 1, 1, 0, // pick up 2 far
-                              goto_cmd, -30, 1640, 400, -1,
-                              set_position_cmd, 25, 1665, 0, // homing 2 
-                              goto_cmd, 60, 1665, 400, 1,
-                              bezier_cmd, 50, 2290, 90, 2330, 280, 2330 , 280, 1,/**********/
-                              orientate_cmd, 90, 0,
-                              goto_cmd,285, 2430,300,1,                     // 3000-600
-                              putdown_cmd, 1, 1,      //drop 2 far
-                              set_position_cmd, 285, 2328, 90,
-                              goto_cmd, 285, 2300, 400, -1,
-                              goto_cmd, 285, 1790, 450, 1,                 // 3000-1210
-                              goto_cmd, 285, 1810, 400, -1,                   // 3000-1190
-                              goto_cmd, -20, 1810, 400, -1,
-                              set_position_cmd, 0 ,1810, 0, // homing 10000 
-                              goto_cmd, 20,1810, 400, 1,
-                              bezier_cmd, 20, 1710, 20, 1715, 370, 1715, 200, 1,
-                              // goto_cmd, 20, 1715, 400, 1,                  // 3000-1280
-                              // goto_cmd, 370, 1715, 450, 1, // drop rest yellow 
-                              goto_cmd, 285, 1715, 400, -1,
-                              bezier_cmd, 285, 1340, 305, 1320, 350, 1280, 330, 1,/**********/
-                              party_time_cmd
-
-    // --------------- strategy with up crates ----------------
-  // set_position_cmd, 66, 2320, -90,
-  // goto_cmd, 66, 1895, 550, 1,
-  // goto_cmd, 160, 1895, 400, 1,
-  // pickup_cmd, 1, 1, 0,
-  // goto_cmd, 80, 2332, 550, 1,
-  // orientate_cmd, 90, 0,
-  // putdown_cmd, 1, 1,
-  // goto_cmd, 80, 2229, 400, -1,
-  // orientate_cmd, 0, 0,
-  // goto_cmd, 160, 2292, 300, 1,
-  // walking_position_cmd, 0,
-  // orientate_cmd, -20, 0,
-  // goto_cmd, 180, 2285, 300, 1,
-  // goto_cmd, 105, 2260, 300, -1,
-  // walking_position_cmd, 1,
-  // goto_cmd, 105, 2380, 300, -1,
-  // set_position_cmd, 105, 2328, -90,
-  // goto_cmd, 105, 2260, 300, 1,
-  // walking_position_cmd, 0,
-  // goto_cmd, 205, 2260, 400, 1,
-  // pickup_cmd, 1, 1, 0,
-  // goto_cmd, 20, 2260, 200, -1,
-  // set_position_cmd, 25, 2260, 0,
-  // goto_cmd, 65, 2260, 400, 1,
-  // goto_cmd, 65, 1800, 400, -1,
-  // goto_cmd, 330, 1800, 500, 1,
-  // putdown_cmd, 1, 0,
-  // goto_cmd, 0, 1800, 250, -1,
-  // set_position_cmd, 25, 1800, 0,
-  // goto_cmd, 35, 1800, 400, 1,
-  // goto_cmd, 40, 1635, 500, 1,
-  // goto_cmd, 80, 1635, 500, 1,
-  // pickup_cmd, 1, 1, 0,
-  // goto_cmd, -10, 1635, 400, -1,
-  // set_position_cmd, 25, 1635, 0,
-  // goto_cmd, 50, 1635, 400, 1,
-  // goto_cmd, 100, 2280, 550, 1,
-  // goto_cmd, 310, 2300, 500, -1,
-  // orientate_cmd, 90, 0,
-  // goto_cmd, 310, 2420, 500, 1,
-  // putdown_cmd, 1, 1,
-  // set_position_cmd, 310, 2332, 90,
-  // goto_cmd, 310, 1800, 200, -1,
-  // goto_cmd, 310, 1900, 500, 1,
-  // walking_position_cmd, 0,
-  // goto_cmd, 310, 1780, 500, 1,
-  // pickup_cmd, 1, 1, 0,
-  // putdown_cmd, 1, 1,
-  // goto_cmd, 310, 1830, 500, -1,
-  // walking_position_cmd, 1,
-  // goto_cmd, 120, 1830, 400, 1,
-  // goto_cmd, 120, 1700, 400, 1,
-  // goto_cmd, 380, 1700, 200, 1,
-  // goto_cmd, -60, 1700, 500, -1,
-  // set_position_cmd, 10, 1700, 0,
-  // goto_cmd, 30, 1700, 500, 1,
-  // goto_cmd, 370, 1250, 500, 1,
-  // party_time_cmd
-};
-
-
-  const int *commands = is_yellow ? master_cina_yellow : master_cina_blue;
-  int num_commands = is_yellow
-      ? (int)(sizeof(master_cina_yellow) / sizeof(master_cina_yellow[0]))
-      : (int)(sizeof(master_cina_blue) / sizeof(master_cina_blue[0]));
-  extern size_t commands_count;
-  //int num_commands = commands_count;
-  //int num_commands = sizeof(commands) / sizeof(commands[0]); // For testing, replace with commands_count in production
-  if (communicationTaskHandle != NULL) {
-      vTaskDelete(communicationTaskHandle);
-      communicationTaskHandle = NULL;
-      Serial.println("Communication task deleted, strategy is now in control.");
-  }
+  int* commands = strategy_commands; // Assuming strategy_commands is filled with ROS commands
+  int total_commands = strategy_length; // Assuming strategy_length is set to the number of ROS
   int i = 0;
   strategy_start_time = millis();
   // rotate(1800, 0);
   // while(1);
-  while (i < num_commands){
-    Serial.print("current command");
-    Serial.println(i);
+  while (i < total_commands)
+  {
     int command_type = commands[i];
-    if (command_type == goto_cmd){
+    if (command_type == GOTO)
+    {
       int x = commands[i + 1];
       int y = commands[i + 2];
       int speed = commands[i + 3];
@@ -314,62 +62,25 @@ void strategy(){
       Serial.printf("[POS] After goto: robot_x=%.1f, robot_y=%.1f, robot_phi=%.1f deg\n", current_x, current_y, rad_to_deg(current_phi));
       i += 5;
     }
-    else if (command_type == rotate_cmd) {
+    else if (command_type == ORIENTATE)
+    {
       int angle = commands[i + 1];
-      int is_radian = commands[i + 2];
-      Serial.printf("[CMD] rotate_cmd: angle=%d, is_radian=%d\n", angle, is_radian);
-      rotate(angle, is_radian);
-      Serial.printf("[POS] After rotate: robot_x=%.1f, robot_y=%.1f, robot_phi=%.1f deg\n", current_x, current_y, rad_to_deg(current_phi));
-      i += 3;
-    }
-    else if (command_type == orientate_cmd){
-      int angle = commands[i + 1];
-      int is_radian = commands[i + 2];
-      Serial.printf("[CMD] orientate_cmd: angle=%d, is_radian=%d\n", angle, is_radian);
-      orientate(angle, is_radian);
-      Serial.printf("[POS] After orientate: robot_x=%.1f, robot_y=%.1f, robot_phi=%.1f deg\n", current_x, current_y, rad_to_deg(current_phi));
-      i += 3;
-    }
-    else if (command_type == set_position_cmd){
-      int x = commands[i + 1];
-      int y = commands[i + 2];
-      int phi_degrees = commands[i + 3];
-      Serial.printf("[CMD] set_position_cmd: x=%d, y=%d, phi=%d degrees\n", x, y, phi_degrees);
-      float phi_radians = deg_to_rad(phi_degrees);
-      set_position(x, y, phi_radians, phi_radians);
-      Serial.printf("[POS] After set_position: robot_x=%.1f, robot_y=%.1f, robot_phi=%.1f deg\n",   current_x, current_y, rad_to_deg(current_phi));
-      i += 4;
-    }
-    else if (command_type == pickup_cmd){
-      Serial.printf("[CMD] pickup_cmd: arg1=%d, arg2=%d, arg3=%d\n", commands[i + 1], commands[i + 2], commands[i + 3]);
-      pickup(commands[i + 1], commands[i + 2], commands[i + 3]);
-      Serial.printf("[POS] After pickup: robot_x=%.1f, robot_y=%.1f, robot_phi=%.1f deg\n", current_x, current_y, rad_to_deg(current_phi));
-      i += 4;
-    }
-    else if (command_type == putdown_cmd){
-      int bechwaya = commands[i+1];
-      int nid_lot = commands[i+2];
-      Serial.println("[CMD] putdown_cmd");
-      putdown(bechwaya, nid_lot);
-      i += 3;
-    }
-    else if (command_type == walking_position_cmd){
-      int position = commands[i + 1];
-      Serial.println("[CMD] walking_position_cmd");
-      walking_position(position);
+      orientate(angle, 0);
       i += 2;
     }
-    else if (command_type == prepare_cmd){
-      Serial.println("[CMD] prepare_cmd");
-      prepare_servo_up();
-      i++;
-    }
-    else if (command_type == letgo_cmd){
-      Serial.println("[CMD] letgo_cmd");
-      letgo();
-      i++;
-    }
-    else if(command_type == forward_cmd){
+    else if (command_type == SET_POSITION) { 
+      int x = commands[i + 1];
+      int y = commands[i + 2];
+      int phi = commands[i + 3];
+      set_position(x, y, deg_to_rad(phi), deg_to_rad(phi)); 
+      i += 4; 
+    }else if (command_type == WAIT_FOR) {
+      int flag = commands[i + 1];
+      while(millis() - strategy_start_time < flag){
+        custom_delay(5);
+      }
+      i += 2;
+    }else if (command_type == BACKWARDS) {
       int distance = commands[i + 1];
       int speed = commands[i + 2];
       int x = commands[i + 3];
@@ -389,9 +100,12 @@ void strategy(){
     else if (command_type == fix_x_cmd){
       double new_x = commands[i + 1];
       control_loop_state = DISACTIVATED;
-      set_position(new_x, current_y, current_phi, absolute_phi);
+      i += 3;
+    }else if (command_type == DELAY){
+      custom_delay(commands[i+1]);
       i += 2;
-    }else if (command_type == bezier_cmd){
+    }
+     else if (command_type == BEZIER){
       int x1 = commands[i + 1];
       int y1 = commands[i + 2];
       int x2 = commands[i + 3];
@@ -406,51 +120,9 @@ void strategy(){
       }
       i += 9;
     }
-    
-    // else if(command_type == move_linear_cmd){
-    //   int distance = commands[i + 1];
-    //   int speed = commands[i + 2];
-    //   int x = commands[i + 3];
-    //   int y = commands[i + 4];
-    //   int direction = commands[i + 5];
-    //   // while(go_backward_to(x, y, speed)){
-    //   //   wait_for_obstacle_clearance();
-    //   //   Serial.println("obstacle cleared, resuming...");
-    //   //   }
-    //   int result = move_linear(distance, speed, x, y, 1); // direction = 1 for forward
-    //   i += 6;
-    // }
-
-    else if (command_type == delay_cmd) {
-      int delay_time = commands[i + 1];
-      Serial.printf("[CMD] delay_cmd: custom_delay(%d)\n", delay_time);
-      custom_delay(delay_time);
-      i += 2;
-    }
-    else if (command_type == print_analog12_cmd) {
-      int analogValue = analogRead(12);
-      Serial.printf("[CMD] print_analog12_cmd: Analog value on pin 12 = %d\n", analogValue);
-       custom_delay(1000);
-      Serial.printf("[CMD] print_analog12_cmd: Analog value on pin 12 = %d\n", analogValue);
-       custom_delay(1000);
-      Serial.printf("[CMD] print_analog12_cmd: Analog value on pin 12 = %d\n", analogValue);
-       custom_delay(10000);
-      Serial.printf("[CMD] print_analog12_cmd: Analog value on pin 12 = %d\n", analogValue);
-       custom_delay(10000);
-      Serial.printf("[CMD] print_analog12_cmd: Analog value on pin 12 = %d\n", analogValue);
-       custom_delay(10000);
-      Serial.printf("[CMD] print_analog12_cmd: Analog value on pin 12 = %d\n", analogValue);
-       custom_delay(10000);
-      Serial.printf("[CMD] print_analog12_cmd: Analog value on pin 12 = %d\n", analogValue);
-      i += 1;
-      // Add a delay to ensure the message is printed before executing the next command
-    }
-    else{
-      Serial.print("Unknown command type: ");
-      Serial.println(command_type);
-      break; // Exit the loop on unknown command
-    }
   }
+  control_loop_state = DISACTIVATED;
+	stop_motors();
   // 3. Send completion signal
   //send_action_done(1);
 
@@ -564,6 +236,7 @@ void PIDTask(void *pvParameters){
       previous_speed_error_L = error;
 
       PWM_L = PWM_L * 0.0 + 1.0 * (PWM_offset_L + kpS_L * error + kdS_L * speed_derivative_L + kiS_L * speed_integral_L);
+      PWM_L = PWM_L * 0.0 + 1.0 * (PWM_offset_L + kpS_L * error + kdS_L * speed_derivative_L + kiS_L * speed_integral_L);
       PWM_L = (PWM_L > PWM_max) ? PWM_max : (PWM_L < -PWM_max) ? -PWM_max : PWM_L;
       PWM_L = (target_speed_L == 0) ? 0 : PWM_L;
 
@@ -585,7 +258,7 @@ void PIDTask(void *pvParameters){
       position_integral_R = ( (PWM_R == PWM_max) || (PWM_R == -PWM_max) )? (position_integral_R - 2*error*dt) : position_integral_R;
 
       // left motor position control
-      error = (target_encoder_count_L - encoder_count_L);
+      error = (target_encoder_count_L - encoder_count_L)*2;
 
       position_derivative_L = (error - previous_position_error_L)/dt; // unit = mm/s²
       position_integral_L = ( SGN(error) == SGN( previous_position_error_L) )? position_integral_L + error*dt : 0;
@@ -678,6 +351,20 @@ void websocketTask(void *pvParameters)
   }
 }
 
+void kill_comms(){
+  if (communicationTaskHandle == NULL) {
+    return;
+  }
+
+  eTaskState comm_state = eTaskGetState(communicationTaskHandle);
+  if (comm_state != eDeleted) {
+    cleanup_micro_ros();
+    vTaskDelete(communicationTaskHandle);
+  }
+
+  communicationTaskHandle = NULL;
+}
+
  void setup()
 {
   // Initialize Serial for debugging
@@ -688,8 +375,12 @@ void websocketTask(void *pvParameters)
   Serial.println("Setting motor pins...");
   set_motor_pins( 19, 18, 21, 22, 17, 23);  // shah 19, 18, 21, 22, 17, 23
 
-  
   set_system_pins(32, 26, 33, 27);// bdlthom //25
+
+  // TODO: Set tirette pins
+  set_tirettes_pins(27, 33);
+
+  set_agent_led_pin(25);
 
   Serial.println("Setting encoder channels...");
   set_encoder_channels(2, 15, 4, 16, 1400); // badalthom  2, 15, 4, 16, 
@@ -702,20 +393,6 @@ void websocketTask(void *pvParameters)
   Serial.println("Setting wheel parameters...");
   set_wheel_diameter_and_spacing(47.746482927568600730665129011754, 47.669870635475871651225659202322, 120.4418940144483039743055580586);
   HAL_setup();
-  
-  // Initialize agent LED
-  pinMode(AGENT_LED_PIN, OUTPUT);
-  digitalWrite(AGENT_LED_PIN, LOW);
-  
-  // Initialize WebSocket if enabled
-  extern int websocket_enabled;
-  websocket_enabled = websocket;  // Set from the main websocket variable
-  if (websocket_enabled == 1) {
-    Serial.println("Initializing WebSocket...");
-    websocket_init();
-    delay(1000);
-  }
-
 
   Serial.println("Creating tasks...");
   
@@ -763,26 +440,28 @@ void websocketTask(void *pvParameters)
       &emergencyBreakTaskHandle,
       1); // Pin to core 1
 
-  // Create WebSocket task if enabled
- /* if (websocket_enabled == 1) {
-    xTaskCreatePinnedToCore(
-        websocketTask,
-        "websocketTask",
-        8192, // Larger stack for WebSocket operations
-        NULL,
-        1, // Lower priority than PID
-        &websocketTaskHandle,
-        0); // Pin to core 0 (same as other communication tasks)
-    
-    delay(500); // Delay between task creation
-    Serial.println("WebSocket task created");
-  }
-*/
+  delay(500); // Delay between task creation
+  Serial.println("WebSocket task created");
+
   Serial.println("All tasks created successfully!");
   control_loop_state = DISACTIVATED;
-  delay(100);
-  strategy_waiting = false ; // Start the strategy after setup;
-
+  delay(1000);
+  strategy_waiting = 0;
+  if (get_tirette_state() == 0){
+    kill_comms();
+    for(int i=0; i<4; i++){
+      set_agent_led_on();
+      custom_delay(500);
+      set_agent_led_off();
+      custom_delay(500);
+    }
+    is_yellow = get_color_switch_state();
+    load_strategy(strategy_commands, &strategy_length, is_yellow);
+    while(get_tirette_state() == 0){
+      custom_delay(10);
+    }
+    strategy_waiting = 1;
+  }
 }
 void loop(){
    

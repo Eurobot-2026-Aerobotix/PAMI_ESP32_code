@@ -11,10 +11,9 @@
 #include <std_msgs/msg/int32.h>
 #include <std_srvs/srv/trigger.h>
 #include "HAL.h"
+#include "navigation.h"
 
 // Macro definitions
-#define LED_PIN 13
-#define AGENT_LED_PIN 25
 #define RCCHECK(fn)                  \
     {                                \
         rcl_ret_t temp_rc = fn;      \
@@ -74,9 +73,7 @@ extern float received_floats[200];
 extern size_t received_floats_count;
 extern int commands[200];
 extern size_t commands_count;
-
-// Task handle for suspending communication during navigation
-extern TaskHandle_t communicationTaskHandle;
+extern int recieved_commands[100];
 // Core functions
 bool setup_micro_ros(const char *wifi_ssid, const char *wifi_password, const char *agent_ip, int agent_port);
 void communication_loop();
