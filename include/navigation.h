@@ -36,7 +36,13 @@ enum command {
 	SET_POSITION,
 	BEZIER,
 	WAIT_FOR,
-	BACKWARDS
+	BACKWARDS,
+	PICKUP,
+	PUTDOWN,
+	WALKING_POSITION,
+	PREPARE,
+	LETGO,
+	PARTY_TIME
 };
 
 extern enum Control_loop control_loop_state;
@@ -75,4 +81,3 @@ void wait_for_obstacle_clearance();
 void wait_for_idle();
 void prepare_emergency_break();
 int bezier_curve(float x1, float y1, float x2, float y2, float x3, float y3, float speed, int direction);
-int add_fixed_strategy_part(int* strategy, int* output, int start_length, int* output_length);

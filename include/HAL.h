@@ -135,7 +135,7 @@ extern bool strategy_waiting;
 extern int servo_positions[9];
 extern bool ultrasonic_blocked;
 extern bool heza;
-extern int strategy_commands[300];
+extern int strategy_commands[400];
 extern int strategy_length;
 extern bool is_yellow;
 

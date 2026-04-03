@@ -105,9 +105,10 @@ int servo_positions[9] =  {0, 135, 70, 110, 95, 15, 120,70,140 };   //0, 130, 48
 bool ultrasonic_blocked = true;
 bool heza = false;
 
-int strategy_commands[300];
+int strategy_commands[400];
 int strategy_length;
 bool is_yellow = true;
+bool strategy_waiting = false;
 
 void set_motor_pins(int right_forward, int right_backward, int left_forward, int left_backward, int right_enable, int left_enable)
 {
@@ -298,7 +299,7 @@ void save_strategy(int* strategy, int strategy_length, bool yellow){
 }
 void load_strategy(int* strategy, int* strategy_length, bool yellow){
     prefs.begin("pami", true);
-    int buffer[300]; // assuming max strategy length is 99
+    int buffer[400]; // assuming max strategy length is 99
     size_t bytesRead = prefs.getBytes(yellow? "strategy_yellow" : "strategy_blue", buffer, sizeof(buffer));
     prefs.end();
     if (bytesRead > 0 && bytesRead <= sizeof(buffer)){

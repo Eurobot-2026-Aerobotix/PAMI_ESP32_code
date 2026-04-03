@@ -94,18 +94,39 @@ void strategy()
       move_forward(distance,speed, x, y,direction);
       i += 6;
     }
-    else if (command_type == party_time_cmd){
-      party_time();
+    else if (command_type == PICKUP){
+      Serial.printf("[CMD] pickup_cmd: arg1=%d, arg2=%d, arg3=%d\n", commands[i + 1], commands[i + 2], commands[i + 3]);
+      pickup(commands[i + 1], commands[i + 2], commands[i + 3]);
+      Serial.printf("[POS] After pickup: robot_x=%.1f, robot_y=%.1f, robot_phi=%.1f deg\n", current_x, current_y, rad_to_deg(current_phi));
+      i += 4;
     }
-    else if (command_type == fix_x_cmd){
-      double new_x = commands[i + 1];
-      control_loop_state = DISACTIVATED;
+    else if (command_type == PUTDOWN){
+      int bechwaya = commands[i+1];
+      int nid_lot = commands[i+2];
+      Serial.println("[CMD] putdown_cmd");
+      putdown(bechwaya, nid_lot);
       i += 3;
-    }else if (command_type == DELAY){
-      custom_delay(commands[i+1]);
+    }
+    else if (command_type == WALKING_POSITION){
+      int position = commands[i + 1];
+      Serial.println("[CMD] walking_position_cmd");
+      walking_position(position);
       i += 2;
     }
-     else if (command_type == BEZIER){
+    else if (command_type == PREPARE){
+      Serial.println("[CMD] prepare_cmd");
+      prepare_servo_up();
+      i++;
+    }
+    else if (command_type == LETGO){
+      Serial.println("[CMD] letgo_cmd");
+      letgo();
+      i++;
+    }
+    else if (command_type == PARTY_TIME){
+      party_time();
+    }
+    else if (command_type == BEZIER){
       int x1 = commands[i + 1];
       int y1 = commands[i + 2];
       int x2 = commands[i + 3];
@@ -119,6 +140,12 @@ void strategy()
         Serial.println("obstacle cleared, resuming...");
       }
       i += 9;
+    }
+    else if (command_type == DELAY){
+      int delay_time = commands[i + 1];
+      Serial.printf("[CMD] delay_cmd: custom_delay(%d)\n", delay_time);
+      custom_delay(delay_time);
+      i += 2;
     }
   }
   control_loop_state = DISACTIVATED;

@@ -480,8 +480,10 @@ void strategy_callback(const void *msgin)
         Serial.println(recieved_commands[i]);
     }
     is_yellow = (recieved_commands[2] < 1500);
-
-    add_fixed_strategy_part(recieved_commands, strategy_commands, received_floats_count, &strategy_length);
+    for (int i=0; i< received_floats_count; i++){
+        strategy_commands[i] = (int)received_floats[i];
+    }
+    strategy_length = received_floats_count;
     
     save_strategy(strategy_commands, strategy_length, is_yellow);
     
