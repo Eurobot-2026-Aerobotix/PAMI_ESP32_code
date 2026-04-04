@@ -25,6 +25,7 @@ TaskHandle_t commandExecutionTaskHandle;
 TaskHandle_t websocketTaskHandle;
 TaskHandle_t emergencyBreakTaskHandle;
 int websocket=0;
+float deviation_distance;
 
 // Custom strategy implementation
 void strategy()
@@ -54,21 +55,22 @@ void strategy()
   // extern int commands[];
   // extern size_t commands_count;
 
-  int commands[] = {
-                    set_position_cmd, 0, 0, 0,
-                    // bezier_cmd, 550, 0, 250, 1000, 1000, 500, 500, 1,
-                    goto_cmd, 1000, 0, 300,
-                    goto_cmd, 0, 0, 300,
-                    // orientate_cmd, 0, 0,
-                    // set_position_cmd, 357, 199, 0,
-                    //  goto_cmd, 900, 400, 600,
-                    //  goto_cmd, 1650, 380, 600,
-                    //  goto_cmd, 1922, 50, 600,
-                    //  orientate_cmd, 88, 0,
-                    //  goto_cmd, 1900, 550, 400,
-                    }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
+   int commands[] = {
+  //                   3, 50, 204, 0, 0, 3000, 1, 365, 204, 400, 5, 15000, 0, 500, 1, 1022, 510, 400, 4, 1793, 427, 1399, 1517, 1776, 1547, 500, 1
+  //                   // set_position_cmd, 0, 0, 0,
+  //                   // bezier_cmd, 550, 0, 250, 1000, 1000, 500, 380, 1,
+                         goto_cmd, 300, 0, 400,
+  //                   // goto_cmd, 0, 0, 400,
+  //                   // orientate_cmd, 0, 0,
+  //                   // set_position_cmd, 357, 199, 0,
+  //                   //  goto_cmd, 900, 400, 600,
+  //                   //  goto_cmd, 1650, 380, 600,
+  //                   //  goto_cmd, 1922, 50, 600,
+  //                   //  orientate_cmd, 88, 0,
+  //                   //  goto_cmd, 1900, 550, 400,
+                     }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
   int num_commands = sizeof(commands) / sizeof(commands[0]);
-  // int num_commands = commands_count;
+  //int num_commands = commands_count;
   int i = 0;
   strategy_start_time = millis();
   // rotate(1800, 0);
@@ -126,6 +128,8 @@ void strategy()
       i += 2;
     }
   }
+  control_loop_state = DISACTIVATED;
+	stop_motors();
   // 3. Send completion signal
   send_action_done(1);
 
@@ -140,7 +144,7 @@ void communicationTask(void *pvParameters)
   Serial.println("Communication task started");
   
   // Setup micro-ROS (will handle WiFi connection internally)
-  if (setup_micro_ros("hrissa", "harissaharissa2026", "10.42.1.1", 8888))
+  if (setup_micro_ros("harissa", "harissaharissa2026", "10.42.1.1", 8888))
   {
     Serial.println("micro-ROS setup successful");
   }
@@ -157,7 +161,7 @@ void communicationTask(void *pvParameters)
     } else {
       // If WiFi disconnected, try to reconnect
       Serial.println("WiFi disconnected in task, attempting reconnection...");
-      connect_wifi("hrissa", "harissaharissa2026");
+      connect_wifi("harissa", "harissaharissa2026");
       vTaskDelay(pdMS_TO_TICKS(5000)); // Wait 5 seconds before next attempt
     }
 
@@ -262,7 +266,8 @@ void PIDTask(void *pvParameters){
       previous_position_error_L = error;
     }
     
-
+    PWM_R = 300;
+    PWM_L = 300;
     run_right_motor();
     run_left_motor();
 
@@ -316,7 +321,7 @@ void setup()
   Serial.println("Setting motor pins...");
   set_motor_pins(22, 21, 18, 19, 23, 26);
 
-  set_ultrasonic_pins(14, 12);
+  set_ultrasonic_pins(14, 27);
 
   Serial.println("Setting encoder channels...");
   set_encoder_channels(4, 16, 15, 2, 350);
@@ -325,7 +330,7 @@ void setup()
   set_PWM_min_max(1023, 240, 210, -240, -210);
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(56.8838490721385917724551615442, 58.363460303135798387099654552859, 92.146905981078862140426417061303);
+  set_wheel_diameter_and_spacing(32.24, 33.1032, 82.94835082132307);
   HAL_setup();
   
   // Initialize agent LED
@@ -403,7 +408,7 @@ void setup()
   Serial.println("All tasks created successfully!");
   control_loop_state = DISACTIVATED;
   delay(1000);
-  strategy_waiting = 1;
+  strategy_waiting = 0;
 }
 
 void loop(){
@@ -457,4 +462,5 @@ void loop(){
   // }
   //send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, debugger);
   // custom_delay(10);
+  //send_values_to_usart(deviation_distance * 100, 0, 0, 0);
 }
