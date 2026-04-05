@@ -18,6 +18,7 @@
 
 #include <Arduino.h>
 #include "driver/pcnt.h"
+#include <Preferences.h>
 
 #define FAST_READ(pin) (((uint32_t)((pin) < 32 ? GPIO.in : GPIO.in1.val) >> ((pin) & 31)) & 0x1)
 
@@ -25,6 +26,7 @@
 #define PCNT_CH   PCNT_CHANNEL_0
 #define PCNT_UNIT PCNT_UNIT_1
 #define PCNT_CH   PCNT_CHANNEL_1
+extern Preferences prefs;
 
 // motor pins
 extern int motorLa;
@@ -45,6 +47,11 @@ extern int encoderLB;
 // distance sensor pins
 extern int trigger;
 extern int echo;
+
+// tirette
+extern int tirette_pin;
+extern int color_switch_pin;
+extern int agent_led_pin;
 
 // global constants
 extern int PWM_R_forward_min;
@@ -114,11 +121,20 @@ extern float kdP_L;
 extern float kiP_L;
 extern volatile float debugger;
 extern int strategy_start_time;
-const int max_running_time = 100000; // 15 seconds
+const int max_running_time = 100000;
 extern bool strategy_waiting;
 
+extern int strategy_commands[300];
+extern int strategy_length;
+extern bool is_yellow;
+
 void set_motor_pins(int right_forward, int right_backward, int left_forward, int left_backward, int right_enable, int left_enable);
+void set_tirettes_pins(int tirette_pin, int color_switch_pin);
 void set_ultrasonic_pins(int trigger_pin, int echo_pin);
+void set_agent_led_pin(int led_pin);
+void set_agent_led_state(bool state);
+void set_agent_led_on();
+void set_agent_led_off();
 void set_encoder_channels(int _encoderRA, int _encoderRB, int _encoderLA, int _encoderLB, int cpr);
 void set_PWM_min_max(int PWM__max, int PWM__R_forward_min, int PWM__L_forward_min, int PWM__R_backward_min, int PWM__L_backward_min);
 void set_wheel_diameter_and_spacing(float wheel__diameter_R, float wheel__diameter_L, float wheel__spacing);
@@ -136,6 +152,12 @@ void send_values_to_usart(float value1, float value2, float value3, float value4
 
 float get_ultrasonic_distance();
 void reset_position_control_variables();
+
+bool get_tirette_state();
+bool get_color_switch_state();
+
+void save_strategy(int* strategy, int strategy_length, bool yellow);
+void load_strategy(int* strategy, int* strategy_length, bool yellow);
 
 void encoder_init();
 int16_t encoder_get_R();
