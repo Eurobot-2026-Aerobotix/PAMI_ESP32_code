@@ -4,7 +4,7 @@ enum Control_loop control_loop_state = SPEED;
 enum Wheel_state wheel_state_R = DEAD_STOP;
 enum Wheel_state wheel_state_L = DEAD_STOP;
 enum Trajectory trajectory = STRAIGHT;
-float ramping_acceleration = 2;
+float ramping_acceleration = 3;
 float breaking_acceleration = -3;
 float emergency_breaking_acceleration = -10;
 float rotating_speed = 200;
@@ -419,6 +419,7 @@ int rotate(float angle, int8_t is_radian){
 		x1 = speed / rotating_ramping_acceleration;
 		x2 = speed / rotating_breaking_acceleration + distance;
 	}
+	acc_linearization_coef = sqrt(x1);
 
 	cruise_speed_R = speed * direction_R;
 	cruise_speed_L = speed * direction_L;
