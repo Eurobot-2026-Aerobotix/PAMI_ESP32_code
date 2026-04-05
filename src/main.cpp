@@ -101,6 +101,8 @@ void strategy()
       i += 2;
     }
      else if (command_type == BEZIER){
+      int x0 = current_x;
+      int y0 = current_y;
       int x1 = commands[i + 1];
       int y1 = commands[i + 2];
       int x2 = commands[i + 3];
@@ -109,7 +111,17 @@ void strategy()
       int y3 = commands[i + 6];
       int speed = commands[i + 7];
       int direction = commands[i + 8];
-      while(bezier_curve(x1, y1, x2, y2, x3, y3, speed, direction)){
+      while(1){
+        if (!bezier_curve(x1, y1, x2, y2, x3, y3, speed, direction)){
+          break;
+        }
+        float t = project_bezier(current_x, current_y, x0, y0, x1, y1, x2, y2, x3, y3);
+        int new_x1, new_y1, new_x2, new_y2;
+        approximate_sub_bezier(x0, y0, x1, y1, x2, y2, x3, y3, t, &x0, &y0, &new_x1, &new_y1, &new_x2, &new_y2, &x3, &y3);
+        x1 = new_x1;
+        y1 = new_y1;
+        x2 = new_x2;
+        y2 = new_y2;
         wait_for_obstacle_clearance();
         Serial.println("obstacle cleared, resuming...");
         Serial.println("mahdi y7ebb louled");
