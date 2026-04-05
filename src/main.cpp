@@ -32,16 +32,33 @@ void kill_comms();
 void strategy()
 {
   kill_comms();
+  Serial.println("Executing strategy...");
 
   // Calculate total commands: ROS commands + yellow/blue strategy commands
   
   int* commands = strategy_commands; // Assuming strategy_commands is filled with ROS commands
-  int total_commands = strategy_length; // Assuming strategy_length is set to the number of ROS
+  int num_commands = strategy_length; // Assuming strategy_length is set to the number of ROS
+
+  // int commands[] = {
+  //                 SET_POSITION, 0, 0, 0,
+  //                 // bezier_cmd, 550, 0, 250, 1000, 1000, 500, 600, 1,
+  //                 GOTO, 500, 0, 380,
+  //                 // goto_cmd, 0, 0, 500,
+  //                 // orientate_cmd, 90, 0,
+  //                 // set_position_cmd, 357, 199, 0,
+  //                 // goto_cmd, 900, 400, 600,
+  //                 // goto_cmd, 1650, 380, 600,
+  //                 // goto_cmd, 1922, 50, 600,
+  //                 // orientate_cmd, 88, 0,
+  //                 // goto_cmd, 1900, 550, 400,
+  //                 }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
+  // int num_commands = sizeof(commands) / sizeof(commands[0]);
+
   int i = 0;
   strategy_start_time = millis();
   // rotate(1800, 0);
   // while(1);
-  while (i < total_commands)
+  while (i < num_commands)
   {
     int command_type = commands[i];
     if (command_type == GOTO)
@@ -52,7 +69,6 @@ void strategy()
       while(go_to(x, y, speed)){
         wait_for_obstacle_clearance();
         Serial.println("obstacle cleared, resuming...");
-        Serial.println("DHIA y7ebb louled w yheb mahdi");
       }
       i += 4;
     }
@@ -103,6 +119,7 @@ void strategy()
   }
   control_loop_state = DISACTIVATED;
 	stop_motors();
+  party_time();
   // 3. Send completion signal
   send_action_done(1);
 
@@ -117,7 +134,7 @@ void communicationTask(void *pvParameters)
   Serial.println("Communication task started");
   
   // Setup micro-ROS (will handle WiFi connection internally)
-  if (setup_micro_ros("hrissa", "harissaharissa2026", "10.42.2.1", 8888))
+  if (setup_micro_ros("harissa", "harissaharissa2026", "10.42.1.1", 8888))
   {
     Serial.println("micro-ROS setup successful");
   }
@@ -134,7 +151,7 @@ void communicationTask(void *pvParameters)
     } else {
       // If WiFi disconnected, try to reconnect
       Serial.println("WiFi disconnected in task, attempting reconnection...");
-      connect_wifi("hrissa", "harissaharissa2026");
+      connect_wifi("harissa", "harissaharissa2026");
       vTaskDelay(pdMS_TO_TICKS(5000)); // Wait 5 seconds before next attempt
     }
 
@@ -149,7 +166,7 @@ void emergencyBreakTask(void *pvParameters)
   
   for (;;)
   {
-    if (( ((get_ultrasonic_distance() < (min_distance * max(max(fabs(current_speed_R), fabs(current_speed_L)), 200.0f)/200)) && trajectory != ROTATING && current_x > 5000) || (millis() - strategy_start_time >= max_running_time)) && wheel_state_R != EMERGENCY_BREAK && wheel_state_L != EMERGENCY_BREAK)
+    if (( ((get_ultrasonic_distance() < (min_distance * max(max(fabs(current_speed_R), fabs(current_speed_L)), 200.0f)/200)) && trajectory != ROTATING) || (millis() - strategy_start_time >= max_running_time)) && wheel_state_R != EMERGENCY_BREAK && wheel_state_L != EMERGENCY_BREAK)
     {
       prepare_emergency_break();
     }
@@ -258,7 +275,6 @@ void commandExecutionTask(void *pvParameters)
   {
     if (strategy_waiting) {
       strategy_waiting = 0;
-      //custom_delay(85000);
       strategy();
     }
     execute_command();
@@ -305,12 +321,13 @@ void setup()
   Serial.println("=== PAMI ESP32 Setup ===");
 
   Serial.println("Setting motor pins...");
-  set_motor_pins(26, 21, 18, 19, 23, 17);
+  set_motor_pins(27, 21, 18, 19, 23, 17);
 
   set_ultrasonic_pins(14, 12);
 
-  // TODO: Set tirette pins
-  set_tirettes_pins(27, 33);
+  set_tirettes_pins(26, 33);
+
+  set_servo_pin(32);
 
   set_agent_led_pin(25);
 
@@ -378,16 +395,19 @@ void setup()
   strategy_waiting = 0;
   if (get_tirette_state() == 0){
     kill_comms();
-    for(int i=0; i<4; i++){
+    for(int i=0; i<2; i++){
       set_agent_led_on();
-      custom_delay(500);
+      custom_delay(300);
       set_agent_led_off();
-      custom_delay(500);
+      custom_delay(300);
     }
     is_yellow = get_color_switch_state();
     load_strategy(strategy_commands, &strategy_length, is_yellow);
+    bool status = false;
     while(get_tirette_state() == 0){
-      custom_delay(10);
+      custom_delay(40);
+      set_agent_led_state(status);
+      status = !status;
     }
     strategy_waiting = 1;
   }

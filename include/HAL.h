@@ -19,6 +19,7 @@
 #include <Arduino.h>
 #include "driver/pcnt.h"
 #include <Preferences.h>
+#include "ESP32Servo.h"
 
 #define FAST_READ(pin) (((uint32_t)((pin) < 32 ? GPIO.in : GPIO.in1.val) >> ((pin) & 31)) & 0x1)
 
@@ -52,6 +53,9 @@ extern int echo;
 extern int tirette_pin;
 extern int color_switch_pin;
 extern int agent_led_pin;
+
+//servo 
+extern int servo_pin;
 
 // global constants
 extern int PWM_R_forward_min;
@@ -132,6 +136,7 @@ void set_motor_pins(int right_forward, int right_backward, int left_forward, int
 void set_tirettes_pins(int tirette_pin, int color_switch_pin);
 void set_ultrasonic_pins(int trigger_pin, int echo_pin);
 void set_agent_led_pin(int led_pin);
+void set_servo_pin(int servo__pin);
 void set_agent_led_state(bool state);
 void set_agent_led_on();
 void set_agent_led_off();
@@ -165,3 +170,4 @@ int16_t encoder_get_L();
 
 void HAL_setup();
 void custom_delay(int ms);
+void party_time();

@@ -410,8 +410,6 @@ void destroy_entities()
 void LED_BLINK()
 {
     set_agent_led_off();
-    //vTaskDelay(pdMS_TO_TICKS(100));
-    //set_agent_led_on();
 }
 
 // Callback for start topic subscription
@@ -461,7 +459,10 @@ void strategy_callback(const void *msgin)
     }
     is_yellow = (recieved_commands[2] < 1500);
 
-    add_fixed_strategy_part(recieved_commands, strategy_commands, received_floats_count, &strategy_length);
+    for (int i = 0; i < received_floats_count && i < 200; i++){
+        strategy_commands[i] = received_floats[i];
+    }
+    strategy_length = received_floats_count;
     
     save_strategy(strategy_commands, strategy_length, is_yellow);
     
