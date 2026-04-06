@@ -48,6 +48,9 @@ extern int encoderLB;
 extern int trigger;
 extern int echo;
 
+// servo pins
+extern int servo_pin;
+
 // tirette
 extern int tirette_pin;
 extern int color_switch_pin;
@@ -162,6 +165,11 @@ void load_strategy(int* strategy, int* strategy_length, bool yellow);
 void encoder_init();
 int16_t encoder_get_R();
 int16_t encoder_get_L();
+
+void set_servo_pin(int pin);
+void init_servo();
+void set_servo_angle(int angle);
+void set_servo_position(int position);
 
 void HAL_setup();
 void custom_delay(int ms);

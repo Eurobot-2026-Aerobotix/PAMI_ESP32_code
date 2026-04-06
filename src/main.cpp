@@ -32,15 +32,29 @@ void kill_comms();
 void strategy()
 {
   kill_comms();
-
+  int delay_cmd = 0, goto_cmd = 1, orientate_cmd = 2, set_position_cmd = 3, bezier_cmd = 4, wait_for_cmd = 5;
   // Calculate total commands: ROS commands + yellow/blue strategy commands
-  
-  int* commands = strategy_commands; // Assuming strategy_commands is filled with ROS commands
-  int total_commands = strategy_length; // Assuming strategy_length is set to the number of ROS
+  int commands[] = {
+                   // set_position_cmd, 0, 0, 0,
+                    // bezier_cmd, 550, 0, 250, 1000, 1000, 500, 500, 1,
+                    goto_cmd, 1000, 0, 500,
+                    //goto_cmd, 0, 0, 300,
+                    // orientate_cmd, 0, 0,
+                    // set_position_cmd, 357, 199, 0,
+                    //  goto_cmd, 900, 400, 600,
+                    //  goto_cmd, 1650, 380, 600,
+                    //  goto_cmd, 1922, 50, 600,
+                    //  orientate_cmd, 88, 0,
+                    //  goto_cmd, 1900, 550, 400,
+                    }; 
+  //int* commands = strategy_commands; // Assuming strategy_commands is filled with ROS commands
+  //int total_commands = strategy_length; // Assuming strategy_length is set to the number of ROS
   int i = 0;
   strategy_start_time = millis();
   // rotate(1800, 0);
   // while(1);
+   int total_commands = sizeof(commands) / sizeof(commands[0]);
+ 
   while (i < total_commands)
   {
     int command_type = commands[i];
@@ -148,7 +162,7 @@ void emergencyBreakTask(void *pvParameters)
   
   for (;;)
   {
-    if (( ((get_ultrasonic_distance() < (min_distance * max(max(fabs(current_speed_R), fabs(current_speed_L)), 200.0f)/200) && trajectory != ROTATING && current_x < 1700 && current_x > 5000) || (millis() - strategy_start_time >= max_running_time)) && wheel_state_R != EMERGENCY_BREAK && wheel_state_L != EMERGENCY_BREAK) ){
+    if (((get_ultrasonic_distance() < (min_distance)) && trajectory != ROTATING) || ((millis() - strategy_start_time >= max_running_time) && wheel_state_R != EMERGENCY_BREAK && wheel_state_L != EMERGENCY_BREAK)) {
       prepare_emergency_break();
     }
 
@@ -310,6 +324,9 @@ void setup()
 
   set_agent_led_pin(25);
 
+  Serial.println("Setting servo pins...");
+  set_servo_pin(32); // servo on pin 32
+
   Serial.println("Setting encoder channels...");
   set_encoder_channels(4, 16, 15, 2, 350);
 
@@ -371,7 +388,7 @@ void setup()
   Serial.println("All tasks created successfully!");
   control_loop_state = DISACTIVATED;
   delay(1000);
-  strategy_waiting = 0;
+  strategy_waiting = 1;
   if (get_tirette_state() == 0){
     kill_comms();
     for(int i=0; i<4; i++){

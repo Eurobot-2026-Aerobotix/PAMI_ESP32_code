@@ -1,4 +1,5 @@
 #include "HAL.h"
+#include <ESP32Servo.h>
 
 Preferences prefs;
 
@@ -21,6 +22,13 @@ int motorLEN_channel;
 // distance sensor pins
 int trigger;
 int echo;
+
+// servo pins
+int servo_pin = -1;
+
+// servo object
+Servo servo;
+
 // tirette
 int tirette_pin;
 int color_switch_pin;
@@ -428,11 +436,45 @@ void HAL_setup()
     directionR = 1;
     directionL = 1;
 
+    // Initialize servos
+    init_servo();
+
     // Interrupts
     //attachInterrupt(digitalPinToInterrupt(encoderRA), encoderRISRA, CHANGE);
     //attachInterrupt(digitalPinToInterrupt(encoderLA), encoderLISRA, CHANGE);
     encoder_init();
 }
+
+void set_servo_pin(int pin)
+{
+    servo_pin = pin;
+}
+
+void init_servo()
+{
+    if (servo_pin >= 0) {
+        servo.attach(servo_pin);
+        servo.write(90); // center position
+    }
+}
+
+void set_servo_angle(int angle)
+{
+    // constrain angle to 0-180 degrees
+    angle = constrain(angle, 0, 180);
+    
+    if (servo_pin >= 0) {
+        servo.write(angle);
+    }
+}
+
+void set_servo_position(int position)
+{
+    // position is 0-100, convert to 0-180 degrees
+    int angle = map(position, 0, 100, 0, 180);
+    set_servo_angle(angle);
+}
+
 void custom_delay(int ms)
 {
     unsigned long start_time = millis();
