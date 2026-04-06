@@ -350,7 +350,7 @@ void setup()
   set_PWM_min_max(1023, 270, 270, -270, -270);
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(32.25, 32.25, 90.81474857768681);
+  set_wheel_diameter_and_spacing(32.25, 32.25, 91.14313998872904);
   HAL_setup();
 
   Serial.println("Creating tasks...");
