@@ -15,8 +15,11 @@ float cruise_speed_L;
 float starting_phi;
 float turning_radius;
 int min_distance = 120;
+int safety_margin = 80; // safety margin in mm to allow passing close to obstacles
 
-int32_t previous_speed_control_time = 0;
+// bool has_target = false;
+
+
 
 int move_forward(float distance, float speed, float target_point_x, float target_point_y){
 	wait_for_idle();
@@ -534,14 +537,21 @@ int orientate(float orientation, int8_t is_radian)
 }
 int go_to(float x, float y, float speed)
 {
+	target_x = x;
+	target_y = y;
+	// has_target = true;
 	wait_for_idle();
 	float target_angle = get_angle_to(x, y);
 
 	if (orientate(target_angle, 1)){
+		// has_target = false;
 		return 1;
 	}
 	wait_for_idle();
 	int result = move_forward(get_distance_to(x, y), speed, x, y) * 2; // why *2 ? cause fuck you
+	// if (result == 0) {
+	// 	// has_target = false;
+	// }
 	return result;
 }
 void emergency_break()
