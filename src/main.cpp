@@ -25,6 +25,12 @@ TaskHandle_t commandExecutionTaskHandle;
 TaskHandle_t websocketTaskHandle;
 TaskHandle_t emergencyBreakTaskHandle;
 int websocket=0;
+float target_x;
+float target_y;
+float distance_to_target;
+float obstacle_distance;
+//bool has_target = false;
+int32_t previous_speed_control_time = 0;
 
 void kill_comms();
 
@@ -32,16 +38,33 @@ void kill_comms();
 void strategy()
 {
   kill_comms();
+  Serial.println("Executing strategy...");
 
   // Calculate total commands: ROS commands + yellow/blue strategy commands
   
-  int* commands = strategy_commands; // Assuming strategy_commands is filled with ROS commands
-  int total_commands = strategy_length; // Assuming strategy_length is set to the number of ROS
+   int* commands = strategy_commands; // Assuming strategy_commands is filled with ROS commands
+   int num_commands = strategy_length; // Assuming strategy_length is set to the number of ROS
+
+  // int commands[] = {
+  //                   SET_POSITION, 0, 0, 0,
+  //                 // bezier_cmd, 550, 0, 250, 1000, 1000, 500, 600, 1,
+  //                  GOTO, 300, 0, 380,
+  //                 // goto_cmd, 0, 0, 500,
+  //                 // orientate_cmd, 90, 0,
+  //                 // set_position_cmd, 357, 199, 0,
+  //                 // goto_cmd, 900, 400, 600,
+  //                 // goto_cmd, 1650, 380, 600,
+  //                 // goto_cmd, 1922, 50, 600,
+  //                 // orientate_cmd, 88, 0,
+  //                 // goto_cmd, 1900, 550, 400,
+  //                 }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
+  //int num_commands = sizeof(commands) / sizeof(commands[0]);
+
   int i = 0;
   strategy_start_time = millis();
   // rotate(1800, 0);
   // while(1);
-  while (i < total_commands)
+  while (i < num_commands)
   {
     int command_type = commands[i];
     if (command_type == GOTO)
@@ -52,7 +75,6 @@ void strategy()
       while(go_to(x, y, speed)){
         wait_for_obstacle_clearance();
         Serial.println("obstacle cleared, resuming...");
-        Serial.println("mahdi y7ebb louled");
       }
       i += 4;
     }
@@ -85,6 +107,8 @@ void strategy()
       i += 2;
     }
      else if (command_type == BEZIER){
+      int x0 = current_x;
+      int y0 = current_y;
       int x1 = commands[i + 1];
       int y1 = commands[i + 2];
       int x2 = commands[i + 3];
@@ -93,9 +117,20 @@ void strategy()
       int y3 = commands[i + 6];
       int speed = commands[i + 7];
       int direction = commands[i + 8];
-      while(bezier_curve(x1, y1, x2, y2, x3, y3, speed, direction)){
+      while(1){
+        if (!bezier_curve(x1, y1, x2, y2, x3, y3, speed, direction)){
+          break;
+        }
+        float t = project_bezier(current_x, current_y, x0, y0, x1, y1, x2, y2, x3, y3);
+        int new_x1, new_y1, new_x2, new_y2;
+        approximate_sub_bezier(x0, y0, x1, y1, x2, y2, x3, y3, t, &x0, &y0, &new_x1, &new_y1, &new_x2, &new_y2, &x3, &y3);
+        x1 = new_x1;
+        y1 = new_y1;
+        x2 = new_x2;
+        y2 = new_y2;
         wait_for_obstacle_clearance();
         Serial.println("obstacle cleared, resuming...");
+        Serial.println("mahdi y7ebb louled");
       }
       i += 9;
     }
@@ -103,6 +138,7 @@ void strategy()
   }
   control_loop_state = DISACTIVATED;
 	stop_motors();
+  party_time();
   // 3. Send completion signal
   send_action_done(1);
 
@@ -117,7 +153,7 @@ void communicationTask(void *pvParameters)
   Serial.println("Communication task started");
   
   // Setup micro-ROS (will handle WiFi connection internally)
-  if (setup_micro_ros("hrissa", "harissaharissa2026", "10.42.2.1", 8888))
+  if (setup_micro_ros("harissa", "harissaharissa2026", "10.42.1.1", 8888))
   {
     Serial.println("micro-ROS setup successful");
   }
@@ -134,7 +170,7 @@ void communicationTask(void *pvParameters)
     } else {
       // If WiFi disconnected, try to reconnect
       Serial.println("WiFi disconnected in task, attempting reconnection...");
-      connect_wifi("hrissa", "harissaharissa2026");
+      connect_wifi("harissa", "harissaharissa2026");
       vTaskDelay(pdMS_TO_TICKS(5000)); // Wait 5 seconds before next attempt
     }
 
@@ -149,7 +185,19 @@ void emergencyBreakTask(void *pvParameters)
   
   for (;;)
   {
-    if (( ((get_ultrasonic_distance() < (min_distance * max(max(fabs(current_speed_R), fabs(current_speed_L)), 200.0f)/200) && trajectory != ROTATING && current_x < 1700 && current_x > 5000) || (millis() - strategy_start_time >= max_running_time)) && wheel_state_R != EMERGENCY_BREAK && wheel_state_L != EMERGENCY_BREAK) ){
+    float ultrasonic_dist = get_ultrasonic_distance();
+    float min_dist = min_distance * (max(max(fabs(current_speed_R), fabs(current_speed_L)), 200.0f)/200);
+    bool obstacle_too_close = (ultrasonic_dist < min_dist) && trajectory != ROTATING;
+    bool target_allows_passing = true;
+    //if (obstacle_too_close) {
+    distance_to_target = get_distance_to(target_x, target_y);
+    //distance_to_target = get_distance_to(arguments["x"], arguments["y"]);
+    obstacle_distance = ultrasonic_dist;
+    //target_allows_passing = distance_to_target < obstacle_distance + safety_margin;
+    //}
+    
+    if (( (obstacle_too_close && distance_to_target > (obstacle_distance + safety_margin)) || (millis() - strategy_start_time >= max_running_time)) && wheel_state_R != EMERGENCY_BREAK && wheel_state_L != EMERGENCY_BREAK)
+    {
       prepare_emergency_break();
     }
 
@@ -257,7 +305,6 @@ void commandExecutionTask(void *pvParameters)
   {
     if (strategy_waiting) {
       strategy_waiting = 0;
-      //custom_delay(85000);
       strategy();
     }
     execute_command();
@@ -308,8 +355,9 @@ void setup()
 
   set_ultrasonic_pins(14, 12);
 
-  // TODO: Set tirette pins
-  set_tirettes_pins(27, 33);
+  set_tirettes_pins(26, 33);
+
+  set_servo_pin(32);
 
   set_agent_led_pin(25);
 
@@ -320,7 +368,7 @@ void setup()
   set_PWM_min_max(1023, 270, 270, -270, -270);
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(56.809944732271944, 56.647955232721074 , 91.05600939322017);
+  set_wheel_diameter_and_spacing(32.25, 32.25, 91.14313998872904);
   HAL_setup();
 
   Serial.println("Creating tasks...");
@@ -377,38 +425,43 @@ void setup()
   strategy_waiting = 0;
   if (get_tirette_state() == 0){
     kill_comms();
-    for(int i=0; i<4; i++){
+    for(int i=0; i<2; i++){
       set_agent_led_on();
-      custom_delay(500);
+      custom_delay(300);
       set_agent_led_off();
-      custom_delay(500);
+      custom_delay(300);
     }
     is_yellow = get_color_switch_state();
     load_strategy(strategy_commands, &strategy_length, is_yellow);
+    bool status = false;
     while(get_tirette_state() == 0){
-      custom_delay(10);
+      custom_delay(40);
+      set_agent_led_state(status);
+      status = !status;
     }
     strategy_waiting = 1;
   }
 }
 
 void loop(){
-    // PWM_R=250;
-    // PWM_L=250;
-  //   delay(2000);
+  //send_values_to_usart(distance_to_target, obstacle_distance, 0, 0);
+  // custom_delay(10);
+    // PWM_R=500;
+    // PWM_L=500;
+    // delay(2000);
    
-  //   PWM_R=-500;
-  //   PWM_L=-500;
-  //   delay(2000);
+    // PWM_R=-500;
+    // PWM_L=-500;
+    // delay(2000);
     
-  //   PWM_R=500;
-  //   PWM_L=0;
-  //   delay(2000);
+    // PWM_R=500;
+    // PWM_L=0;
+    // delay(2000);
 
 
-  //   PWM_R=0;
-  //   PWM_L=500;
-  //   delay(2000);
+    // PWM_R=0;
+    // PWM_L=500;
+    // delay(2000);
 
   // Serial.print(encoder_count_L);
   //  Serial.print(" - ");

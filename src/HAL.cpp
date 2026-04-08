@@ -26,6 +26,11 @@ int tirette_pin;
 int color_switch_pin;
 int agent_led_pin = -1;
 
+//servo
+int servo_pin;
+
+Servo servo;
+
 // global constants
 int PWM_R_forward_min;
 int PWM_R_backward_min;
@@ -120,6 +125,9 @@ void set_ultrasonic_pins(int trigger_pin, int echo_pin){
 void set_agent_led_pin(int led_pin)
 {
     agent_led_pin = led_pin;
+}
+void set_servo_pin(int servo__pin){
+    servo_pin = servo__pin;
 }
 void set_agent_led_state(bool state)
 {
@@ -428,6 +436,8 @@ void HAL_setup()
     directionR = 1;
     directionL = 1;
 
+    servo.attach(servo_pin);
+
     // Interrupts
     //attachInterrupt(digitalPinToInterrupt(encoderRA), encoderRISRA, CHANGE);
     //attachInterrupt(digitalPinToInterrupt(encoderLA), encoderLISRA, CHANGE);
@@ -439,5 +449,17 @@ void custom_delay(int ms)
     while (millis() - start_time < ms)
     {
         vTaskDelay(1);
+    }
+}
+
+void party_time()
+{
+    while(1){
+        servo.write(180);
+        set_agent_led_on();
+        delay(500);
+        set_agent_led_off();
+        servo.write(0);
+        delay(500);
     }
 }
