@@ -69,8 +69,8 @@ int move_forward(float distance, float speed, float target_point_x, float target
 		float phi_error = normalize_angle(calculate_instant_target_phi(x, distance) - current_phi);
 		float deviation_angle = normalize_angle(atan2(current_y - starting_y, current_x - starting_x) - atan2(target_point_y - starting_y, target_point_x - starting_x) );
 		float deviation_distance = (-1) * sqrt(SQR(current_y - starting_y) + SQR(current_x - starting_x)) * sin(deviation_angle); // positive to the left and negative to the right
-		float phi_correction_term = (phi_error) * ( 1.5 / ( MAX( ( abs(target_speed_R) + abs(target_speed_L) )/2, 100.0) /500.0) ); // the first coefficient is tunable
-		lane_correction_term = (deviation_distance) * ( 0.04 / ( MAX( ( abs(target_speed_R) + abs(target_speed_L) )/2, 100.0) /500.0)) + phi_correction_term; // the first coefficient is tunable
+		float phi_correction_term = (phi_error) * ( 2 / ( MAX( ( abs(target_speed_R) + abs(target_speed_L) )/2, 100.0) /500.0) ); // the first coefficient is tunable
+		lane_correction_term = (deviation_distance) * ( 0.01 / ( MAX( ( abs(target_speed_R) + abs(target_speed_L) )/2, 100.0) /500.0)) + phi_correction_term; // the first coefficient is tunable
 		lane_correction_term = MIN(MAX(lane_correction_term, -0.1), 0.1); // the coefficient is tunable
 
 		set_target_speeds(fabs(calculate_instant_target_speed_R(x, distance)) * (1 + lane_correction_term), fabs(calculate_instant_target_speed_L(x, distance)) * (1 - lane_correction_term));
@@ -154,8 +154,7 @@ int move_backwards(float distance, float speed){
 	float lane_correction_term;
 	float phase_two_distance = 30;
 
-	bool right_stopped = false;
-	bool left_stopped = false;
+	int start_time = millis();
 	while (distance_to_target > phase_two_distance){
 		x = distance - distance_to_target;
 		if (wheel_state_R == ACCELERATING && x > x1){
@@ -169,6 +168,10 @@ int move_backwards(float distance, float speed){
 			return 1;
 		}
 
+		if ((millis() - start_time) > 2000){
+			break;
+		}
+
 		set_target_speeds(calculate_instant_target_speed_R(x, distance), calculate_instant_target_speed_R(x, distance));
 		custom_delay(4);
 		previous_distance_to_target = distance_to_target;
@@ -178,7 +181,7 @@ int move_backwards(float distance, float speed){
 	wheel_state_R = EMERGENCY_BREAK;
 	wheel_state_L = EMERGENCY_BREAK;
 	stop_motors();
-	int start_time = millis();
+	start_time = millis();
 	while(fabs(current_speed_L) > 5 || fabs(current_speed_R) > 5){
 		custom_delay(10);
 		if (millis() - start_time > 500){
@@ -255,7 +258,7 @@ int bezier_curve(float x1, float y1, float x2, float y2, float x3, float y3, flo
 			phi_error += 2*PI ;
 		float phi_correction_term = (phi_error) * ( 1.5 / ( MAX( ( abs(target_speed_R) + abs(target_speed_L) )/2, 100.0) /500.0) ); // 3 the first coefficient is tunable
 
-		lane_correction_term = MIN(fabs(SQR(signed_distance) * (0.01f)), 0.5)*SGN(signed_distance) + phi_correction_term;// this coefficient is tunable
+		lane_correction_term = MIN(fabs(SQR(signed_distance) * (0.04f)), 0.5)*SGN(signed_distance) + phi_correction_term;// this coefficient is tunable
 		if (d < 0.1*d_1){ // 0.002f;
 			lane_correction_term = 0;
 		}
@@ -605,4 +608,33 @@ void wait_for_idle(){
 void prepare_emergency_break(){
 	wheel_state_R = EMERGENCY_BREAK;
 	wheel_state_L = EMERGENCY_BREAK;
+}
+
+int add_fixed_strategy_part(int* strategy, int* output, int start_length, int* output_length){
+	int yellow_commands[] = {
+						BACKWARDS, 180, 200,
+						SET_POSITION, 1900, 0, 90,
+						GOTO, 1900, 540, 400,
+					};
+	int blue_commands[] = { 
+						BACKWARDS, 180, 200,
+						SET_POSITION, 1900, 3000, -90,
+						GOTO, 1890, 2460, 400,
+					};
+	for (int i = 0; i < start_length && i < 100; i++){
+		output[i] = strategy[i];
+	}
+	int num_commands = 0;
+	if (is_yellow){
+		num_commands = sizeof(yellow_commands) / sizeof(yellow_commands[0]);
+		for (int i = 0; i < num_commands && i < 100; i++){
+			output[i + start_length] = yellow_commands[i];
+		}
+	}else{
+		num_commands = sizeof(blue_commands) / sizeof(blue_commands[0]);
+		for (int i = 0; i < num_commands && i < 100; i++){
+			output[i + start_length] = blue_commands[i];
+		}
+	}
+	*output_length = start_length + num_commands;
 }
