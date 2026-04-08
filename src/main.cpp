@@ -98,9 +98,6 @@ void strategy()
         Serial.println("obstacle cleared, resuming...");
       }
       i += 9;
-    }else if (command_type == delay_cmd){
-      custom_delay(commands[i+1]);
-      i += 2;
     }
 
   }
