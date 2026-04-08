@@ -137,7 +137,7 @@ void strategy()
   }
   control_loop_state = DISACTIVATED;
 	stop_motors();
-  //party_time();
+  party_time();
   // 3. Send completion signal
   send_action_done(1);
 
@@ -421,29 +421,29 @@ void setup()
   Serial.println("All tasks created successfully!");
   control_loop_state = DISACTIVATED;
   delay(1000);
-  strategy_waiting = 1;
-  // if (get_tirette_state() == 0){
-  //   kill_comms();
-  //   for(int i=0; i<2; i++){
-  //     set_agent_led_on();
-  //     custom_delay(300);
-  //     set_agent_led_off();
-  //     custom_delay(300);
-  //   }
-  //   is_yellow = get_color_switch_state();
-  //   load_strategy(strategy_commands, &strategy_length, is_yellow);
-  //   bool status = false;
-  //   while(get_tirette_state() == 0){
-  //     custom_delay(40);
-  //     set_agent_led_state(status);
-  //     status = !status;
-  //   }
-  //   strategy_waiting = 1;
-  // }
+  strategy_waiting = 0;
+  if (get_tirette_state() == 0){
+    kill_comms();
+    for(int i=0; i<2; i++){
+      set_agent_led_on();
+      custom_delay(300);
+      set_agent_led_off();
+      custom_delay(300);
+    }
+    is_yellow = get_color_switch_state();
+    load_strategy(strategy_commands, &strategy_length, is_yellow);
+    bool status = false;
+    while(get_tirette_state() == 0){
+      custom_delay(40);
+      set_agent_led_state(status);
+      status = !status;
+    }
+    strategy_waiting = 1;
+  }
 }
 
 void loop(){
-   send_values_to_usart(distance_to_target, obstacle_distance, 0, 0);
+  //send_values_to_usart(distance_to_target, obstacle_distance, 0, 0);
   // custom_delay(10);
     // PWM_R=500;
     // PWM_L=500;
