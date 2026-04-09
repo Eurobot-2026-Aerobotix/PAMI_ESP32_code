@@ -3,7 +3,7 @@
 
 // Micro-ROS name constant
 
-const char* micro_ros_name = "pami5";
+const char* micro_ros_name = "pami6";
 // Dynamic topic names (constructed from micro_ros_name)
 char topic_action_done[50];
 char topic_start[50];
@@ -26,11 +26,12 @@ std_srvs__srv__Trigger_Request status_req;
 std_srvs__srv__Trigger_Response status_res;
 float received_floats[100]; // Adjust size as needed
 size_t received_floats_count = 0;
-int commands[100]; // Integer array for converted commands
+int recieved_commands[100]; // Integer array for converted recieved_commands
+int deploy_pos[3];
+int first_delay = 1;
 size_t commands_count = 0;
 bool micro_ros_init_successful = false;
 enum CommunicationState comm_state = WAITING_AGENT;
-bool is_yellow = true;
 
 // WiFi reconnection variables
 unsigned long last_wifi_check = 0;
@@ -129,10 +130,6 @@ bool setup_micro_ros(const char *wifi_ssid, const char *wifi_password, const cha
     Serial.println("Setting up micro-ROS transport...");
     set_microros_wifi_transports((char *)wifi_ssid, (char *)wifi_password, (char *)agent_ip, agent_port);
 
-    // Initialize LED pin
-    pinMode(LED_PIN, OUTPUT);
-    digitalWrite(LED_PIN, LOW);
-
     // Initialize message data
     start_msg.data = 0;
     action_done_msg.data = 0;
@@ -213,8 +210,7 @@ void communication_loop()
     }
 
     // Update LED status
-    digitalWrite(LED_PIN, (comm_state == AGENT_CONNECTED) ? HIGH : LOW);
-    digitalWrite(AGENT_LED_PIN, (comm_state == AGENT_CONNECTED) ? HIGH : LOW);
+    set_agent_led_state(comm_state == AGENT_CONNECTED);
 }
 
 // Create all ROS entities (publishers, subscribers, timers)
@@ -413,8 +409,7 @@ void destroy_entities()
 // LED blink function - non-blocking version
 void LED_BLINK()
 {
-   
-    digitalWrite(AGENT_LED_PIN, LOW);
+    set_agent_led_off();
 }
 
 // Callback for start topic subscription
@@ -453,16 +448,23 @@ void strategy_callback(const void *msgin)
     for (size_t i = 0; i < msg->data.size && i < 100; i++)
     {
         received_floats[i] = msg->data.data[i];
-        commands[i] = (int)msg->data.data[i]; // Convert float to int
+        recieved_commands[i] = (int)msg->data.data[i]; // Convert float to int
         
         Serial.print("  [");
         Serial.print(i);
         Serial.print("]: ");
         Serial.print(received_floats[i], 4);
         Serial.print(" -> command: ");
-        Serial.println(commands[i]);
+        Serial.println(recieved_commands[i]);
     }
-    is_yellow = (commands[2] < 1500);
+    is_yellow = (recieved_commands[2] < 1500);
+
+    for (int i = 0; i < received_floats_count && i < 200; i++){
+        strategy_commands[i] = received_floats[i];
+    }
+    strategy_length = received_floats_count;
+    
+    save_strategy(strategy_commands, strategy_length, is_yellow);
     
     pami_status = true;  // Set status to true when strategy received
     Serial.println("Strategy received - pami_status set to TRUE");
