@@ -3,7 +3,7 @@
 
 // Micro-ROS name constant
 
-const char* micro_ros_name = "pami6";
+const char* micro_ros_name = "pami5";
 // Dynamic topic names (constructed from micro_ros_name)
 char topic_action_done[50];
 char topic_start[50];
