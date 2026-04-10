@@ -32,6 +32,8 @@ int first_delay = 1;
 size_t commands_count = 0;
 bool micro_ros_init_successful = false;
 enum CommunicationState comm_state = WAITING_AGENT;
+volatile bool comm_stop_requested = false;
+static bool entities_created = false;
 
 // WiFi reconnection variables
 unsigned long last_wifi_check = 0;
@@ -340,6 +342,7 @@ bool create_entities()
     }
 
     Serial.println("DEBUG: All entities created successfully!");
+    entities_created = true;
     return true;
 }
 
@@ -347,36 +350,65 @@ bool create_entities()
 void destroy_entities()
 {
     Serial.println("DEBUG: Cleaning up entities...");
+
+    if (!entities_created && support.context.impl == NULL) {
+        Serial.println("DEBUG: No active entities/context, skipping cleanup");
+        return;
+    }
     
-    // Set destroy timeout to 0 for immediate cleanup
-    rmw_context_t *rmw_context = rcl_context_get_rmw_context(&support.context);
-    (void)rmw_uros_set_context_entity_destroy_session_timeout(rmw_context, 0);
+    // Set destroy timeout to 0 for immediate cleanup when context is valid.
+    if (support.context.impl != NULL) {
+        rmw_context_t *rmw_context = rcl_context_get_rmw_context(&support.context);
+        if (rmw_context != NULL) {
+            (void)rmw_uros_set_context_entity_destroy_session_timeout(rmw_context, 0);
+        }
+    }
 
     // Destroy entities in reverse order of creation
     rcl_ret_t rc;
     
-    rc = rcl_publisher_fini(&action_done_publisher, &node);
-    if (rc != RCL_RET_OK) {
-        Serial.print("WARN: Failed to destroy publisher, code: ");
-        Serial.println(rc);
-    }
+    if (entities_created) {
+        rc = rcl_publisher_fini(&action_done_publisher, &node);
+        if (rc != RCL_RET_OK) {
+            Serial.print("WARN: Failed to destroy publisher, code: ");
+            Serial.println(rc);
+        }
     
-    rc = rcl_subscription_fini(&subscriber, &node);
-    if (rc != RCL_RET_OK) {
-        Serial.print("WARN: Failed to destroy start subscriber, code: ");
-        Serial.println(rc);
-    }
+        rc = rcl_subscription_fini(&subscriber, &node);
+        if (rc != RCL_RET_OK) {
+            Serial.print("WARN: Failed to destroy start subscriber, code: ");
+            Serial.println(rc);
+        }
     
-    rc = rcl_subscription_fini(&strategy_subscriber, &node);
-    if (rc != RCL_RET_OK) {
-        Serial.print("WARN: Failed to destroy strategy subscriber, code: ");
-        Serial.println(rc);
-    }
+        rc = rcl_subscription_fini(&strategy_subscriber, &node);
+        if (rc != RCL_RET_OK) {
+            Serial.print("WARN: Failed to destroy strategy subscriber, code: ");
+            Serial.println(rc);
+        }
     
-    rc = rcl_service_fini(&status_service, &node);
-    if (rc != RCL_RET_OK) {
-        Serial.print("WARN: Failed to destroy status service, code: ");
-        Serial.println(rc);
+        rc = rcl_service_fini(&status_service, &node);
+        if (rc != RCL_RET_OK) {
+            Serial.print("WARN: Failed to destroy status service, code: ");
+            Serial.println(rc);
+        }
+
+        rc = rclc_executor_fini(&executor);
+        if (rc != RCL_RET_OK) {
+            Serial.print("WARN: Failed to destroy executor, code: ");
+            Serial.println(rc);
+        }
+
+        rc = rcl_node_fini(&node);
+        if (rc != RCL_RET_OK) {
+            Serial.print("WARN: Failed to destroy node, code: ");
+            Serial.println(rc);
+        }
+
+        rc = rclc_support_fini(&support);
+        if (rc != RCL_RET_OK) {
+            Serial.print("WARN: Failed to destroy support, code: ");
+            Serial.println(rc);
+        }
     }
     
     // Free allocated memory for strategy message
@@ -385,23 +417,8 @@ void destroy_entities()
         strategy_msg.data.data = NULL;
     }
     
-    rc = rclc_executor_fini(&executor);
-    if (rc != RCL_RET_OK) {
-        Serial.print("WARN: Failed to destroy executor, code: ");
-        Serial.println(rc);
-    }
-    
-    rc = rcl_node_fini(&node);
-    if (rc != RCL_RET_OK) {
-        Serial.print("WARN: Failed to destroy node, code: ");
-        Serial.println(rc);
-    }
-    
-    rc = rclc_support_fini(&support);
-    if (rc != RCL_RET_OK) {
-        Serial.print("WARN: Failed to destroy support, code: ");
-        Serial.println(rc);
-    }
+    entities_created = false;
+    support.context.impl = NULL;
     
     Serial.println("DEBUG: Entity cleanup complete");
 }
@@ -536,6 +553,7 @@ void cleanup_micro_ros()
         destroy_entities();
         comm_state = WAITING_AGENT;
     }
+    comm_stop_requested = false;
     micro_ros_init_successful = false;
     Serial.println("micro-ROS cleaned up");
 }

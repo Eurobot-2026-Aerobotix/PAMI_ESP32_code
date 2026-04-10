@@ -47,7 +47,7 @@ void strategy()
 
   //  int commands[] = {
   //                   SET_POSITION, 0, 0, 0,
-  //                   GOTO, 500, 0, 380,
+  //                   GOTO, 1000, 0, 380,
   //                    //ORIENTATE, 90, 0,
   //                  }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
   // int num_commands = sizeof(commands) / sizeof(commands[0]);
@@ -155,6 +155,12 @@ void communicationTask(void *pvParameters)
   
   for (;;) // Infinite loop - CRITICAL!
   {
+    if (comm_stop_requested) {
+      Serial.println("Communication stop requested");
+      cleanup_micro_ros();
+      break;
+    }
+
     // Only run communication loop if WiFi is connected
     if (WiFi.status() == WL_CONNECTED) {
       communication_loop();
@@ -167,6 +173,9 @@ void communicationTask(void *pvParameters)
 
     vTaskDelayUntil(&xLastWakeTime, xDelay);
   }
+
+  communicationTaskHandle = NULL;
+  vTaskDelete(NULL);
 }
 
 void emergencyBreakTask(void *pvParameters)
@@ -325,13 +334,22 @@ void kill_comms(){
     return;
   }
 
-  eTaskState comm_state = eTaskGetState(communicationTaskHandle);
-  if (comm_state != eDeleted) {
-    cleanup_micro_ros();
-    vTaskDelete(communicationTaskHandle);
-  }
+  eTaskState task_state = eTaskGetState(communicationTaskHandle);
+  if (task_state != eDeleted) {
+    comm_stop_requested = true;
 
-  communicationTaskHandle = NULL;
+    const TickType_t wait_step = pdMS_TO_TICKS(20);
+    const int max_wait_steps = 100; // ~2 seconds
+    for (int i = 0; i < max_wait_steps && communicationTaskHandle != NULL; i++) {
+      vTaskDelay(wait_step);
+    }
+
+    // Fallback if task did not self-terminate in time.
+    if (communicationTaskHandle != NULL) {
+      vTaskDelete(communicationTaskHandle);
+      communicationTaskHandle = NULL;
+    }
+  }
 }
 
 void setup()
@@ -342,7 +360,7 @@ void setup()
   Serial.println("=== PAMI ESP32 Setup ===");
 
   Serial.println("Setting motor pins...");
-  set_motor_pins(21, 22, 19, 18, 23, 17);
+  set_motor_pins(22, 21, 18, 19, 23, 17);
 
   set_ultrasonic_pins(14, 12);
 
@@ -353,13 +371,13 @@ void setup()
   set_agent_led_pin(25);
 
   Serial.println("Setting encoder channels...");
-  set_encoder_channels(16, 4, 2, 15, 350);
+  set_encoder_channels(4, 16, 15, 2, 350);
 
   Serial.println("Setting PWM parameters...");
   set_PWM_min_max(1023, 270, 270, -270, -270);
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(32.11898861837906, 32.224200589862505, 89.24533586904563);
+  set_wheel_diameter_and_spacing(32.224200589862505, 32.11898861837906, 89.24533586904563);
   HAL_setup();
 
   Serial.println("Creating tasks...");
@@ -437,22 +455,22 @@ void setup()
 void loop(){
   //send_values_to_usart(distance_to_target, obstacle_distance, 0, 0);
   // custom_delay(10);
-    // PWM_R=500;
-    // PWM_L=500;
-    // delay(2000);
+  //   PWM_R=500;
+  //   PWM_L=500;
+  //   delay(2000);
    
-    // PWM_R=-500;
-    // PWM_L=-500;
-    // delay(2000);
+  //   PWM_R=-500;
+  //   PWM_L=-500;
+  //   delay(2000);
     
-    // PWM_R=500;
-    // PWM_L=0;
-    // delay(2000);
+  //   PWM_R=500;
+  //   PWM_L=0;
+  //   delay(2000);
 
 
-    // PWM_R=0;
-    // PWM_L=500;
-    // delay(2000);
+  //   PWM_R=0;
+  //   PWM_L=500;
+  //   delay(2000);
 
   // Serial.print(encoder_count_L);
   //  Serial.print(" - ");
@@ -488,6 +506,6 @@ void loop(){
   ///////////////////////////////////
   // send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, debugger);
   // custom_delay(10);
-  //  send_values_to_usart(encoder_count_R, encoder_count_L, 0, 0);
+  // send_values_to_usart(encoder_count_R, encoder_count_L, 0, 0);
   // custom_delay(10);
 }
