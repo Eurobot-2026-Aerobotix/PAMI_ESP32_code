@@ -29,6 +29,16 @@ enum Control_loop {
 	POSITION
 };
 
+enum command {
+	DELAY,
+	GOTO,
+	ORIENTATE,
+	SET_POSITION,
+	BEZIER,
+	WAIT_FOR,
+	BACKWARDS
+};
+
 extern enum Control_loop control_loop_state;
 extern enum Wheel_state wheel_state_R;
 extern enum Wheel_state wheel_state_L;
@@ -44,8 +54,10 @@ extern float starting_phi;
 extern float turning_radius;
 extern int32_t previous_speed_control_time;
 extern int min_distance;
-extern float deviation_distance;
-
+extern int safety_margin;
+extern float target_x;
+extern float target_y;
+// extern bool has_target;
 int move_forward(float distance, float speed, float target_point_x, float target_point_y	);	// will return 0 if target has been reached successfully or 1 if it could not be reached
 int move_backwards(float distance, float speed);
 float calculate_instant_target_speed_R_full(float x, float distance, float ramping__acceleration, float breaking__acceleration);
@@ -64,3 +76,4 @@ void wait_for_obstacle_clearance();
 void wait_for_idle();
 void prepare_emergency_break();
 int bezier_curve(float x1, float y1, float x2, float y2, float x3, float y3, float speed, int direction);
+int add_fixed_strategy_part(int* strategy, int* output, int start_length, int* output_length);

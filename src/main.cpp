@@ -25,52 +25,41 @@ TaskHandle_t commandExecutionTaskHandle;
 TaskHandle_t websocketTaskHandle;
 TaskHandle_t emergencyBreakTaskHandle;
 int websocket=0;
-float deviation_distance;
+float target_x;
+float target_y;
+float distance_to_target;
+float obstacle_distance;
+//bool has_target = false;
+int32_t previous_speed_control_time = 0;
+
+void kill_comms();
 
 // Custom strategy implementation
 void strategy()
 {
-  /*
-  Serial.println("PAMI Robot Strategy Started!");
+  kill_comms();
+  Serial.println("Executing strategy...");
 
-  // Example strategy implementation:
-  // 1. Check crate colors
-  Serial.println("Current crate colors:");
-  for (int i = 0; i < 8; i++)
-  {
-    Serial.print("Crate ");
-    Serial.print(i + 1);
-    Serial.print(": ");
-    Serial.println(crate_colors[i] ? "YELLOW" : "BLUE");
-  }
-  */
-
-  // 2. Execute some movement or action
-  // Example: move forward, rotate, etc.
-  // move_forward(100, 50); // Move 100mm at 50mm/s speed
-  //custom_delay(500);
-  int delay_cmd = 0, goto_cmd = 1, orientate_cmd = 2, set_position_cmd = 3, bezier_cmd = 4, wait_for_cmd = 5;
+  // Calculate total commands: ROS commands + yellow/blue strategy commands
   
-  // Use global commands array received from ROS2
-  // extern int commands[];
-  // extern size_t commands_count;
+   int* commands = strategy_commands; // Assuming strategy_commands is filled with ROS commands
+   int num_commands = strategy_length; // Assuming strategy_length is set to the number of ROS
 
-   int commands[] = {
-  //                   3, 50, 204, 0, 0, 3000, 1, 365, 204, 400, 5, 15000, 0, 500, 1, 1022, 510, 400, 4, 1793, 427, 1399, 1517, 1776, 1547, 500, 1
-  //                   // set_position_cmd, 0, 0, 0,
-  //                   // bezier_cmd, 550, 0, 250, 1000, 1000, 500, 380, 1,
-                         goto_cmd, 300, 0, 400,
-  //                   // goto_cmd, 0, 0, 400,
-  //                   // orientate_cmd, 0, 0,
-  //                   // set_position_cmd, 357, 199, 0,
-  //                   //  goto_cmd, 900, 400, 600,
-  //                   //  goto_cmd, 1650, 380, 600,
-  //                   //  goto_cmd, 1922, 50, 600,
-  //                   //  orientate_cmd, 88, 0,
-  //                   //  goto_cmd, 1900, 550, 400,
-                     }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
-  int num_commands = sizeof(commands) / sizeof(commands[0]);
-  //int num_commands = commands_count;
+  // int commands[] = {
+  //                   SET_POSITION, 0, 0, 0,
+  //                 // bezier_cmd, 550, 0, 250, 1000, 1000, 500, 600, 1,
+  //                  GOTO, 300, 0, 380,
+  //                 // goto_cmd, 0, 0, 500,
+  //                 // orientate_cmd, 90, 0,
+  //                 // set_position_cmd, 357, 199, 0,
+  //                 // goto_cmd, 900, 400, 600,
+  //                 // goto_cmd, 1650, 380, 600,
+  //                 // goto_cmd, 1922, 50, 600,
+  //                 // orientate_cmd, 88, 0,
+  //                 // goto_cmd, 1900, 550, 400,
+  //                 }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
+  //int num_commands = sizeof(commands) / sizeof(commands[0]);
+
   int i = 0;
   strategy_start_time = millis();
   // rotate(1800, 0);
@@ -78,7 +67,7 @@ void strategy()
   while (i < num_commands)
   {
     int command_type = commands[i];
-    if (command_type == goto_cmd)
+    if (command_type == GOTO)
     {
       int x = commands[i + 1];
       int y = commands[i + 2];
@@ -86,30 +75,40 @@ void strategy()
       while(go_to(x, y, speed)){
         wait_for_obstacle_clearance();
         Serial.println("obstacle cleared, resuming...");
-        Serial.println("mahdi y7ebb louled");
       }
       i += 4;
     }
-    else if (command_type == orientate_cmd)
+    else if (command_type == ORIENTATE)
     {
       int angle = commands[i + 1];
       orientate(angle, 0);
       i += 2;
     }
-    else if (command_type == set_position_cmd) { 
+    else if (command_type == SET_POSITION) { 
       int x = commands[i + 1];
       int y = commands[i + 2];
       int phi = commands[i + 3];
       set_position(x, y, deg_to_rad(phi), deg_to_rad(phi)); 
       i += 4; 
-    }
-    else if (command_type == wait_for_cmd) {
+    }else if (command_type == WAIT_FOR) {
       int flag = commands[i + 1];
       while(millis() - strategy_start_time < flag){
         custom_delay(5);
       }
       i += 2;
-    }else if (command_type == bezier_cmd){
+    }else if (command_type == BACKWARDS) {
+      int distance = commands[i + 1];
+      int speed = commands[i + 2];
+      move_backwards(distance, speed);
+      control_loop_state = DISACTIVATED;
+      i += 3;
+    }else if (command_type == DELAY){
+      custom_delay(commands[i+1]);
+      i += 2;
+    }
+     else if (command_type == BEZIER){
+      int x0 = current_x;
+      int y0 = current_y;
       int x1 = commands[i + 1];
       int y1 = commands[i + 2];
       int x2 = commands[i + 3];
@@ -118,18 +117,27 @@ void strategy()
       int y3 = commands[i + 6];
       int speed = commands[i + 7];
       int direction = commands[i + 8];
-      while(bezier_curve(x1, y1, x2, y2, x3, y3, speed, direction)){
+      while(1){
+        if (!bezier_curve(x1, y1, x2, y2, x3, y3, speed, direction)){
+          break;
+        }
+        float t = project_bezier(current_x, current_y, x0, y0, x1, y1, x2, y2, x3, y3);
+        int new_x1, new_y1, new_x2, new_y2;
+        approximate_sub_bezier(x0, y0, x1, y1, x2, y2, x3, y3, t, &x0, &y0, &new_x1, &new_y1, &new_x2, &new_y2, &x3, &y3);
+        x1 = new_x1;
+        y1 = new_y1;
+        x2 = new_x2;
+        y2 = new_y2;
         wait_for_obstacle_clearance();
         Serial.println("obstacle cleared, resuming...");
+        Serial.println("mahdi y7ebb louled");
       }
       i += 9;
-    }else if (command_type == delay_cmd){
-      custom_delay(commands[i+1]);
-      i += 2;
     }
   }
   control_loop_state = DISACTIVATED;
 	stop_motors();
+  party_time();
   // 3. Send completion signal
   send_action_done(1);
 
@@ -176,7 +184,18 @@ void emergencyBreakTask(void *pvParameters)
   
   for (;;)
   {
-    if (( ((get_ultrasonic_distance() - (max(fabs(current_speed_R), fabs(current_speed_L)) * max(fabs(current_speed_R), fabs(current_speed_L)) / (2 * fabs(emergency_breaking_acceleration))) < min_distance) && trajectory != ROTATING) || (millis() - strategy_start_time >= max_running_time)) && wheel_state_R != EMERGENCY_BREAK && wheel_state_L != EMERGENCY_BREAK)
+    float ultrasonic_dist = get_ultrasonic_distance();
+    float min_dist = min_distance * (max(max(fabs(current_speed_R), fabs(current_speed_L)), 200.0f)/200);
+    bool obstacle_too_close = (ultrasonic_dist < min_dist) && trajectory != ROTATING;
+    bool target_allows_passing = true;
+    //if (obstacle_too_close) {
+    distance_to_target = get_distance_to(target_x, target_y);
+    //distance_to_target = get_distance_to(arguments["x"], arguments["y"]);
+    obstacle_distance = ultrasonic_dist;
+    //target_allows_passing = distance_to_target < obstacle_distance + safety_margin;
+    //}
+    
+    if (( (obstacle_too_close && distance_to_target > (obstacle_distance + safety_margin)) || (millis() - strategy_start_time >= max_running_time)) && wheel_state_R != EMERGENCY_BREAK && wheel_state_L != EMERGENCY_BREAK)
     {
       prepare_emergency_break();
     }
@@ -285,7 +304,6 @@ void commandExecutionTask(void *pvParameters)
   {
     if (strategy_waiting) {
       strategy_waiting = 0;
-      //custom_delay(85000);
       strategy();
     }
     execute_command();
@@ -310,6 +328,20 @@ void websocketTask(void *pvParameters)
   }
 }
 
+void kill_comms(){
+  if (communicationTaskHandle == NULL) {
+    return;
+  }
+
+  eTaskState comm_state = eTaskGetState(communicationTaskHandle);
+  if (comm_state != eDeleted) {
+    cleanup_micro_ros();
+    vTaskDelete(communicationTaskHandle);
+  }
+
+  communicationTaskHandle = NULL;
+}
+
 void setup()
 {
   // Initialize Serial for debugging
@@ -320,31 +352,23 @@ void setup()
   Serial.println("Setting motor pins...");
   set_motor_pins(22, 21, 18, 19, 23, 26);
 
-  set_ultrasonic_pins(14, 27);
+  set_ultrasonic_pins(14, 12);
+
+  set_tirettes_pins(26, 33);
+
+  set_servo_pin(32);
+
+  set_agent_led_pin(25);
 
   Serial.println("Setting encoder channels...");
   set_encoder_channels(4, 16, 15, 2, 350);
 
   Serial.println("Setting PWM parameters...");
-  set_PWM_min_max(1023, 240, 210, -240, -210);
+  set_PWM_min_max(1023, 270, 270, -270, -270);
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(32.24, 33.1032, 82.94835082132307);
+  set_wheel_diameter_and_spacing(32.25, 32.25, 91.14313998872904);
   HAL_setup();
-  
-  // Initialize agent LED
-  pinMode(AGENT_LED_PIN, OUTPUT);
-  digitalWrite(AGENT_LED_PIN, LOW);
-  
-  // Initialize WebSocket if enabled
-  extern int websocket_enabled;
-  websocket_enabled = websocket;  // Set from the main websocket variable
-  if (websocket_enabled == 1) {
-    Serial.println("Initializing WebSocket...");
-    websocket_init();
-    delay(1000);
-  }
-
 
   Serial.println("Creating tasks...");
 
@@ -391,42 +415,52 @@ void setup()
       &emergencyBreakTaskHandle,
       1); // Pin to core 1
 
-  // Create WebSocket task if enabled
-  xTaskCreatePinnedToCore(
-      websocketTask,
-      "websocketTask",
-      8192, // Larger stack for WebSocket operations
-      NULL,
-      1, // Lower priority than PID
-      &websocketTaskHandle,
-      0); // Pin to core 0 (same as other communication tasks)
-  
   delay(500); // Delay between task creation
   Serial.println("WebSocket task created");
 
   Serial.println("All tasks created successfully!");
   control_loop_state = DISACTIVATED;
   delay(1000);
-  strategy_waiting = 1;
+  strategy_waiting = 0;
+  if (get_tirette_state() == 0){
+    kill_comms();
+    for(int i=0; i<2; i++){
+      set_agent_led_on();
+      custom_delay(300);
+      set_agent_led_off();
+      custom_delay(300);
+    }
+    is_yellow = get_color_switch_state();
+    load_strategy(strategy_commands, &strategy_length, is_yellow);
+    bool status = false;
+    while(get_tirette_state() == 0){
+      custom_delay(40);
+      set_agent_led_state(status);
+      status = !status;
+    }
+    strategy_waiting = 1;
+  }
 }
 
 void loop(){
-    // PWM_R=250;
-    // PWM_L=250;
-  //   delay(2000);
+  //send_values_to_usart(distance_to_target, obstacle_distance, 0, 0);
+  // custom_delay(10);
+    // PWM_R=500;
+    // PWM_L=500;
+    // delay(2000);
    
-  //   PWM_R=-500;
-  //   PWM_L=-500;
-  //   delay(2000);
+    // PWM_R=-500;
+    // PWM_L=-500;
+    // delay(2000);
     
-  //   PWM_R=500;
-  //   PWM_L=0;
-  //   delay(2000);
+    // PWM_R=500;
+    // PWM_L=0;
+    // delay(2000);
 
 
-  //   PWM_R=0;
-  //   PWM_L=500;
-  //   delay(2000);
+    // PWM_R=0;
+    // PWM_L=500;
+    // delay(2000);
 
   // Serial.print(encoder_count_L);
   //  Serial.print(" - ");
@@ -459,7 +493,10 @@ void loop(){
   //   send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
   //   delay(10);
   // }
-  //send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, debugger);
+  ///////////////////////////////////
+  // send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, debugger);
+  // custom_delay(10);
+  // send_values_to_usart(current_x, current_y, 0, 0);
   // custom_delay(10);
   //send_values_to_usart(deviation_distance * 100, 0, 0, 0);
 }
