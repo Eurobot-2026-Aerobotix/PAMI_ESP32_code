@@ -11,6 +11,7 @@
 #include <std_msgs/msg/int32.h>
 #include <std_srvs/srv/trigger.h>
 #include "HAL.h"
+#include "navigation.h"
 
 // Macro definitions
 #define RCCHECK(fn)                  \
@@ -67,7 +68,9 @@ extern bool pami_status;
 extern float received_floats[100];
 extern size_t received_floats_count;
 extern size_t commands_count;
-extern bool is_yellow;
+extern int recieved_commands[100];
+extern int deploy_pos[3];
+extern int first_delay;
 // Core functions
 bool setup_micro_ros(const char *wifi_ssid, const char *wifi_password, const char *agent_ip, int agent_port);
 void communication_loop();
