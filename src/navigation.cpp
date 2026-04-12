@@ -14,6 +14,7 @@ float cruise_speed_R;
 float cruise_speed_L;
 float starting_phi;
 float turning_radius;
+//float deviation_distance;
 int min_distance = 120;
 int safety_margin = 80; // safety margin in mm to allow passing close to obstacles
 
@@ -259,9 +260,9 @@ int bezier_curve(float x1, float y1, float x2, float y2, float x3, float y3, flo
 			phi_error -= 2*PI ;
 		else if (phi_error < -PI)
 			phi_error += 2*PI ;
-		float phi_correction_term = (phi_error) * ( 1.5 / ( MAX( ( abs(target_speed_R) + abs(target_speed_L) )/2, 100.0) /500.0) ); // 3 the first coefficient is tunable
+		float phi_correction_term = (phi_error) * ( 5 / ( MAX( ( abs(target_speed_R) + abs(target_speed_L) )/2, 100.0) /500.0) ); // 3 the first coefficient is tunable
 
-		lane_correction_term = MIN(fabs(SQR(signed_distance) * (0.01f)), 0.5)*SGN(signed_distance) + phi_correction_term;// this coefficient is tunable
+		lane_correction_term = MIN(fabs(SQR(signed_distance) * (0.4f)), 0.5)*SGN(signed_distance) + phi_correction_term;// this coefficient is tunable
 		if (d < 0.1*d_1){ // 0.002f;
 			lane_correction_term = 0;
 		}
@@ -558,9 +559,6 @@ void emergency_break()
 {
 	wheel_state_R = EMERGENCY_BREAK;
 	wheel_state_L = EMERGENCY_BREAK;
-	stop_motors();
-	custom_delay(500);
-	set_target_encoder_counts(encoder_count_R, encoder_count_L);
 }
 void reset_speed_control_variables(){
 	previous_speed_control_time = micros()-999;
@@ -623,6 +621,10 @@ void wait_for_idle(){
 	}
 }
 void prepare_emergency_break(){
+	float d = get_ultrasonic_distance();
+	float delta_mm = max(0.0f, d - min_distance);
+	int32_t delta_ticks = (int32_t) (delta_mm * CPR / (wheel_diameter_R * PI));
+	set_target_encoder_counts(encoder_count_R + delta_ticks, encoder_count_L + delta_ticks);
 	wheel_state_R = EMERGENCY_BREAK;
 	wheel_state_L = EMERGENCY_BREAK;
 }
