@@ -360,7 +360,7 @@ void setup()
   Serial.println("=== PAMI ESP32 Setup ===");
 
   Serial.println("Setting motor pins...");
-  set_motor_pins(22, 21, 18, 19, 23, 17);
+  set_motor_pins(22, 21, 18, 19, 23, 27);
 
   set_ultrasonic_pins(14, 12);
 
