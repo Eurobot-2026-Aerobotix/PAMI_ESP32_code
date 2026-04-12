@@ -340,7 +340,7 @@ void setup()
   Serial.println("=== PAMI ESP32 Setup ===");
 
   Serial.println("Setting motor pins...");
-  set_motor_pins(21, 22, 18, 19, 23, 17);
+  set_motor_pins(27, 21, 18, 19, 23, 17);
   PWM_R = 0;
   PWM_L = 0;
   run_right_motor();
@@ -355,7 +355,7 @@ void setup()
   set_agent_led_pin(25);
 
   Serial.println("Setting encoder channels...");
-  set_encoder_channels(4, 16, 15, 27, 350);
+  set_encoder_channels(4, 16, 15, 2, 350);
 
   Serial.println("Setting PWM parameters...");
   set_PWM_min_max(1023, 270, 270, -270, -270);
@@ -417,45 +417,45 @@ void setup()
   control_loop_state = DISACTIVATED;
   delay(1000);
   strategy_waiting = 0;
-  if (get_tirette_state() == 0){
-    kill_comms();
-    for(int i=0; i<2; i++){
-      set_agent_led_on();
-      custom_delay(300);
-      set_agent_led_off();
-      custom_delay(300);
-    }
-    is_yellow = get_color_switch_state();
-    load_strategy(strategy_commands, &strategy_length, is_yellow);
-    bool status = false;
-    while(get_tirette_state() == 0){
-      custom_delay(40);
-      set_agent_led_state(status);
-      status = !status;
-    }
-    strategy_waiting = 1;
-  }
+  // if (get_tirette_state() == 0){
+  //   kill_comms();
+  //   for(int i=0; i<2; i++){
+  //     set_agent_led_on();
+  //     custom_delay(300);
+  //     set_agent_led_off();
+  //     custom_delay(300);
+  //   }
+  //   is_yellow = get_color_switch_state();
+  //   load_strategy(strategy_commands, &strategy_length, is_yellow);
+  //   bool status = false;
+  //   while(get_tirette_state() == 0){
+  //     custom_delay(40);
+  //     set_agent_led_state(status);
+  //     status = !status;
+  //   }
+  //   strategy_waiting = 1;
+  // }
 }
 
 void loop(){
   //send_values_to_usart(distance_to_target, obstacle_distance, 0, 0);
-  // custom_delay(10);
-  //   PWM_R=500;
-  //   PWM_L=500;
-  //   delay(2000);
+  custom_delay(10);
+    PWM_R=500;
+    PWM_L=500;
+    delay(2000);
    
-  //   PWM_R=-500;
-  //   PWM_L=-500;
-  //   delay(2000);
+    PWM_R=-500;
+    PWM_L=-500;
+    delay(2000);
     
-  //   PWM_R=500;
-  //   PWM_L=0;
-  //   delay(2000);
+    PWM_R=500;
+    PWM_L=0;
+    delay(2000);
 
 
-  //   PWM_R=0;
-  //   PWM_L=500;
-  //   delay(2000);
+    PWM_R=0;
+    PWM_L=500;
+    delay(2000);
 
   // Serial.print(encoder_count_L);
   //  Serial.print(" - ");
