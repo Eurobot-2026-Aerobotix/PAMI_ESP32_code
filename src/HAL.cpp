@@ -98,8 +98,9 @@ float kpP_L = 200;
 float kdP_L = 5;
 float kiP_L = 1000;
 volatile float debugger = 0;
-int strategy_start_time = 1000000;
+int strategy_start_time = 0;
 bool strategy_waiting = 0;
+bool strategy_active = false;
 
 int strategy_commands[300];
 int strategy_length;
