@@ -156,7 +156,7 @@ void communicationTask(void *pvParameters)
   Serial.println("Communication task started");
   
   // Setup micro-ROS (will handle WiFi connection internally)
-  if (setup_micro_ros("rouge", "t0rb@g26", "10.42.1.1", 8888))
+  if (setup_micro_ros("rouge", "t0rb@g26", "192.168.31.2", 8888))
   {
     Serial.println("micro-ROS setup successful");
   }
@@ -367,6 +367,19 @@ void setup()
   HAL_setup();
 
   Serial.println("Creating tasks...");
+    //Create tasks with lower stack sizes first
+    xTaskCreatePinnedToCore(
+     communicationTask,
+      "communicationTask",
+      8192,
+      NULL,
+      1, // Lower priority
+       &communicationTaskHandle,
+       0); // Pin to core 0
+
+   delay(500); // Delay between task creation
+   Serial.println("Communication task created");
+
 
   xTaskCreatePinnedToCore(
       commandExecutionTask,
