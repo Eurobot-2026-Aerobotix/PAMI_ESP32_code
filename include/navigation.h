@@ -32,6 +32,7 @@ enum Control_loop {
 enum command {
 	DELAY,
 	GOTO,
+	ROTATING_CMD,
 	ORIENTATE,
 	SET_POSITION,
 	BEZIER,

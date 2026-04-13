@@ -7,7 +7,7 @@ enum Trajectory trajectory = STRAIGHT;
 float ramping_acceleration = 3;
 float breaking_acceleration = -3;
 float emergency_breaking_acceleration = -10;
-float rotating_speed = 200;
+float rotating_speed = 380;
 float acc_linearization_coef;
 
 float cruise_speed_R;
