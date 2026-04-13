@@ -43,13 +43,14 @@ void strategy()
 
   // Calculate total commands: ROS commands + yellow/blue strategy commands
   
-   int* commands = strategy_commands; // Assuming strategy_commands is filled with ROS commands
-   int num_commands = strategy_length; // Assuming strategy_length is set to the number of ROS
+  //  int* commands = strategy_commands; // Assuming strategy_commands is filled with ROS commands
+  //  int num_commands = strategy_length; // Assuming strategy_length is set to the number of ROS
 
-  // int commands[] = {
+   int commands[] = {
   //                   SET_POSITION, 0, 0, 0,
   //                 // bezier_cmd, 550, 0, 250, 1000, 1000, 500, 600, 1,
-  //                  GOTO, 1000, 0, 380,
+                    GOTO, 1000, 0, 380,
+                    //ROTATING_CMD, 3600, 
   //                 // goto_cmd, 0, 0, 500,
   //                 // orientate_cmd, 90, 0,
   //                 // set_position_cmd, 357, 199, 0,
@@ -58,8 +59,8 @@ void strategy()
   //                 // goto_cmd, 1922, 50, 600,
   //                 // orientate_cmd, 88, 0,
   //                 // goto_cmd, 1900, 550, 400,
-  //                 }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
-  // int num_commands = sizeof(commands) / sizeof(commands[0]);
+                   }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
+   int num_commands = sizeof(commands) / sizeof(commands[0]);
 
   int i = 0;
   strategy_start_time = millis();
@@ -135,10 +136,15 @@ void strategy()
       }
       i += 9;
     }
+    else if (command_type == ROTATING_CMD){
+      int angle = commands[i + 1];
+      rotate(angle, 0);
+      i += 2; 
+    }
   }
   control_loop_state = DISACTIVATED;
 	stop_motors();
-  party_time();
+  //party_time();
   // 3. Send completion signal
   send_action_done(1);
 
@@ -340,11 +346,11 @@ void setup()
   Serial.println("=== PAMI ESP32 Setup ===");
 
   Serial.println("Setting motor pins...");
-  set_motor_pins(27, 21, 18, 19, 23, 17);
-  PWM_R = 0;
-  PWM_L = 0;
-  run_right_motor();
-  run_left_motor();
+  set_motor_pins(21, 22, 18, 19, 23, 17);
+  // PWM_R = 0;
+  // PWM_L = 0;
+  // run_right_motor();
+  // run_left_motor();
 
   set_ultrasonic_pins(14, 12);
 
@@ -355,13 +361,13 @@ void setup()
   set_agent_led_pin(25);
 
   Serial.println("Setting encoder channels...");
-  set_encoder_channels(4, 16, 15, 2, 350);
+  set_encoder_channels(4, 16, 15, 27, 350);
 
   Serial.println("Setting PWM parameters...");
   set_PWM_min_max(1023, 270, 270, -270, -270);
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(32.25, 32.08875, 88.67981188092556);
+  set_wheel_diameter_and_spacing(32.3706436379525082114, 32.1290901822775894131375,  88.7783);
   HAL_setup();
 
   Serial.println("Creating tasks...");
@@ -400,7 +406,7 @@ void setup()
       1); // Pin to core 1
   Serial.println("PID task created");
 
-  strategy_waiting = 0;
+  
   xTaskCreatePinnedToCore(
       emergencyBreakTask,
       "emergencyBreakTask",
@@ -416,7 +422,7 @@ void setup()
   Serial.println("All tasks created successfully!");
   control_loop_state = DISACTIVATED;
   delay(1000);
-  strategy_waiting = 0;
+  strategy_waiting = 1;
   // if (get_tirette_state() == 0){
   //   kill_comms();
   //   for(int i=0; i<2; i++){
@@ -439,23 +445,23 @@ void setup()
 
 void loop(){
   //send_values_to_usart(distance_to_target, obstacle_distance, 0, 0);
-  custom_delay(10);
-    PWM_R=500;
-    PWM_L=500;
-    delay(2000);
+  //custom_delay(10);
+    // PWM_R=300;
+    // PWM_L=300;
+    // delay(2000);
    
-    PWM_R=-500;
-    PWM_L=-500;
-    delay(2000);
+    // PWM_R=-500;
+    // PWM_L=-500;
+    // delay(2000);
     
-    PWM_R=500;
-    PWM_L=0;
-    delay(2000);
+    // PWM_R=500;
+    // PWM_L=0;
+    // delay(2000);
 
 
-    PWM_R=0;
-    PWM_L=500;
-    delay(2000);
+    // PWM_R=0;
+    // PWM_L=500;
+    // delay(2000);
 
   // Serial.print(encoder_count_L);
   //  Serial.print(" - ");
@@ -493,7 +499,7 @@ void loop(){
   // custom_delay(10);
   // PWM_R=0;
   // PWM_L=0;
-  // send_values_to_usart(encoder_count_R, encoder_count_L, 0, 0);
+  //send_values_to_usart(encoder_count_R, encoder_count_L, 0, 0);
   // custom_delay(10);
   //send_values_to_usart(deviation_distance * 100, 0, 0, 0);
 }
