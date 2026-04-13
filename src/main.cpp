@@ -159,7 +159,7 @@ void communicationTask(void *pvParameters)
   Serial.println("Communication task started");
   
   // Setup micro-ROS (will handle WiFi connection internally)
-  if (setup_micro_ros("rouge", "t0rb@g26", "192.168.31.1", 8888))
+  if (setup_micro_ros("rouge", "t0rb@g26", "192.168.31.2", 8888))
   {
     Serial.println("micro-ROS setup successful");
   }
