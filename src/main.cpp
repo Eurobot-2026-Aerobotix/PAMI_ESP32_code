@@ -136,11 +136,6 @@ void strategy()
       }
       i += 9;
     }
-    else if (command_type == ROTATING_CMD){
-      int angle = commands[i + 1];
-      rotate(angle, 0);
-      i += 2; 
-    }
   }
   control_loop_state = DISACTIVATED;
 	stop_motors();
