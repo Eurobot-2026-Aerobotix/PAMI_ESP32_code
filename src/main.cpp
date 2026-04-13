@@ -159,7 +159,7 @@ void communicationTask(void *pvParameters)
   Serial.println("Communication task started");
   
   // Setup micro-ROS (will handle WiFi connection internally)
-  if (setup_micro_ros("harissa", "harissaharissa2026", "10.42.1.1", 8888))
+  if (setup_micro_ros("rouge", "t0rb@g26", "192.168.31.1", 8888))
   {
     Serial.println("micro-ROS setup successful");
   }
@@ -176,7 +176,7 @@ void communicationTask(void *pvParameters)
     } else {
       // If WiFi disconnected, try to reconnect
       Serial.println("WiFi disconnected in task, attempting reconnection...");
-      connect_wifi("harissa", "harissaharissa2026");
+      connect_wifi("rouge", "t0rb@g26");
       vTaskDelay(pdMS_TO_TICKS(5000)); // Wait 5 seconds before next attempt
     }
 
