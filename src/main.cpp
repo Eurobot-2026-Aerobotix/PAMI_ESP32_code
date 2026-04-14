@@ -37,7 +37,6 @@ void kill_comms();
 // Custom strategy implementation
 void strategy()
 {
-  strategy_active = true;
   kill_comms();
   Serial.println("Executing strategy...");
 
@@ -47,20 +46,11 @@ void strategy()
    int num_commands = strategy_length; // Assuming strategy_length is set to the number of ROS
 
   //  int commands[] = {
-  // //                   SET_POSITION, 0, 0, 0,
-  // //                 // bezier_cmd, 550, 0, 250, 1000, 1000, 500, 600, 1,
+  //                   SET_POSITION, 0, 0, 0,
   //                   GOTO, 1000, 0, 380,
-  //                   //ROTATING_CMD, 3600, 
-  // //                 // goto_cmd, 0, 0, 500,
-  // //                 // orientate_cmd, 90, 0,
-  // //                 // set_position_cmd, 357, 199, 0,
-  // //                 // goto_cmd, 900, 400, 600,
-  // //                 // goto_cmd, 1650, 380, 600,
-  // //                 // goto_cmd, 1922, 50, 600,
-  // //                 // orientate_cmd, 88, 0,
-  // //                 // goto_cmd, 1900, 550, 400,
+  //                    //ORIENTATE, 90, 0,
   //                  }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
-  //  int num_commands = sizeof(commands) / sizeof(commands[0]);
+  // int num_commands = sizeof(commands) / sizeof(commands[0]);
 
   int i = 0;
   strategy_start_time = millis();
@@ -138,7 +128,7 @@ void strategy()
     }
   }
   control_loop_state = DISACTIVATED;
-	 stop_motors();
+	stop_motors();
   party_time();
   // 3. Send completion signal
   send_action_done(1);
@@ -366,12 +356,11 @@ void setup()
 {
   // Initialize Serial for debugging
   Serial.begin(115200);
-  strategy_waiting = 0;
 
   Serial.println("=== PAMI ESP32 Setup ===");
 
   Serial.println("Setting motor pins...");
-  set_motor_pins(21, 22, 18, 19, 23, 17);
+  set_motor_pins(22, 21, 18, 19, 23, 27);
 
   set_ultrasonic_pins(14, 12);
 
@@ -465,23 +454,23 @@ void setup()
 
 void loop(){
   //send_values_to_usart(distance_to_target, obstacle_distance, 0, 0);
-  //custom_delay(10);
-    // PWM_R=300;
-    // PWM_L=300;
-    // delay(2000);
+  // custom_delay(10);
+  //   PWM_R=500;
+  //   PWM_L=500;
+  //   delay(2000);
    
-    // PWM_R=-500;
-    // PWM_L=-500;
-    // delay(2000);
+  //   PWM_R=-500;
+  //   PWM_L=-500;
+  //   delay(2000);
     
-    // PWM_R=500;
-    // PWM_L=0;
-    // delay(2000);
+  //   PWM_R=500;
+  //   PWM_L=0;
+  //   delay(2000);
 
 
-    // PWM_R=0;
-    // PWM_L=500;
-    // delay(2000);
+  //   PWM_R=0;
+  //   PWM_L=500;
+  //   delay(2000);
 
   // Serial.print(encoder_count_L);
   //  Serial.print(" - ");
@@ -517,9 +506,6 @@ void loop(){
   ///////////////////////////////////
   // send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, debugger);
   // custom_delay(10);
-  // PWM_R=0;
-  // PWM_L=0;
-  //send_values_to_usart(encoder_count_R, encoder_count_L, 0, 0);
+  // send_values_to_usart(encoder_count_R, encoder_count_L, 0, 0);
   // custom_delay(10);
-  //send_values_to_usart(deviation_distance * 100, 0, 0, 0);
 }
