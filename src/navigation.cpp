@@ -669,6 +669,5 @@ int add_fixed_strategy_part(int* strategy, int* output, int start_length, int* o
 	if (*output_length > max_commands) {
 		*output_length = max_commands;
 	}
-
 	return *output_length;
 }
