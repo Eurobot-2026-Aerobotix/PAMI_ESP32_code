@@ -51,7 +51,7 @@ void strategy()
 
   int i = 0;
   strategy_start_time = millis();
-  // rotate(1800, 0);
+  // rotate(3600, 0);
   // while(1);
   while (i < num_commands)
   {
@@ -379,7 +379,7 @@ void kill_comms(){
   set_PWM_min_max(1023, 120, 120, -120, -120); //yess    //130  120
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(32.99175, 32.315419125, 110.76523367100438);
+  set_wheel_diameter_and_spacing(32.7608077, 32.315419125, 111.34736991444105);
   HAL_setup();
 
   Serial.println("Creating tasks...");
