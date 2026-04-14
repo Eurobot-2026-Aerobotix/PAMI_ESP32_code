@@ -628,30 +628,47 @@ void prepare_emergency_break(){
 }
 
 int add_fixed_strategy_part(int* strategy, int* output, int start_length, int* output_length){
-	int yellow_commands[] = {
+	if (strategy == NULL || output == NULL || output_length == NULL) {
+		return 0;
+	}
+
+	const int yellow_commands[] = {
 						BACKWARDS, 180, 200,
 						SET_POSITION, 1900, 0, 90,
 						GOTO, 1900, 540, 400,
 					};
-	int blue_commands[] = { 
+	const int blue_commands[] = { 
 						BACKWARDS, 180, 200,
 						SET_POSITION, 1900, 3000, -90,
 						GOTO, 1890, 2460, 400,
 					};
-	for (int i = 0; i < start_length && i < 100; i++){
+	const int max_commands = 300;
+	if (start_length < 0) {
+		start_length = 0;
+	}
+	if (start_length > max_commands) {
+		start_length = max_commands;
+	}
+
+	for (int i = 0; i < start_length && i < max_commands; i++){
 		output[i] = strategy[i];
 	}
 	int num_commands = 0;
 	if (is_yellow){
 		num_commands = sizeof(yellow_commands) / sizeof(yellow_commands[0]);
-		for (int i = 0; i < num_commands && i < 100; i++){
+		for (int i = 0; i < num_commands && (i + start_length) < max_commands; i++){
 			output[i + start_length] = yellow_commands[i];
 		}
 	}else{
 		num_commands = sizeof(blue_commands) / sizeof(blue_commands[0]);
-		for (int i = 0; i < num_commands && i < 100; i++){
+		for (int i = 0; i < num_commands && (i + start_length) < max_commands; i++){
 			output[i + start_length] = blue_commands[i];
 		}
 	}
 	*output_length = start_length + num_commands;
+	if (*output_length > max_commands) {
+		*output_length = max_commands;
+	}
+
+	return *output_length;
 }

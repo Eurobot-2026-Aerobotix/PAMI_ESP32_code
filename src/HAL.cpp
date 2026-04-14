@@ -282,22 +282,46 @@ bool get_color_switch_state(){
 }
 
 void save_strategy(int* strategy, int strategy_length, bool yellow){
-    int buffer[strategy_length + 1];
+    if (strategy == NULL) {
+        return;
+    }
+
+    const int max_strategy = 300;
+    if (strategy_length < 0) {
+        strategy_length = 0;
+    }
+    if (strategy_length > max_strategy) {
+        strategy_length = max_strategy;
+    }
+
+    int buffer[max_strategy + 1];
     buffer[0] = strategy_length;
     for (int i = 0; i < strategy_length; i++){
         buffer[i+1] = strategy[i];
     }
+
+    const size_t bytes_to_write = (size_t)(strategy_length + 1) * sizeof(int);
     prefs.begin("pami", false);
-    prefs.putBytes(yellow? "strategy_yellow" : "strategy_blue", buffer, sizeof(buffer));
+    prefs.putBytes(yellow? "strategy_yellow" : "strategy_blue", buffer, bytes_to_write);
     prefs.end();
 }
 void load_strategy(int* strategy, int* strategy_length, bool yellow){
+    if (strategy == NULL || strategy_length == NULL) {
+        return;
+    }
+
     prefs.begin("pami", true);
-    int buffer[300]; // assuming max strategy length is 99
+    int buffer[301];
     size_t bytesRead = prefs.getBytes(yellow? "strategy_yellow" : "strategy_blue", buffer, sizeof(buffer));
     prefs.end();
     if (bytesRead > 0 && bytesRead <= sizeof(buffer)){
         *strategy_length = buffer[0];
+        if (*strategy_length < 0) {
+            *strategy_length = 0;
+        }
+        if (*strategy_length > 300) {
+            *strategy_length = 300;
+        }
         for (int i = 0; i < *strategy_length; i++){
             strategy[i] = buffer[i+1];
         }

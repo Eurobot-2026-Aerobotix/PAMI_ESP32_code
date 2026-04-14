@@ -38,6 +38,8 @@ static bool entities_created = false;
 static const size_t STRATEGY_MSG_CAPACITY = 300;
 static const size_t MAX_RECEIVED_FLOATS = 100;
 static const size_t MAX_STRATEGY_COMMANDS = 300;
+static const size_t FIXED_STRATEGY_PART_LENGTH = 11;
+static const size_t MAX_STRATEGY_INPUT_COMMANDS = MAX_STRATEGY_COMMANDS - FIXED_STRATEGY_PART_LENGTH;
 
 // WiFi reconnection variables
 unsigned long last_wifi_check = 0;
@@ -460,7 +462,7 @@ void strategy_callback(const void *msgin)
     const std_msgs__msg__Float32MultiArray *msg = (const std_msgs__msg__Float32MultiArray *)msgin;
     const size_t msg_size = msg->data.size;
     const size_t safe_copy_count = (msg_size < MAX_RECEIVED_FLOATS) ? msg_size : MAX_RECEIVED_FLOATS;
-    const size_t safe_strategy_count = (msg_size < MAX_STRATEGY_COMMANDS) ? msg_size : MAX_STRATEGY_COMMANDS;
+    const size_t safe_strategy_count = (msg_size < MAX_STRATEGY_INPUT_COMMANDS) ? msg_size : MAX_STRATEGY_INPUT_COMMANDS;
     
     Serial.println("Received float table:");
     received_floats_count = safe_copy_count;
@@ -473,10 +475,10 @@ void strategy_callback(const void *msgin)
         Serial.println(STRATEGY_MSG_CAPACITY);
     }
 
-    if (msg_size > MAX_STRATEGY_COMMANDS) {
+    if (msg_size > MAX_STRATEGY_INPUT_COMMANDS) {
         Serial.print("WARN: Strategy truncated to ");
-        Serial.print(MAX_STRATEGY_COMMANDS);
-        Serial.println(" elements");
+        Serial.print(MAX_STRATEGY_INPUT_COMMANDS);
+        Serial.println(" elements so the fixed strategy part fits safely");
     }
     
     // Blink LED to indicate message received
@@ -504,12 +506,18 @@ void strategy_callback(const void *msgin)
     }
     strategy_length = (int)safe_strategy_count;
    
-    int combined_strategy[300]; 
+    static int combined_strategy[MAX_STRATEGY_COMMANDS];
     int combined_length;
     add_fixed_strategy_part(strategy_commands, combined_strategy, strategy_length, &combined_length);
 
-    for(int i = 0; i < combined_length; i++){
-    strategy_commands[i] = combined_strategy[i];
+    if (combined_length > (int)MAX_STRATEGY_COMMANDS) {
+        Serial.print("WARN: Combined strategy exceeded capacity, clamping to ");
+        Serial.println(MAX_STRATEGY_COMMANDS);
+        combined_length = MAX_STRATEGY_COMMANDS;
+    }
+
+    for (int i = 0; i < combined_length; i++) {
+        strategy_commands[i] = combined_strategy[i];
     }
     strategy_length = combined_length;
     
@@ -522,6 +530,7 @@ void strategy_callback(const void *msgin)
 // Service callback for status service
 void status_service_callback(const void *req, void *res)
 {
+    (void)req;
     std_srvs__srv__Trigger_Response *response = (std_srvs__srv__Trigger_Response *)res;
     
     // Set response success to pami_status
@@ -530,18 +539,13 @@ void status_service_callback(const void *req, void *res)
     // Set message based on status
     const char* msg = pami_status ? "PAMI is ready" : "PAMI is busy";
     
-    // Allocate memory for the string
-    response->message.data = (char*)malloc(strlen(msg) + 1);
-    if (response->message.data != NULL) {
-        strcpy(response->message.data, msg);
-        response->message.size = strlen(msg);
-        response->message.capacity = strlen(msg) + 1;
-    } else {
-        // Fallback if allocation fails
-        response->message.data = (char*)"";
-        response->message.size = 0;
-        response->message.capacity = 0;
-    }
+    // Use a static buffer to avoid heap fragmentation and random reboots.
+    static char response_buffer[32];
+    strncpy(response_buffer, msg, sizeof(response_buffer) - 1);
+    response_buffer[sizeof(response_buffer) - 1] = '\0';
+    response->message.data = response_buffer;
+    response->message.size = strlen(response_buffer);
+    response->message.capacity = sizeof(response_buffer);
     
     Serial.print("Status service called - returning: ");
     Serial.println(pami_status ? "true" : "false");
