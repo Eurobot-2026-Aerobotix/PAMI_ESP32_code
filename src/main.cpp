@@ -44,10 +44,9 @@ void strategy()
   int commands[] = {
                   SET_POSITION, 0, 0, 0,
                   GOTO, 500, 0, 450, 1,
-                  PICKUP, 1,1,1,
+                  PICKUP, 1, 1, 1,
                   GOTO, 0, 0, 450, 1,
-                  PUTDOWN, 1,1,
-                  
+                  PUTDOWN, 1, 1,
                   }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
   int num_commands = sizeof(commands) / sizeof(commands[0]);
 
@@ -98,10 +97,6 @@ void strategy()
       int y = commands[i + 4];
       int direction = commands[i + 5];
       Serial.printf("[CMD] forward_cmd: distance=%d, speed=%d, x=%d, y=%d, direction=%d\n", distance, speed, x, y, direction);
-      // while(go_backward_to(x, y, speed)){
-      //   wait_for_obstacle_clearance();
-      //   Serial.println("obstacle cleared, resuming...");
-      //   }
       move_forward(distance,speed, x, y,direction);
       i += 6;
     }
@@ -156,10 +151,9 @@ void strategy()
       i += 2;
     }
   }
-  control_loop_state = DISACTIVATED;
-	stop_motors();
+  // control_loop_state = DISACTIVATED;
+	// stop_motors();
   // 3. Send completion signal
-  //send_action_done(1);
 
   Serial.println("Strategy execution completed!");
 }
@@ -380,7 +374,7 @@ void kill_comms(){
   set_PWM_min_max(1023, 120, 120, -120, -120); //yess    //130  120
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(32.7608077, 32.315419125, 111.34736991444105);
+  set_wheel_diameter_and_spacing(33.897792694710276, 33.80884390444275, 111.82885526349219);
   HAL_setup();
 
   Serial.println("Creating tasks...");

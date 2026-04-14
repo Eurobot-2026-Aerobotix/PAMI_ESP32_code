@@ -492,7 +492,7 @@ void HAL_setup()
 
     servo.setPeriodHertz(50);
     servo.attach(servo_pin);
-    move_servo(25);
+    move_servo(5);
 
     pinMode(tirette_pin, INPUT_PULLUP);
     pinMode(color_switch_pin, INPUT_PULLUP);
