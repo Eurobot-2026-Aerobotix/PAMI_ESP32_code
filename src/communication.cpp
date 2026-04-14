@@ -284,13 +284,12 @@ bool create_entities()
     
     // Allocate memory for incoming array
     Serial.println("DEBUG: Allocating memory for strategy message...");
-    strategy_msg.data.data = (float *)malloc(60 * sizeof(float));
+    strategy_msg.data.data = (float *)malloc(STRATEGY_MSG_CAPACITY * sizeof(float));
     if (strategy_msg.data.data == NULL) {
         Serial.println("ERROR: Failed to allocate memory for strategy message!");
         return false;
     }
-    strategy_msg.data.size = 0;
-    strategy_msg.data.capacity = 60;
+    strategy_msg.data.capacity = STRATEGY_MSG_CAPACITY;
     
     // Create status service
     Serial.println("DEBUG: Creating status service...");
@@ -460,7 +459,7 @@ void strategy_callback(const void *msgin)
     is_yellow = (recieved_commands[2] < 1500);
 
     for (int i = 0; i < received_floats_count && i < 200; i++){
-        strategy_commands[i] = received_floats[i];
+        strategy_commands[i] = (int)msg->data.data[i];
     }
     strategy_length = received_floats_count;
     

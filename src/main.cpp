@@ -1,4 +1,3 @@
-
 /*
  *
  *            ___ _   _ ___  ___  ___  ___ _____   ___ __ ___ ___
@@ -32,7 +31,15 @@ float obstacle_distance;
 //bool has_target = false;
 int32_t previous_speed_control_time = 0;
 
-void kill_comms();
+void kill_comms() {
+    if (communicationTaskHandle == NULL) {
+        return;
+    }
+
+    cleanup_micro_ros();
+    vTaskDelete(communicationTaskHandle);
+    communicationTaskHandle = NULL;
+}
 
 // Custom strategy implementation
 void strategy()
@@ -328,20 +335,6 @@ void websocketTask(void *pvParameters)
     
     vTaskDelayUntil(&xLastWakeTime, xDelay);
   }
-}
-
-void kill_comms(){
-  if (communicationTaskHandle == NULL) {
-    return;
-  }
-
-  eTaskState comm_state = eTaskGetState(communicationTaskHandle);
-  if (comm_state != eDeleted) {
-    cleanup_micro_ros();
-    vTaskDelete(communicationTaskHandle);
-  }
-
-  communicationTaskHandle = NULL;
 }
 
 void setup()
