@@ -14,7 +14,6 @@ float cruise_speed_R;
 float cruise_speed_L;
 float starting_phi;
 float turning_radius;
-//float deviation_distance;
 int min_distance = 120;
 int safety_margin = 80; // safety margin in mm to allow passing close to obstacles
 
@@ -559,6 +558,9 @@ void emergency_break()
 {
 	wheel_state_R = EMERGENCY_BREAK;
 	wheel_state_L = EMERGENCY_BREAK;
+	stop_motors();
+	custom_delay(500);
+	set_target_encoder_counts(encoder_count_R, encoder_count_L);
 }
 void reset_speed_control_variables(){
 	previous_speed_control_time = micros()-999;
@@ -621,10 +623,6 @@ void wait_for_idle(){
 	}
 }
 void prepare_emergency_break(){
-	float d = get_ultrasonic_distance();
-	float delta_mm = max(0.0f, d - min_distance);
-	int32_t delta_ticks = (int32_t) (delta_mm * CPR / (wheel_diameter_R * PI));
-	set_target_encoder_counts(encoder_count_R + delta_ticks, encoder_count_L + delta_ticks);
 	wheel_state_R = EMERGENCY_BREAK;
 	wheel_state_L = EMERGENCY_BREAK;
 }

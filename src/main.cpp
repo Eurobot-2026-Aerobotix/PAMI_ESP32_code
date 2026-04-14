@@ -34,31 +34,9 @@ int32_t previous_speed_control_time = 0;
 
 void kill_comms();
 
-static void print_loaded_strategy(const int* commands, int length)
-{
-  Serial.print("Loaded strategy length: ");
-  Serial.println(length);
-
-  if (length <= 0)
-  {
-    Serial.println("Loaded strategy is empty");
-    return;
-  }
-
-  Serial.println("Loaded strategy commands:");
-  for (int i = 0; i < length; i++)
-  {
-    Serial.print("[");
-    Serial.print(i);
-    Serial.print("] ");
-    Serial.println(commands[i]);
-  }
-}
-
 // Custom strategy implementation
 void strategy()
 {
-  strategy_active = true;
   kill_comms();
   Serial.println("Executing strategy...");
 
@@ -67,19 +45,11 @@ void strategy()
    int* commands = strategy_commands; // Assuming strategy_commands is filled with ROS commands
    int num_commands = strategy_length; // Assuming strategy_length is set to the number of ROS
 
-  // int commands[] = {
+  //  int commands[] = {
   //                   SET_POSITION, 0, 0, 0,
-  //                 // bezier_cmd, 550, 0, 250, 1000, 1000, 500, 600, 1,
-  //                  GOTO, 1000, 0, 380,
-  //                 // goto_cmd, 0, 0, 500,
-  //                 // orientate_cmd, 90, 0,
-  //                 // set_position_cmd, 357, 199, 0,
-  //                 // goto_cmd, 900, 400, 600,
-  //                 // goto_cmd, 1650, 380, 600,
-  //                 // goto_cmd, 1922, 50, 600,
-  //                 // orientate_cmd, 88, 0,
-  //                 // goto_cmd, 1900, 550, 400,
-  //                 }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
+  //                   GOTO, 1000, 0, 380,
+  //                    //ORIENTATE, 90, 0,
+  //                  }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
   // int num_commands = sizeof(commands) / sizeof(commands[0]);
 
   int i = 0;
@@ -157,13 +127,13 @@ void strategy()
       i += 9;
     }
   }
-  // 3. Send completion signal
-  Serial.println("Strategy execution completed!");
-  strategy_active = false;
   control_loop_state = DISACTIVATED;
 	stop_motors();
   party_time();
+  // 3. Send completion signal
+  send_action_done(1);
 
+  Serial.println("Strategy execution completed!");
 }
 
 void communicationTask(void *pvParameters)
@@ -185,6 +155,12 @@ void communicationTask(void *pvParameters)
   
   for (;;) // Infinite loop - CRITICAL!
   {
+    if (comm_stop_requested) {
+      Serial.println("Communication stop requested");
+      cleanup_micro_ros();
+      break;
+    }
+
     // Only run communication loop if WiFi is connected
     if (WiFi.status() == WL_CONNECTED) {
       communication_loop();
@@ -197,6 +173,9 @@ void communicationTask(void *pvParameters)
 
     vTaskDelayUntil(&xLastWakeTime, xDelay);
   }
+
+  communicationTaskHandle = NULL;
+  vTaskDelete(NULL);
 }
 
 void emergencyBreakTask(void *pvParameters)
@@ -206,11 +185,6 @@ void emergencyBreakTask(void *pvParameters)
   
   for (;;)
   {
-    if (!strategy_active) {
-      vTaskDelayUntil(&xLastWakeTime, xDelay);
-      continue;
-    }
-
     float ultrasonic_dist = get_ultrasonic_distance();
     float min_dist = min_distance * (max(max(fabs(current_speed_R), fabs(current_speed_L)), 200.0f)/200);
     bool obstacle_too_close = (ultrasonic_dist < min_dist) && trajectory != ROTATING;
@@ -222,7 +196,7 @@ void emergencyBreakTask(void *pvParameters)
     //target_allows_passing = distance_to_target < obstacle_distance + safety_margin;
     //}
     
-    if (( (obstacle_too_close && distance_to_target > (obstacle_distance + safety_margin)) || (millis() - strategy_start_time >= max_running_time)) && wheel_state_R != EMERGENCY_BREAK && wheel_state_L != EMERGENCY_BREAK && (current_x > 500))
+    if (( (obstacle_too_close && distance_to_target > (obstacle_distance + safety_margin)) || (millis() - strategy_start_time >= max_running_time)) && wheel_state_R != EMERGENCY_BREAK && wheel_state_L != EMERGENCY_BREAK)
     {
       prepare_emergency_break();
     }
@@ -337,25 +311,51 @@ void commandExecutionTask(void *pvParameters)
     vTaskDelayUntil(&xLastWakeTime, xDelay);
   }
 }
+
+void websocketTask(void *pvParameters)
+{
+  const TickType_t xDelay = pdMS_TO_TICKS(50); // 50ms delay for WebSocket operations
+  TickType_t xLastWakeTime = xTaskGetTickCount();
+  Serial.println("WebSocket task started");
+  
+  // Wait a bit for system initialization
+  vTaskDelay(pdMS_TO_TICKS(3));
+  
+  for (;;) // Infinite loop - CRITICAL!
+  {
+    //send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, debugger);
+    
+    vTaskDelayUntil(&xLastWakeTime, xDelay);
+  }
+}
+
 void kill_comms(){
   if (communicationTaskHandle == NULL) {
     return;
   }
 
-  eTaskState comm_state = eTaskGetState(communicationTaskHandle);
-  if (comm_state != eDeleted) {
-    cleanup_micro_ros();
-    vTaskDelete(communicationTaskHandle);
-  }
+  eTaskState task_state = eTaskGetState(communicationTaskHandle);
+  if (task_state != eDeleted) {
+    comm_stop_requested = true;
 
-  communicationTaskHandle = NULL;
+    const TickType_t wait_step = pdMS_TO_TICKS(20);
+    const int max_wait_steps = 100; // ~2 seconds
+    for (int i = 0; i < max_wait_steps && communicationTaskHandle != NULL; i++) {
+      vTaskDelay(wait_step);
+    }
+
+    // Fallback if task did not self-terminate in time.
+    if (communicationTaskHandle != NULL) {
+      vTaskDelete(communicationTaskHandle);
+      communicationTaskHandle = NULL;
+    }
+  }
 }
 
 void setup()
 {
   // Initialize Serial for debugging
   Serial.begin(115200);
-  strategy_waiting = 0;
 
   Serial.println("=== PAMI ESP32 Setup ===");
 
@@ -398,7 +398,6 @@ void setup()
    delay(500); // Delay between task creation
    Serial.println("Communication task created");
 
-
   xTaskCreatePinnedToCore(
       commandExecutionTask,
       "commandExecutionTask",
@@ -420,7 +419,6 @@ void setup()
       1); // Pin to core 1
   Serial.println("PID task created");
 
-  strategy_waiting = 0;
   xTaskCreatePinnedToCore(
       emergencyBreakTask,
       "emergencyBreakTask",
@@ -447,7 +445,6 @@ void setup()
     }
     is_yellow = get_color_switch_state();
     load_strategy(strategy_commands, &strategy_length, is_yellow);
-    print_loaded_strategy(strategy_commands, strategy_length);
     bool status = false;
     while(get_tirette_state() == 0){
       custom_delay(40);
@@ -512,9 +509,6 @@ void loop(){
   ///////////////////////////////////
   // send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, debugger);
   // custom_delay(10);
-  // PWM_R=0;
-  // PWM_L=0;
   // send_values_to_usart(encoder_count_R, encoder_count_L, 0, 0);
   // custom_delay(10);
-  //send_values_to_usart(deviation_distance * 100, 0, 0, 0);
 }

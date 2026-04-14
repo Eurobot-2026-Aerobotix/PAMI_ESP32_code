@@ -63,6 +63,7 @@ extern std_srvs__srv__Trigger_Response status_res;
 extern bool micro_ros_init_successful;
 extern enum CommunicationState comm_state;
 extern bool pami_status;
+extern volatile bool comm_stop_requested;
 
 // Strategy data arrays
 extern float received_floats[100];
@@ -89,5 +90,6 @@ void status_service_callback(const void *req, void *res);
 void send_action_done(int value);
 bool is_agent_connected();
 void check_wifi_connection(const char *ssid, const char *password);
+void LED_BLINK();
 // Strategy function (to be implemented by user)
 void strategy();
