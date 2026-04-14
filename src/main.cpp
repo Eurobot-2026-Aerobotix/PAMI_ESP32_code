@@ -38,13 +38,22 @@ void strategy()
 
   // Calculate total commands: ROS commands + yellow/blue strategy commands
   
-  int* commands = strategy_commands; // Assuming strategy_commands is filled with ROS commands
-  int total_commands = strategy_length; // Assuming strategy_length is set to the number of ROS
+  // int* commands = strategy_commands; // Assuming strategy_commands is filled with ROS commands
+  // int total_commands = strategy_length; // Assuming strategy_length is set to the number of ROSµ
+
+  int commands[] = {
+                  SET_POSITION, 0, 0, 0,
+                  GOTO, 500, 0, 450, 1,
+                  GOTO, 0, 0, 450, 1,
+                  ORIENTATE, 0,
+                  }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
+  int num_commands = sizeof(commands) / sizeof(commands[0]);
+
   int i = 0;
   strategy_start_time = millis();
   // rotate(1800, 0);
   // while(1);
-  while (i < total_commands)
+  while (i < num_commands)
   {
     int command_type = commands[i];
     if (command_type == GOTO)
@@ -145,6 +154,7 @@ void strategy()
       i += 2;
     }
   }
+  custom_delay(500); // Ensure all commands have time to complete before sending completion signal
   control_loop_state = DISACTIVATED;
 	stop_motors();
   // 3. Send completion signal
@@ -330,51 +340,6 @@ void commandExecutionTask(void *pvParameters)
   }
 }
 
-void websocketTask(void *pvParameters)
-{
-  const TickType_t xDelay = pdMS_TO_TICKS(50); // 50ms delay for WebSocket operations
-  TickType_t xLastWakeTime = xTaskGetTickCount();
-  Serial.println("WebSocket task started");
-  
-  // Wait a bit for system initialization
-  vTaskDelay(pdMS_TO_TICKS(3));
-  
-  for (;;) // Infinite loop - CRITICAL!
-  {
-    if (websocket == 1) {
-      // Handle reconnections and polling
-      websocket_reconnect_if_needed();
-      websocket_poll();
-    
-      // Send robot data via WebSocket at 10Hz (every 100ms)
-      static TickType_t last_data_send = 0;
-      if ((xTaskGetTickCount() - last_data_send) >= pdMS_TO_TICKS(100)) {
-        last_data_send = xTaskGetTickCount();
-        if (websocket_has_new_string()) {
-        String receivedMsg = websocket_get_last_string();
-        Serial.println("Processing: " + receivedMsg);
-        processReceivedString(receivedMsg);
-}
-        if (websocket_is_connected()) {
-          // Send current robot data
-          /*
-          websocket_send_data(0xAA, current_speed_R_filtered);
-          websocket_send_data(0xAB, current_speed_L_filtered);
-          websocket_send_data(0xAC, target_speed_R);
-          websocket_send_data(0xAD, target_speed_L);
-          */
-          websocket_send_data(0xAA, current_speed_L);
-          websocket_send_data(0xAB, current_speed_R);
-          websocket_send_data(0xAC, target_speed_L);
-          websocket_send_data(0xAD, target_speed_R);
-        }
-      }
-    }
-    
-    vTaskDelayUntil(&xLastWakeTime, xDelay);
-  }
-}
-
 void kill_comms(){
   if (communicationTaskHandle == NULL) {
     return;
@@ -397,25 +362,24 @@ void kill_comms(){
   Serial.println("=== PAMI ESP32 Setup ===");
 
   Serial.println("Setting motor pins...");
-  set_motor_pins( 19, 18, 21, 22, 17, 23);  // shah 19, 18, 21, 22, 17, 23
+  set_motor_pins(21, 22, 19, 18, 23, 17);  // shah 19, 18, 21, 22, 17, 23
 
   set_system_pins(32, 26, 33, 27);// bdlthom //25
 
-  // TODO: Set tirette pins
-  set_tirettes_pins(27, 33);
+  set_tirettes_pins(25, 12);
 
-  set_agent_led_pin(25);
+  set_agent_led_pin(5);
 
   Serial.println("Setting encoder channels...");
-  set_encoder_channels(2, 15, 4, 16, 1400); // badalthom  2, 15, 4, 16, 
+  set_encoder_channels(16, 4, 15, 2, 400); // badalthom  2, 15, 4, 16, 
 
   Serial.println("Setting PWM parameters...");
   set_ultrasonic_pins(14, 34); // badalthom //14
 
-  set_PWM_min_max(1023, 100, 120, -100, -120); //yess    //130  120
+  set_PWM_min_max(1023, 120, 120, -120, -120); //yess    //130  120
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(47.746482927568600730665129011754, 47.669870635475871651225659202322, 120.4418940144483039743055580586);
+  set_wheel_diameter_and_spacing(32.99175, 32.315419125, 110.76523367100438);
   HAL_setup();
 
   Serial.println("Creating tasks...");
@@ -455,14 +419,14 @@ void kill_comms(){
       1); // Pin to core 1
   Serial.println("PID task created");
 
-  xTaskCreatePinnedToCore(
-      emergencyBreakTaskWithoutUltrason,
-      "emergencyBreakTask",
-      2048, // Stack size
-      NULL,
-      2, // High priority
-      &emergencyBreakTaskHandle,
-      1); // Pin to core 1
+  // xTaskCreatePinnedToCore(
+  //     emergencyBreakTaskWithoutUltrason,
+  //     "emergencyBreakTask",
+  //     2048, // Stack size
+  //     NULL,
+  //     2, // High priority
+  //     &emergencyBreakTaskHandle,
+  //     1); // Pin to core 1
 
   delay(500); // Delay between task creation
   Serial.println("WebSocket task created");
@@ -470,25 +434,42 @@ void kill_comms(){
   Serial.println("All tasks created successfully!");
   control_loop_state = DISACTIVATED;
   delay(1000);
-  strategy_waiting = 0;
-  if (get_tirette_state() == 0){
-    kill_comms();
-    for(int i=0; i<4; i++){
-      set_agent_led_on();
-      custom_delay(500);
-      set_agent_led_off();
-      custom_delay(500);
-    }
-    is_yellow = get_color_switch_state();
-    load_strategy(strategy_commands, &strategy_length, is_yellow);
-    while(get_tirette_state() == 0){
-      custom_delay(10);
-    }
-    strategy_waiting = 1;
-  }
+  strategy_waiting = 1;
+  // if (get_tirette_state() == 0){
+  //   kill_comms();
+  //   for(int i=0; i<4; i++){
+  //     set_agent_led_on();
+  //     custom_delay(500);
+  //     set_agent_led_off();
+  //     custom_delay(500);
+  //   }
+  //   is_yellow = get_color_switch_state();
+  //   load_strategy(strategy_commands, &strategy_length, is_yellow);
+  //   while(get_tirette_state() == 0){
+  //     custom_delay(10);
+  //   }
+  //   strategy_waiting = 1;
+  // }
 }
 void loop(){
+
+    // PWM_R=500;
+    // PWM_L=500;
+    // delay(2000);
    
+    // PWM_R=-500;
+    // PWM_L=-500;
+    // delay(2000);
+    
+    // PWM_R=500;
+    // PWM_L=0;
+    // delay(2000);
+
+
+    // PWM_R=0;
+    // PWM_L=500;
+    // delay(2000);
+  //  control_loop_state = SPEED;
   //  for(int i=0; i<100; i++){
   //    set_target_speeds(i*2, i*2);
 
@@ -504,6 +485,7 @@ void loop(){
   //    send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
   //  delay(10);
   //  }
+  //  reset_speed_control_variables();
 
   // send_values_to_usart(current_speed_L, current_speed_R, fabs(PWM_L)/(MAX(fabs(current_speed_L), 10))*100, target_speed_R);
   // delay(10);
@@ -511,7 +493,7 @@ void loop(){
   // delay(10);
   // send_values_to_usart(debugger*100, 0, target_speed_R, target_speed_L); // send encoder counts and position for debugging
   // send_values_to_usart(encoder_count_R, encoder_count_L, 0, 0); // send encoder counts and position for debugging
-  // delay(10);
+  // delay(20);
   // send_values_to_usart(current_x, current_y, current_phi * 100, 0);
   // delay(10);
 }

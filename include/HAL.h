@@ -19,7 +19,6 @@
 #include <Arduino.h>
 #include "driver/pcnt.h"
 #include <ESP32Servo.h>
-#include <ESP32Servo.h>
 #include <Preferences.h>
 
 #define FAST_READ(pin) (((uint32_t)((pin) < 32 ? GPIO.in : GPIO.in1.val) >> ((pin) & 31)) & 0x1)

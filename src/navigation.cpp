@@ -4,7 +4,7 @@ enum Control_loop control_loop_state = SPEED;
 enum Wheel_state wheel_state_R = DEAD_STOP;
 enum Wheel_state wheel_state_L = DEAD_STOP;
 enum Trajectory trajectory = STRAIGHT;
-float ramping_acceleration = 1.7; // tzid acc tzid fl ramping meloul 
+float ramping_acceleration = 3; // tzid acc tzid fl ramping meloul 
 float breaking_acceleration = -2; // tzid break tzid flkher 
 float emergency_breaking_acceleration = -10;
 float rotating_speed = 250;
@@ -62,7 +62,6 @@ int move_forward(float distance, float speed, float target_x, float target_y, fl
 		x1 = speed/ramping_acceleration;
 		x2 = speed/breaking_acceleration + distance + deceleration_offset;
 	}
-	acc_linearization_coef = sqrt(x1);
 	acc_linearization_coef = sqrt(x1);
 
 	cruise_speed_R = speed;
@@ -460,7 +459,7 @@ int rotate(float angle, int8_t is_radian){
 	wait_for_idle();
 	reset_speed_control_variables();
 	float rotating_breaking_acceleration = -3;
-	float rotating_ramping_acceleration = 4;
+	float rotating_ramping_acceleration = 3;
 	angle = is_radian ? angle : deg_to_rad(angle);
 	rotating_ramping_acceleration = MIN(pow(fabs(rad_to_deg(angle)), 1.3) * 0.015, 3);
 	rotating_breaking_acceleration = -MIN(pow(fabs(rad_to_deg(angle)), 1.3) * 0.015, 3);
@@ -484,6 +483,8 @@ int rotate(float angle, int8_t is_radian){
 		x1 = speed / rotating_ramping_acceleration;
 		x2 = speed / rotating_breaking_acceleration + distance;
 	}
+
+	acc_linearization_coef = sqrt(x1);
 
 	cruise_speed_R = speed * direction_R;
 	cruise_speed_L = speed * direction_L;
@@ -561,7 +562,13 @@ int rotate(float angle, int8_t is_radian){
 		}
 	}
 	stop_motors();
-	set_target_encoder_counts(encoder_count_R, encoder_count_L - (target_phi - absolute_phi)*wheels_spacing*CPR / (wheel_diameter_L*PI) ); // the second part is there to fix any last minute fuck ups, concerning phi
+	float diff = absolute_phi - target_phi;
+
+	while (diff >  PI) { target_phi += 2*PI; diff -= 2*PI; }
+	while (diff < -PI) { target_phi -= 2*PI; diff += 2*PI; }
+
+	float position_correction = ( ( (target_phi - absolute_phi) * wheels_spacing*CPR / ( ((wheel_diameter_L + wheel_diameter_R)/2)*PI) ) ) / 2.0f;
+	set_target_encoder_counts(encoder_count_R + position_correction, encoder_count_L - position_correction); // the second part is there to fix any last minute fuck ups, concerning the phi
 	wheel_state_R = DEAD_STOP;
 	wheel_state_L = DEAD_STOP;
 	return 0;
@@ -625,7 +632,7 @@ void reset_speed_control_variables(){
 	previous_speed_error_R = 0;
 }
 bool is_idle(){
-	int encoder_tolerance = 12;
+	int encoder_tolerance = 4;
 	int pwm_tolerance = 500;
 	bool right_wheel_idle = (fabs(target_encoder_count_R - encoder_count_R) < encoder_tolerance) && (fabs(PWM_R) < pwm_tolerance) && (fabs(previous_position_error_R) < encoder_tolerance);
 	bool left_wheel_idle = (fabs(target_encoder_count_L - encoder_count_L) < encoder_tolerance) && (fabs(PWM_L) < pwm_tolerance) && (fabs(previous_position_error_L) < encoder_tolerance);
