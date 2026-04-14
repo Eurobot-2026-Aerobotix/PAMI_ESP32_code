@@ -503,6 +503,15 @@ void strategy_callback(const void *msgin)
         strategy_commands[i] = (int)msg->data.data[i];
     }
     strategy_length = (int)safe_strategy_count;
+   
+    int combined_strategy[300]; 
+    int combined_length;
+    add_fixed_strategy_part(strategy_commands, combined_strategy, strategy_length, &combined_length);
+
+    for(int i = 0; i < combined_length; i++){
+    strategy_commands[i] = combined_strategy[i];
+    }
+    strategy_length = combined_length;
     
     save_strategy(strategy_commands, strategy_length, is_yellow);
     
