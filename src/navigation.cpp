@@ -494,7 +494,7 @@ int rotate(float angle, int8_t is_radian){
 		distance_traveled_L = (encoder_count_L - starting_encoder_count_L) * wheel_diameter_L * PI / CPR;
 		yaw_centering_term = MIN((fabs(distance_traveled_R) - fabs(distance_traveled_L)) * 0.1, 1);
 		yaw_centering_term = MAX(yaw_centering_term, -1);
-		//yaw_centering_term = 0;
+		yaw_centering_term = 0;
 
 		set_target_speeds(speed * (1 - yaw_centering_term), -speed * (1 + yaw_centering_term));
 		speed = MAX(fabs(speed) * 0.985, 80) * direction_R;

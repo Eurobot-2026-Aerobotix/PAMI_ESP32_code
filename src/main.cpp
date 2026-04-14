@@ -47,7 +47,8 @@ void strategy()
 
   //  int commands[] = {
   //                   SET_POSITION, 0, 0, 0,
-  //                   GOTO, 500, 0, 380,
+  //                   GOTO, 1000, 0, 380,
+  //                    //ORIENTATE, 90, 0,
   //                  }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
   // int num_commands = sizeof(commands) / sizeof(commands[0]);
 
@@ -125,7 +126,6 @@ void strategy()
       }
       i += 9;
     }
-
   }
   control_loop_state = DISACTIVATED;
 	stop_motors();
@@ -155,6 +155,12 @@ void communicationTask(void *pvParameters)
   
   for (;;) // Infinite loop - CRITICAL!
   {
+    if (comm_stop_requested) {
+      Serial.println("Communication stop requested");
+      cleanup_micro_ros();
+      break;
+    }
+
     // Only run communication loop if WiFi is connected
     if (WiFi.status() == WL_CONNECTED) {
       communication_loop();
@@ -167,6 +173,9 @@ void communicationTask(void *pvParameters)
 
     vTaskDelayUntil(&xLastWakeTime, xDelay);
   }
+
+  communicationTaskHandle = NULL;
+  vTaskDelete(NULL);
 }
 
 void emergencyBreakTask(void *pvParameters)
@@ -276,6 +285,8 @@ void PIDTask(void *pvParameters){
 
       previous_position_error_L = error;
     }
+    
+
     run_right_motor();
     run_left_motor();
 
@@ -323,13 +334,22 @@ void kill_comms(){
     return;
   }
 
-  eTaskState comm_state = eTaskGetState(communicationTaskHandle);
-  if (comm_state != eDeleted) {
-    cleanup_micro_ros();
-    vTaskDelete(communicationTaskHandle);
-  }
+  eTaskState task_state = eTaskGetState(communicationTaskHandle);
+  if (task_state != eDeleted) {
+    comm_stop_requested = true;
 
-  communicationTaskHandle = NULL;
+    const TickType_t wait_step = pdMS_TO_TICKS(20);
+    const int max_wait_steps = 100; // ~2 seconds
+    for (int i = 0; i < max_wait_steps && communicationTaskHandle != NULL; i++) {
+      vTaskDelay(wait_step);
+    }
+
+    // Fallback if task did not self-terminate in time.
+    if (communicationTaskHandle != NULL) {
+      vTaskDelete(communicationTaskHandle);
+      communicationTaskHandle = NULL;
+    }
+  }
 }
 
 void setup()
@@ -433,26 +453,25 @@ void setup()
 }
 
 void loop(){
-
   //send_values_to_usart(distance_to_target, obstacle_distance, 0, 0);
   // custom_delay(10);
-    // PWM_R=500;
-    // PWM_L=500;
-    // delay(2000);
+  //   PWM_R=500;
+  //   PWM_L=500;
+  //   delay(2000);
    
-    // PWM_R=-500;
-    // PWM_L=-500;
-    // delay(2000);
+  //   PWM_R=-500;
+  //   PWM_L=-500;
+  //   delay(2000);
     
-    // PWM_R=500;
-    // PWM_L=0;
-    // delay(2000);
+  //   PWM_R=500;
+  //   PWM_L=0;
+  //   delay(2000);
 
 
-    // PWM_R=0;
-    // PWM_L=500;
-    // delay(2000);
-  
+  //   PWM_R=0;
+  //   PWM_L=500;
+  //   delay(2000);
+
   // Serial.print(encoder_count_L);
   //  Serial.print(" - ");
   //  Serial.println(encoder_count_R);
@@ -485,8 +504,8 @@ void loop(){
   //   delay(10);
   // }
   ///////////////////////////////////
-  // send_values_to_usart(encoder_count_R, encoder_count_L, 0, 0);
+  // send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, debugger);
   // custom_delay(10);
-  // send_values_to_usart(current_x, current_y, 0, 0);
+  // send_values_to_usart(encoder_count_R, encoder_count_L, 0, 0);
   // custom_delay(10);
 }
