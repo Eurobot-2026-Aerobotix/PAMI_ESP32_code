@@ -260,9 +260,9 @@ int bezier_curve(float x1, float y1, float x2, float y2, float x3, float y3, flo
 			phi_error -= 2*PI ;
 		else if (phi_error < -PI)
 			phi_error += 2*PI ;
-		float phi_correction_term = (phi_error) * ( 5 / ( MAX( ( abs(target_speed_R) + abs(target_speed_L) )/2, 100.0) /500.0) ); // 3 the first coefficient is tunable
+		float phi_correction_term = (phi_error) * ( 1.5 / ( MAX( ( abs(target_speed_R) + abs(target_speed_L) )/2, 100.0) /500.0) ); // 3 the first coefficient is tunable
 
-		lane_correction_term = MIN(fabs(SQR(signed_distance) * (0.4f)), 0.5)*SGN(signed_distance) + phi_correction_term;// this coefficient is tunable
+		lane_correction_term = MIN(fabs(SQR(signed_distance) * (0.01f)), 0.5)*SGN(signed_distance) + phi_correction_term;// this coefficient is tunable
 		if (d < 0.1*d_1){ // 0.002f;
 			lane_correction_term = 0;
 		}
@@ -405,7 +405,7 @@ int rotate(float angle, int8_t is_radian){
 	wait_for_idle();
 	reset_speed_control_variables();
 	float rotating_breaking_acceleration = breaking_acceleration;
-	float rotating_ramping_acceleration = 2;
+	float rotating_ramping_acceleration = 4;
 	angle = is_radian ? angle : deg_to_rad(angle);
 	float arc_length = (wheels_spacing / 2) * angle;
 

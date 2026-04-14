@@ -34,6 +34,27 @@ int32_t previous_speed_control_time = 0;
 
 void kill_comms();
 
+static void print_loaded_strategy(const int* commands, int length)
+{
+  Serial.print("Loaded strategy length: ");
+  Serial.println(length);
+
+  if (length <= 0)
+  {
+    Serial.println("Loaded strategy is empty");
+    return;
+  }
+
+  Serial.println("Loaded strategy commands:");
+  for (int i = 0; i < length; i++)
+  {
+    Serial.print("[");
+    Serial.print(i);
+    Serial.print("] ");
+    Serial.println(commands[i]);
+  }
+}
+
 // Custom strategy implementation
 void strategy()
 {
@@ -136,16 +157,13 @@ void strategy()
       i += 9;
     }
   }
+  // 3. Send completion signal
+  Serial.println("Strategy execution completed!");
+  strategy_active = false;
   control_loop_state = DISACTIVATED;
 	stop_motors();
   party_time();
-  // 3. Send completion signal
-  control_loop_state = DISACTIVATED;
-	stop_motors();
-  send_action_done(1);
 
-  Serial.println("Strategy execution completed!");
-  strategy_active = false;
 }
 
 void communicationTask(void *pvParameters)
@@ -204,7 +222,7 @@ void emergencyBreakTask(void *pvParameters)
     //target_allows_passing = distance_to_target < obstacle_distance + safety_margin;
     //}
     
-    if (( (obstacle_too_close && distance_to_target > (obstacle_distance + safety_margin)) || (millis() - strategy_start_time >= max_running_time)) && wheel_state_R != EMERGENCY_BREAK && wheel_state_L != EMERGENCY_BREAK)
+    if (( (obstacle_too_close && distance_to_target > (obstacle_distance + safety_margin)) || (millis() - strategy_start_time >= max_running_time)) && wheel_state_R != EMERGENCY_BREAK && wheel_state_L != EMERGENCY_BREAK && (current_x > 500))
     {
       prepare_emergency_break();
     }
@@ -429,6 +447,7 @@ void setup()
     }
     is_yellow = get_color_switch_state();
     load_strategy(strategy_commands, &strategy_length, is_yellow);
+    print_loaded_strategy(strategy_commands, strategy_length);
     bool status = false;
     while(get_tirette_state() == 0){
       custom_delay(40);
