@@ -137,14 +137,11 @@ void strategy()
       i += 9;
     }
   }
-  control_loop_state = DISACTIVATED;
-	stop_motors();
-  //party_time();
-  // 3. Send completion signal
-  send_action_done(1);
-
   Serial.println("Strategy execution completed!");
   strategy_active = false;
+  control_loop_state = DISACTIVATED;
+	stop_motors();
+  party_time();
 }
 
 void communicationTask(void *pvParameters)
@@ -342,10 +339,6 @@ void setup()
 
   Serial.println("Setting motor pins...");
   set_motor_pins(21, 22, 18, 19, 23, 17);
-  // PWM_R = 0;
-  // PWM_L = 0;
-  // run_right_motor();
-  // run_left_motor();
 
   set_ultrasonic_pins(14, 12);
 
