@@ -123,7 +123,7 @@ int move_forward(float distance, float speed, float target_x, float target_y, fl
 	distance_to_target = get_distance_to(x_closest, y_closest);
 	previous_distance_to_target = distance_to_target;
 	int32_t phase_two_start_time = micros();
-	while (distance_to_target > 0 && distance_to_target <= previous_distance_to_target){
+	while (distance_to_target > 0){
 		
 		float phi_error = normalize_angle(calculate_instant_target_phi(x, distance) - current_phi);
 		float deviation_angle = normalize_angle(atan2(current_y - starting_y, current_x - starting_x) - atan2(target_y - starting_y, target_x - starting_x) );
@@ -567,7 +567,7 @@ int rotate(float angle, int8_t is_radian){
 	while (diff >  PI) { target_phi += 2*PI; diff -= 2*PI; }
 	while (diff < -PI) { target_phi -= 2*PI; diff += 2*PI; }
 
-	float position_correction = ( ( (target_phi - absolute_phi) * wheels_spacing*CPR / ( ((wheel_diameter_L + wheel_diameter_R)/2)*PI) ) ) / 2.0f;
+	int position_correction = ( ( (target_phi - absolute_phi) * wheels_spacing*CPR / ( ((wheel_diameter_L + wheel_diameter_R)/2)*PI) ) ) / 2.0f;
 	set_target_encoder_counts(encoder_count_R + position_correction, encoder_count_L - position_correction); // the second part is there to fix any last minute fuck ups, concerning the phi
 	wheel_state_R = DEAD_STOP;
 	wheel_state_L = DEAD_STOP;

@@ -26,16 +26,19 @@ void update_encoder_counts(){
         return;
     }
 
-	int32_t delta = encoder_get_R() - previous_encoder_timer_CNT_R;
-	delta = (delta>15000)? delta-32768 : (delta<-15000)? delta+32768 : delta; // handling overflow
-	encoder_count_R += delta; // it was + not - but the encoder phase pins were inverted
+    const int32_t current_timer_cnt_r = encoder_get_R();
+    const int32_t current_timer_cnt_l = encoder_get_L();
 
-	delta = encoder_get_L() - previous_encoder_timer_CNT_L;
-	delta = (delta>15000)? delta-32768 : (delta<-15000)? delta+32768 : delta;
-	encoder_count_L += delta;
+    int32_t delta = current_timer_cnt_r - previous_encoder_timer_CNT_R;
+    delta = (delta > 32767) ? (delta - 65536) : ((delta < -32768) ? (delta + 65536) : delta);
+    encoder_count_R += delta; // it was + not - but the encoder phase pins were inverted
 
-	previous_encoder_timer_CNT_R = encoder_get_R();
-	previous_encoder_timer_CNT_L = encoder_get_L();
+    delta = current_timer_cnt_l - previous_encoder_timer_CNT_L;
+    delta = (delta > 32767) ? (delta - 65536) : ((delta < -32768) ? (delta + 65536) : delta);
+    encoder_count_L += delta;
+
+    previous_encoder_timer_CNT_R = current_timer_cnt_r;
+    previous_encoder_timer_CNT_L = current_timer_cnt_l;
 }
 void update_position(float dt){
 

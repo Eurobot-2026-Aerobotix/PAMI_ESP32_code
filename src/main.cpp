@@ -154,7 +154,6 @@ void strategy()
       i += 2;
     }
   }
-  custom_delay(500); // Ensure all commands have time to complete before sending completion signal
   control_loop_state = DISACTIVATED;
 	stop_motors();
   // 3. Send completion signal
@@ -292,7 +291,7 @@ void PIDTask(void *pvParameters){
       position_integral_R = ( (PWM_R == PWM_max) || (PWM_R == -PWM_max) )? (position_integral_R - 2*error*dt) : position_integral_R;
 
       // left motor position control
-      error = (target_encoder_count_L - encoder_count_L)*2;
+      error = (target_encoder_count_L - encoder_count_L);
 
       position_derivative_L = (error - previous_position_error_L)/dt; // unit = mm/s²
       position_integral_L = ( SGN(error) == SGN( previous_position_error_L) )? position_integral_L + error*dt : 0;
