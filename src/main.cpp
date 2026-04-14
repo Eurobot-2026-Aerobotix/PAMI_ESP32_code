@@ -137,11 +137,13 @@ void strategy()
       i += 9;
     }
   }
-  Serial.println("Strategy execution completed!");
-  strategy_active = false;
   control_loop_state = DISACTIVATED;
-	stop_motors();
+	 stop_motors();
   party_time();
+  // 3. Send completion signal
+  send_action_done(1);
+
+  Serial.println("Strategy execution completed!");
 }
 
 void communicationTask(void *pvParameters)
@@ -163,6 +165,12 @@ void communicationTask(void *pvParameters)
   
   for (;;) // Infinite loop - CRITICAL!
   {
+    if (comm_stop_requested) {
+      Serial.println("Communication stop requested");
+      cleanup_micro_ros();
+      break;
+    }
+
     // Only run communication loop if WiFi is connected
     if (WiFi.status() == WL_CONNECTED) {
       communication_loop();
@@ -175,6 +183,9 @@ void communicationTask(void *pvParameters)
 
     vTaskDelayUntil(&xLastWakeTime, xDelay);
   }
+
+  communicationTaskHandle = NULL;
+  vTaskDelete(NULL);
 }
 
 void emergencyBreakTask(void *pvParameters)
@@ -184,11 +195,6 @@ void emergencyBreakTask(void *pvParameters)
   
   for (;;)
   {
-    if (!strategy_active) {
-      vTaskDelayUntil(&xLastWakeTime, xDelay);
-      continue;
-    }
-
     float ultrasonic_dist = get_ultrasonic_distance();
     float min_dist = min_distance * (max(max(fabs(current_speed_R), fabs(current_speed_L)), 200.0f)/200);
     bool obstacle_too_close = (ultrasonic_dist < min_dist) && trajectory != ROTATING;
@@ -315,18 +321,45 @@ void commandExecutionTask(void *pvParameters)
     vTaskDelayUntil(&xLastWakeTime, xDelay);
   }
 }
+
+void websocketTask(void *pvParameters)
+{
+  const TickType_t xDelay = pdMS_TO_TICKS(50); // 50ms delay for WebSocket operations
+  TickType_t xLastWakeTime = xTaskGetTickCount();
+  Serial.println("WebSocket task started");
+  
+  // Wait a bit for system initialization
+  vTaskDelay(pdMS_TO_TICKS(3));
+  
+  for (;;) // Infinite loop - CRITICAL!
+  {
+    //send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, debugger);
+    
+    vTaskDelayUntil(&xLastWakeTime, xDelay);
+  }
+}
+
 void kill_comms(){
   if (communicationTaskHandle == NULL) {
     return;
   }
 
-  eTaskState comm_state = eTaskGetState(communicationTaskHandle);
-  if (comm_state != eDeleted) {
-    cleanup_micro_ros();
-    vTaskDelete(communicationTaskHandle);
-  }
+  eTaskState task_state = eTaskGetState(communicationTaskHandle);
+  if (task_state != eDeleted) {
+    comm_stop_requested = true;
 
-  communicationTaskHandle = NULL;
+    const TickType_t wait_step = pdMS_TO_TICKS(20);
+    const int max_wait_steps = 100; // ~2 seconds
+    for (int i = 0; i < max_wait_steps && communicationTaskHandle != NULL; i++) {
+      vTaskDelay(wait_step);
+    }
+
+    // Fallback if task did not self-terminate in time.
+    if (communicationTaskHandle != NULL) {
+      vTaskDelete(communicationTaskHandle);
+      communicationTaskHandle = NULL;
+    }
+  }
 }
 
 void setup()
@@ -394,7 +427,6 @@ void setup()
       1); // Pin to core 1
   Serial.println("PID task created");
 
-  
   xTaskCreatePinnedToCore(
       emergencyBreakTask,
       "emergencyBreakTask",
