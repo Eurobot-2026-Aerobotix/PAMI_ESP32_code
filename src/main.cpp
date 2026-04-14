@@ -163,6 +163,12 @@ void communicationTask(void *pvParameters)
   
   for (;;) // Infinite loop - CRITICAL!
   {
+    if (comm_stop_requested) {
+      Serial.println("Communication stop requested");
+      cleanup_micro_ros();
+      break;
+    }
+
     // Only run communication loop if WiFi is connected
     if (WiFi.status() == WL_CONNECTED) {
       communication_loop();
@@ -175,6 +181,9 @@ void communicationTask(void *pvParameters)
 
     vTaskDelayUntil(&xLastWakeTime, xDelay);
   }
+
+  communicationTaskHandle = NULL;
+  vTaskDelete(NULL);
 }
 
 void emergencyBreakTask(void *pvParameters)
@@ -333,13 +342,22 @@ void kill_comms(){
     return;
   }
 
-  eTaskState comm_state = eTaskGetState(communicationTaskHandle);
-  if (comm_state != eDeleted) {
-    cleanup_micro_ros();
-    vTaskDelete(communicationTaskHandle);
-  }
+  eTaskState task_state = eTaskGetState(communicationTaskHandle);
+  if (task_state != eDeleted) {
+    comm_stop_requested = true;
 
-  communicationTaskHandle = NULL;
+    const TickType_t wait_step = pdMS_TO_TICKS(20);
+    const int max_wait_steps = 100; // ~2 seconds
+    for (int i = 0; i < max_wait_steps && communicationTaskHandle != NULL; i++) {
+      vTaskDelay(wait_step);
+    }
+
+    // Fallback if task did not self-terminate in time.
+    if (communicationTaskHandle != NULL) {
+      vTaskDelete(communicationTaskHandle);
+      communicationTaskHandle = NULL;
+    }
+  }
 }
 
 void setup()
