@@ -101,7 +101,8 @@ float kdP_L = 5;
 float kiP_L = 400;
 volatile float debugger = 0;
 int strategy_start_time = 1000000;
-int servo_positions[9] =  {0, 135, 70, 110, 95, 15, 120,70,140 };   //0, 130, 48, 85, 50, 15, 110, 50, 130
+//   {intial pos , pick pos down , walk pos without crates , 110, pick pos up , servo up , putdown pos nid , 70 , put down pos lot };  
+int servo_positions[9] =  {0, 150, 50, 110, 100, 30, 120 , 70 , 150 };   //0, 130, 48, 85, 50, 15, 110, 50, 130
 bool ultrasonic_blocked = true;
 bool heza = false;
 
@@ -434,9 +435,9 @@ void pickup(int pick_right, int pick_left, int up_or_down){
         // move_servo(7);
         // custom_delay(500);
        // move_servo(4);
-        custom_delay(550);
+        custom_delay(800);
     }else{
-        custom_delay(820);
+        custom_delay(1000);
     }
     
     move_servo(up_or_down? 2 : 2);
@@ -491,7 +492,7 @@ void HAL_setup()
 
     servo.setPeriodHertz(50);
     servo.attach(servo_pin);
-    move_servo(0);
+    move_servo(25);
 
     pinMode(tirette_pin, INPUT_PULLUP);
     pinMode(color_switch_pin, INPUT_PULLUP);

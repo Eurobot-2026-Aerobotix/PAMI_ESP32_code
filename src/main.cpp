@@ -44,8 +44,10 @@ void strategy()
   int commands[] = {
                   SET_POSITION, 0, 0, 0,
                   GOTO, 500, 0, 450, 1,
+                  PICKUP, 1,1,1,
                   GOTO, 0, 0, 450, 1,
-                  ORIENTATE, 0,
+                  PUTDOWN, 1,1,
+                  
                   }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
   int num_commands = sizeof(commands) / sizeof(commands[0]);
 
@@ -365,7 +367,7 @@ void kill_comms(){
 
   set_system_pins(32, 26, 33, 27);// bdlthom //25
 
-  set_tirettes_pins(25, 12);
+  set_tirettes_pins(35, 39);
 
   set_agent_led_pin(5);
 
