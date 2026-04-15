@@ -43,15 +43,17 @@ void strategy()
 
   int commands[] = {
                   SET_POSITION, 0, 0, 0,
-                  GOTO, 500, 0, 450, 1,
+                  GOTO, 500, 0, 400, 1,
                   PICKUP, 1, 1, 1,
-                  GOTO, 0, 0, 450, 1,
+                  GOTO, 450, 0, 400, -1,
+                  GOTO, 0, 0, 400, 1,
                   PUTDOWN, 1, 1,
                   }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
   int num_commands = sizeof(commands) / sizeof(commands[0]);
 
   int i = 0;
   strategy_start_time = millis();
+  // rotating_speed = 150;
   // rotate(3600, 0);
   // while(1);
   while (i < num_commands)
@@ -371,7 +373,7 @@ void kill_comms(){
   Serial.println("Setting PWM parameters...");
   set_ultrasonic_pins(14, 34); // badalthom //14
 
-  set_PWM_min_max(1023, 120, 120, -120, -120); //yess    //130  120
+  set_PWM_min_max(1023, 90, 90, -90, -90); //yess    //130  120
 
   Serial.println("Setting wheel parameters...");
   set_wheel_diameter_and_spacing(33.897792694710276, 33.80884390444275, 111.82885526349219);
