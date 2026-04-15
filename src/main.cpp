@@ -38,18 +38,18 @@ void strategy()
 
   // Calculate total commands: ROS commands + yellow/blue strategy commands
   
-  // int* commands = strategy_commands; // Assuming strategy_commands is filled with ROS commands
-  // int total_commands = strategy_length; // Assuming strategy_length is set to the number of ROSµ
+  int* commands = strategy_commands; // Assuming strategy_commands is filled with ROS commands
+  int num_commands = strategy_length; // Assuming strategy_length is set to the number of ROSµ
 
-  int commands[] = {
-                  SET_POSITION, 0, 0, 0,
-                  GOTO, 500, 0, 400, 1,
-                  PICKUP, 1, 1, 1,
-                  GOTO, 450, 0, 400, -1,
-                  GOTO, 0, 0, 400, 1,
-                  PUTDOWN, 1, 1,
-                  }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
-  int num_commands = sizeof(commands) / sizeof(commands[0]);
+  // int commands[] = {
+  //                 SET_POSITION, 0, 0, 0,
+  //                 GOTO, 500, 0, 400, 1,
+  //                 PICKUP, 1, 1, 1,
+  //                 GOTO, 450, 0, 400, -1,
+  //                 GOTO, 0, 0, 400, 1,
+  //                 PUTDOWN, 1, 1,
+  //                 }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
+  // int num_commands = sizeof(commands) / sizeof(commands[0]);
 
   int i = 0;
   strategy_start_time = millis();
@@ -168,7 +168,7 @@ void communicationTask(void *pvParameters)
   Serial.println("Communication task started");
   
   // Setup micro-ROS (will handle WiFi connection internally)
-  if (setup_micro_ros("harissa", "harissaharissa2026", "10.42.1.1", 8888))
+  if (setup_micro_ros("rouge", "t0rb@g26", "192.168.31.2", 8888))
   {
     Serial.println("micro-ROS setup successful");
   }
@@ -185,7 +185,7 @@ void communicationTask(void *pvParameters)
     } else {
       // If WiFi disconnected, try to reconnect
       Serial.println("WiFi disconnected in task, attempting reconnection...");
-      connect_wifi("harissa", "harissaharissa2026");
+      connect_wifi("rouge", "t0rb@g26");
       vTaskDelay(pdMS_TO_TICKS(5000)); // Wait 5 seconds before next attempt
     }
 
@@ -365,7 +365,7 @@ void kill_comms(){
 
   set_tirettes_pins(35, 39);
 
-  set_agent_led_pin(5);
+  set_agent_led_pin(25);
 
   Serial.println("Setting encoder channels...");
   set_encoder_channels(16, 4, 15, 2, 400); // badalthom  2, 15, 4, 16, 
@@ -431,22 +431,25 @@ void kill_comms(){
   Serial.println("All tasks created successfully!");
   control_loop_state = DISACTIVATED;
   delay(1000);
-  strategy_waiting = 1;
-  // if (get_tirette_state() == 0){
-  //   kill_comms();
-  //   for(int i=0; i<4; i++){
-  //     set_agent_led_on();
-  //     custom_delay(500);
-  //     set_agent_led_off();
-  //     custom_delay(500);
-  //   }
-  //   is_yellow = get_color_switch_state();
-  //   load_strategy(strategy_commands, &strategy_length, is_yellow);
-  //   while(get_tirette_state() == 0){
-  //     custom_delay(10);
-  //   }
-  //   strategy_waiting = 1;
-  // }
+  strategy_waiting = 0;
+  if (get_tirette_state() == 0){
+    kill_comms();
+    for(int i=0; i<2; i++){
+      set_agent_led_on();
+      custom_delay(300);
+      set_agent_led_off();
+      custom_delay(300);
+    }
+    is_yellow = get_color_switch_state();
+    load_strategy(strategy_commands, &strategy_length, is_yellow);
+    bool state = true;
+    while(get_tirette_state() == 0){
+      custom_delay(30);
+      set_agent_led_state(state);
+      state = !state;
+    }
+    strategy_waiting = 1;
+  }
 }
 void loop(){
 
