@@ -312,8 +312,6 @@ void PIDTask(void *pvParameters){
 
       previous_position_error_L = error;
     }
- //PWM_L= 500;// MIN =320temchi  319 temchich   min=-320 temchi -319temchich  
- //PWM_R= 500;//MIN =320temchi  319 temchich    min=-320 temchi -319temchich  
 //set_target_speeds(600, 600); 
   //  delay(10);
     run_right_motor();
@@ -382,7 +380,7 @@ void kill_comms(){
   Serial.println("Setting PWM parameters...");
   set_ultrasonic_pins(14, 34); // badalthom //14
 
-  set_PWM_min_max(1023, 90, 90, -90, -90); //yess    //130  120
+  set_PWM_min_max(1023, 80, 80, -80, -80); //yess    //130  120
 
   Serial.println("Setting wheel parameters...");
   set_wheel_diameter_and_spacing(34.50795296321506, 34.41740309472272, 109.63973494663571);
