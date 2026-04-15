@@ -39,15 +39,15 @@ void strategy()
   // Calculate total commands: ROS commands + yellow/blue strategy commands
   
   int* commands = strategy_commands; // Assuming strategy_commands is filled with ROS commands
-  int num_commands = strategy_length; // Assuming strategy_length is set to the number of ROSµ
+  int num_commands = strategy_length; // Assuming strategy_length is set to the number of ROS
 
   // int commands[] = {
   //                 SET_POSITION, 0, 0, 0,
-  //                 GOTO, 500, 0, 400, 1,
-  //                 PICKUP, 1, 1, 1,
-  //                 GOTO, 450, 0, 400, -1,
-  //                 GOTO, 0, 0, 400, 1,
-  //                 PUTDOWN, 1, 1,
+  //                 GOTO, 700, 0, 250, 1,
+  //                 // PICKUP, 1, 1, 1,
+  //                 // GOTO, 450, 0, 400, -1,
+  //                 // GOTO, 0, 0, 250, 1,
+  //                 // PUTDOWN, 1, 1,
   //                 }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
   // int num_commands = sizeof(commands) / sizeof(commands[0]);
 
@@ -55,7 +55,7 @@ void strategy()
   strategy_start_time = millis();
   // rotating_speed = 150;
   // rotate(3600, 0);
-  // while(1);
+  // while(1){custom_delay(10);};
   while (i < num_commands)
   {
     int command_type = commands[i];
@@ -359,7 +359,7 @@ void kill_comms(){
   Serial.println("=== PAMI ESP32 Setup ===");
 
   Serial.println("Setting motor pins...");
-  set_motor_pins(21, 22, 19, 18, 23, 17);  // shah 19, 18, 21, 22, 17, 23
+  set_motor_pins(22, 21, 18, 19, 23, 17);  // shah 19, 18, 21, 22, 17, 23
 
   set_system_pins(32, 26, 33, 27);// bdlthom //25
 
@@ -368,7 +368,7 @@ void kill_comms(){
   set_agent_led_pin(25);
 
   Serial.println("Setting encoder channels...");
-  set_encoder_channels(16, 4, 15, 2, 400); // badalthom  2, 15, 4, 16, 
+  set_encoder_channels(4, 16, 2, 15, 1400); // badalthom  2, 15, 4, 16, 
 
   Serial.println("Setting PWM parameters...");
   set_ultrasonic_pins(14, 34); // badalthom //14
@@ -376,7 +376,7 @@ void kill_comms(){
   set_PWM_min_max(1023, 90, 90, -90, -90); //yess    //130  120
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(33.897792694710276, 33.80884390444275, 111.82885526349219);
+  set_wheel_diameter_and_spacing(34.50795296321506, 34.41740309472272, 109.63973494663571);
   HAL_setup();
 
   Serial.println("Creating tasks...");
@@ -452,6 +452,8 @@ void kill_comms(){
   }
 }
 void loop(){
+  // send_values_to_usart(current_x, current_phi * 100, encoder_count_R, encoder_count_L);
+  // custom_delay(30);
 
     // PWM_R=500;
     // PWM_L=500;

@@ -4,6 +4,9 @@
 #include <Arduino.h>
 #include "odometry.h"
 
+#define STOP_PWM_THRESHOLD   1000   // close to PWM_max (4499)
+#define STOP_SPEED_THRESHOLD 50    // mm/s (robot almost stopped)
+
 enum Wheel_state
 {
 	DEAD_STOP,
@@ -80,3 +83,4 @@ void wait_for_obstacle_clearance();
 void wait_for_idle();
 void prepare_emergency_break();
 int bezier_curve(float x1, float y1, float x2, float y2, float x3, float y3, float speed, int direction);
+bool check_for_collision(int* counter);

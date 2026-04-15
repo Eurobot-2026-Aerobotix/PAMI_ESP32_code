@@ -66,14 +66,14 @@ double wheel_diameter_L;
 double wheels_spacing;
 
 // PID control parameters
-float kpS_R = 4;
+float kpS_R = 10;
 float kdS_R = 0.0000;
 float kiS_R = 100;
 float speed_integral_R = 0;
 float speed_derivative_R = 0;
 float previous_speed_error_R = 0;
 
-float kpS_L = 4;
+float kpS_L = 10;
 float kdS_L = 0;
 float kiS_L = 100;
 float speed_integral_L = 0;
@@ -360,8 +360,8 @@ void encoder_init()
     pcnt_config_R.lctrl_mode = PCNT_MODE_KEEP;
     pcnt_config_R.hctrl_mode = PCNT_MODE_REVERSE;
 
-    pcnt_config_R.counter_h_lim = 32767;
-    pcnt_config_R.counter_l_lim = -32768;
+    pcnt_config_R.counter_h_lim = 30000;
+    pcnt_config_R.counter_l_lim = -30000;
 
     pcnt_unit_config(&pcnt_config_R);
 
@@ -391,8 +391,8 @@ void encoder_init()
     pcnt_config_L.lctrl_mode = PCNT_MODE_KEEP;
     pcnt_config_L.hctrl_mode = PCNT_MODE_REVERSE;
 
-    pcnt_config_L.counter_h_lim = 32767;
-    pcnt_config_L.counter_l_lim = -32768;
+    pcnt_config_L.counter_h_lim = 30000;
+    pcnt_config_L.counter_l_lim = -30000;
 
     pcnt_unit_config(&pcnt_config_L);
 
@@ -407,12 +407,18 @@ void encoder_init()
 int16_t encoder_get_R() {
   int16_t count;
   pcnt_get_counter_value(PCNT_UNIT_0, &count);
+  encoder_count_R += count;
+
+  pcnt_counter_clear(PCNT_UNIT_0);
   return count;
 }
 
 int16_t encoder_get_L() {
   int16_t count;
   pcnt_get_counter_value(PCNT_UNIT_1, &count);
+  encoder_count_L += count;
+
+  pcnt_counter_clear(PCNT_UNIT_1);
   return count;
 }
 void move_servo(int position){
