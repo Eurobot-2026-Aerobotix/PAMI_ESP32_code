@@ -28,26 +28,6 @@ void update_encoder_counts(){
 
     encoder_get_R();
     encoder_get_L();
-    // int16_t current_r, current_l;
-
-    // pcnt_get_counter_value(PCNT_UNIT_0, &current_r);
-    // pcnt_get_counter_value(PCNT_UNIT_1, &current_l);
-
-    // int16_t delta_r = current_r - previous_encoder_timer_CNT_R;
-    // int16_t delta_l = current_l - previous_encoder_timer_CNT_L;
-
-    // // Correct wrap for SIGNED 16-bit
-    // if (delta_r > 32767) delta_r -= 65536;
-    // if (delta_r < -32768) delta_r += 65536;
-
-    // if (delta_l > 32767) delta_l -= 65536;
-    // if (delta_l < -32768) delta_l += 65536;
-
-    // encoder_count_R += delta_r;
-    // encoder_count_L += delta_l;
-
-    // previous_encoder_timer_CNT_R = current_r;
-    // previous_encoder_timer_CNT_L = current_l;
 }
 void update_position(float dt){
 

@@ -30,12 +30,6 @@ int move_forward(float distance, float speed, float target_x, float target_y, fl
     if (communicationTaskHandle != NULL) {
         vTaskSuspend(communicationTaskHandle);
     }
-    // if (heza){
-	// 	ramping_acceleration = 0.75;
-	// 	deceleration_offset = 6.5;
-	// }else
-	//     ramping_acceleration = 1.7;
-	// 	deceleration_offset = 10;
 
 	distance = fabs(distance);
 
@@ -97,6 +91,7 @@ int move_forward(float distance, float speed, float target_x, float target_y, fl
 		}
 		if (check_for_collision(&collision_check_counter)){
 			emergency_break();
+			return 0;
 		}
 
 		float phi_error = normalize_angle(calculate_instant_target_phi(x, distance) - current_phi);
@@ -126,7 +121,7 @@ int move_forward(float distance, float speed, float target_x, float target_y, fl
 	distance_to_target = get_distance_to(x_closest, y_closest);
 	previous_distance_to_target = distance_to_target;
 	int32_t phase_two_start_time = micros();
-	while (distance_to_target > 0){
+	while (distance_to_target > 2.5){
 		
 		float phi_error = normalize_angle(calculate_instant_target_phi(x, distance) - current_phi);
 		float deviation_angle = normalize_angle(atan2(current_y - starting_y, current_x - starting_x) - atan2(target_y - starting_y, target_x - starting_x) );
@@ -158,6 +153,7 @@ int move_forward(float distance, float speed, float target_x, float target_y, fl
 		}
 		if (check_for_collision(&collision_check_counter)){
 			emergency_break();
+			return 0;
 		}
 	}
 	stop_motors();
@@ -229,6 +225,7 @@ int move_backwards(float distance, float speed){
 		}
 		if (check_for_collision(&collision_check_counter)){
 			emergency_break();
+			return 0;
 		}
 
 		if ((millis() - start_time) > 2000){
@@ -596,6 +593,7 @@ int orientate(float orientation, int8_t is_radian)
 	int result = 0;
 	wait_for_idle();
 	if (abs(orientation - current_phi) > deg_to_rad(0.5)){
+		wait_for_idle();
 		float angle = orientation - current_phi;
 		if (angle > PI){
 			angle -= 2 * PI;
@@ -645,7 +643,7 @@ void reset_speed_control_variables(){
 	previous_speed_error_R = 0;
 }
 bool is_idle(){
-	int encoder_tolerance = 3;
+	int encoder_tolerance = 10;
 	int pwm_tolerance = 70;
 	bool right_wheel_idle = (fabs(target_encoder_count_R - encoder_count_R) < encoder_tolerance) && (fabs(PWM_R) < pwm_tolerance) && (fabs(previous_position_error_R) < encoder_tolerance);
 	bool left_wheel_idle = (fabs(target_encoder_count_L - encoder_count_L) < encoder_tolerance) && (fabs(PWM_L) < pwm_tolerance) && (fabs(previous_position_error_L) < encoder_tolerance);
@@ -653,7 +651,7 @@ bool is_idle(){
 }
 void wait_for_idle(){
 	int start_time = millis();
-	while(!is_idle() && (wheel_state_R != EMERGENCY_BREAK) && (wheel_state_L != EMERGENCY_BREAK) ){
+	while(!is_idle() || control_loop_state != POSITION){
 		custom_delay(10);
 		if (millis() - start_time > 200){
 			break;

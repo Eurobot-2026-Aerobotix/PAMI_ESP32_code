@@ -42,8 +42,12 @@ void strategy()
   int num_commands = strategy_length; // Assuming strategy_length is set to the number of ROS
 
   // int commands[] = {
-  //                 SET_POSITION, 0, 0, 0,
-  //                 GOTO, 700, 0, 250, 1,
+  //                 SET_POSITION, 75, 670, 90,
+  //                 GOTO, 75, 1350, 250, 1,
+  //                 GOTO, 120, 1350, 250, 1,
+  //                 GOTO, -50, 1350, 400, -1,
+  //                 SET_POSITION, 50, 1350, 0,
+  //                 GOTO, 100, 1350, 250, 1,
   //                 // PICKUP, 1, 1, 1,
   //                 // GOTO, 450, 0, 400, -1,
   //                 // GOTO, 0, 0, 250, 1,
@@ -84,7 +88,12 @@ void strategy()
       int x = commands[i + 1];
       int y = commands[i + 2];
       int phi = commands[i + 3];
-      set_position(x, y, deg_to_rad(phi), deg_to_rad(phi)); 
+      PWM_R = 0;
+      PWM_L = 0;
+      stop_motors();
+      control_loop_state = DISACTIVATED;
+      custom_delay(300);
+      set_position(x, y, deg_to_rad(phi), deg_to_rad(phi));
       i += 4; 
     }else if (command_type == WAIT_FOR) {
       int flag = commands[i + 1];
@@ -432,6 +441,7 @@ void kill_comms(){
   control_loop_state = DISACTIVATED;
   delay(1000);
   strategy_waiting = 0;
+  // kill_comms();
   if (get_tirette_state() == 0){
     kill_comms();
     for(int i=0; i<2; i++){
@@ -452,7 +462,7 @@ void kill_comms(){
   }
 }
 void loop(){
-  // send_values_to_usart(current_x, current_phi * 100, encoder_count_R, encoder_count_L);
+  // send_values_to_usart(control_loop_state, PWM_L, encoder_count_R, encoder_count_L);
   // custom_delay(30);
 
     // PWM_R=500;
