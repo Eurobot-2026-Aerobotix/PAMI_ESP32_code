@@ -25,8 +25,15 @@ extern "C"
   bool arduino_wifi_transport_open(struct uxrCustomTransport * transport)
   {
     struct micro_ros_agent_locator * locator = (struct micro_ros_agent_locator *) transport->args;
-    udp_client.begin(locator->port);
-    return true;
+    // Ensure socket is properly closed before reopening
+    udp_client.stop();
+    delay(10);
+    // Begin listening on the specified port
+    bool success = udp_client.begin(locator->port);
+    if (success) {
+      delay(10);
+    }
+    return success;
   }
 
   bool arduino_wifi_transport_close(struct uxrCustomTransport * transport)
@@ -40,10 +47,25 @@ extern "C"
     (void)errcode;
     struct micro_ros_agent_locator * locator = (struct micro_ros_agent_locator *) transport->args;
 
-    udp_client.beginPacket(locator->address, locator->port);
+    // Validate inputs
+    if (buf == NULL || len == 0) {
+      return 0;
+    }
+
+    // Check if beginPacket was successful before writing
+    if (!udp_client.beginPacket(locator->address, locator->port)) {
+      // If beginPacket fails, socket may be in bad state - return 0
+      return 0;
+    }
+    
     size_t sent = udp_client.write(buf, len);
-    udp_client.endPacket();
-    udp_client.flush();
+    
+    // Check if endPacket succeeds, but don't fail if it doesn't
+    int end_result = udp_client.endPacket();
+    if (end_result == 0) {
+      // endPacket failed but data was queued, force flush
+      udp_client.flush();
+    }
 
     return sent;
   }

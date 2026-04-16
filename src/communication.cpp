@@ -3,7 +3,7 @@
 
 // Micro-ROS name constant
 
-const char* micro_ros_name = "pami5";
+const char* micro_ros_name = "pami2";
 // Dynamic topic names (constructed from micro_ros_name)
 char topic_action_done[50];
 char topic_start[50];
@@ -151,14 +151,27 @@ bool setup_micro_ros(const char *wifi_ssid, const char *wifi_password, const cha
 // Main communication loop - should be called regularly from main loop
 void communication_loop()
 {
+    // Monitor WiFi connection persistently
+    check_wifi_connection(stored_wifi_ssid.c_str(), stored_wifi_password.c_str());
+    
     // Add slight random delay to desynchronize agent checks across multiple ESPs
     static unsigned long check_offset = random(0, 500);
     
     switch (comm_state)
     {
     case WAITING_AGENT:
-        // Relaxed timeout to 300ms with 3 attempts for more reliable detection
-        EXECUTE_EVERY_N_MS(1000 + check_offset, comm_state = (RMW_RET_OK == rmw_uros_ping_agent(300, 3)) ? AGENT_AVAILABLE : WAITING_AGENT; if (comm_state == AGENT_AVAILABLE) { Serial.println("Agent detected!"); });
+        // Only ping agent if WiFi is connected
+        EXECUTE_EVERY_N_MS(1000 + check_offset, 
+        {
+            if (WiFi.status() == WL_CONNECTED) {
+                comm_state = (RMW_RET_OK == rmw_uros_ping_agent(300, 3)) ? AGENT_AVAILABLE : WAITING_AGENT;
+                if (comm_state == AGENT_AVAILABLE) { 
+                    Serial.println("Agent detected!");
+                }
+            } else {
+                Serial.println("WiFi not connected, skipping agent check");
+            }
+        });
         break;
 
     case AGENT_AVAILABLE:
@@ -190,12 +203,22 @@ void communication_loop()
 
     case AGENT_CONNECTED:
         EXECUTE_EVERY_N_MS(1000,
-                           comm_state = (RMW_RET_OK == rmw_uros_ping_agent(300, 3)) ? AGENT_CONNECTED : AGENT_DISCONNECTED;);
+        {
+            // Check WiFi first before pinging agent
+            if (WiFi.status() != WL_CONNECTED) {
+                Serial.println("WiFi disconnected!");
+                comm_state = AGENT_DISCONNECTED;
+            } else {
+                comm_state = (RMW_RET_OK == rmw_uros_ping_agent(300, 3)) ? AGENT_CONNECTED : AGENT_DISCONNECTED;
+            }
+        });
+        
         if (comm_state == AGENT_CONNECTED)
         {
             // Reduced timeout to allow faster callback processing and prevent blocking
             rclc_executor_spin_some(&executor, RCL_MS_TO_NS(50));
-            
+            // Small delay to prevent socket exhaustion
+            delayMicroseconds(100);
         }
         else
         {
