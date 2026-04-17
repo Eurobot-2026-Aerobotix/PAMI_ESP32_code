@@ -27,6 +27,27 @@ TaskHandle_t PIDTaskHandle;
 TaskHandle_t commandExecutionTaskHandle;
 TaskHandle_t websocketTaskHandle;
 TaskHandle_t emergencyBreakTaskHandle;
+TaskHandle_t pumpTaskHandle;
+
+// Pump switching task
+void pumpTask(void *pvParameters) {
+  const TickType_t xDelay = pdMS_TO_TICKS(15);
+  TickType_t xLastWakeTime = xTaskGetTickCount();
+  static bool toggle = false;
+  for (;;) {
+    if (pump_left_active || pump_right_active) {
+      if (toggle) {
+        set_pump_states(pump_left_active, 0);
+      } else {
+        set_pump_states(0, pump_right_active);
+      }
+      toggle = !toggle;
+    } else {
+      set_pump_states(0, 0);
+    }
+    vTaskDelayUntil(&xLastWakeTime, xDelay);
+  }
+}
 int websocket=0;
 
 void kill_comms();
@@ -376,7 +397,17 @@ void kill_comms(){
   Serial.println("Setting motor pins...");
   set_motor_pins(19, 18, 21, 22, 17, 23);  // shah 19, 18, 21, 22, 17, 23
 
-  set_system_pins(26, 26, 33, 27);// bdlthom //25
+  set_system_pins(13, 33, 26, 27);// example: electrovalve=26, pump_left=33, pump_right=32, servo=27
+
+
+  xTaskCreatePinnedToCore(
+      pumpTask,
+      "pumpTask",
+      2048,
+      NULL,
+      2,
+      &pumpTaskHandle,
+      1);
 
   set_tirettes_pins(35, 39);
 
@@ -446,7 +477,7 @@ void kill_comms(){
   Serial.println("All tasks created successfully!");
   control_loop_state = DISACTIVATED;
   delay(1000);
-  strategy_waiting = 0;
+  strategy_waiting = 0;  // b site 
   if (get_tirette_state() == 0){
     kill_comms();
     for(int i=0; i<2; i++){
@@ -463,13 +494,13 @@ void kill_comms(){
       set_agent_led_state(state);
       state = !state;
     }
-    strategy_waiting = 1; //1 means b site
+    strategy_waiting = 1; //1 means default mode
   }
 }
 void loop(){
   // send_values_to_usart(control_loop_state, PWM_L, encoder_count_R, encoder_count_L);
   // custom_delay(30);
-    
+    Serial.println("it workss");
     // PWM_R=500;
     // PWM_L=500;
     // delay(2000);

@@ -23,9 +23,9 @@ int trigger;
 int echo;
 
 //system pins
-int electrovalve_R_pin;
-int electrovalve_L_pin;
-int pump_pin;
+int electrovalve_pin;
+int pump_left_pin;
+int pump_right_pin;
 int servo_pin;
 Servo servo;
 // tirette
@@ -128,10 +128,10 @@ void set_ultrasonic_pins(int trigger_pin, int echo_pin){
     trigger = trigger_pin;
     echo = echo_pin;
 }
-void set_system_pins(int right_electrovalve, int left_electrovalve, int pump, int servo){
-    electrovalve_R_pin = right_electrovalve;
-    electrovalve_L_pin = left_electrovalve;
-    pump_pin = pump;
+void set_system_pins(int electrovalve, int pump_left, int pump_right, int servo){
+    electrovalve_pin = electrovalve;
+    pump_left_pin = pump_left;
+    pump_right_pin = pump_right;
     servo_pin = servo;
 }
 void set_agent_led_pin(int led_pin)
@@ -424,26 +424,29 @@ int16_t encoder_get_L() {
 void move_servo(int position){
     servo.write(servo_positions[position]);
 }
-void set_EV_states(int left_electrovalve_state, int right_electrovalve_state){
-    digitalWrite(electrovalve_R_pin, right_electrovalve_state);
-    digitalWrite(electrovalve_L_pin, left_electrovalve_state);
+void set_electrovalve_state(int state){
+    digitalWrite(electrovalve_pin, state);
 }
-void set_pump_state(int pump_state){
-    digitalWrite(pump_pin, pump_state);
+void set_pump_states(int left_state, int right_state){
+    digitalWrite(pump_left_pin, left_state);
+    digitalWrite(pump_right_pin, right_state);
 }
+volatile int pump_left_active = 0;
+volatile int pump_right_active = 0;
 void pickup(int pick_right, int pick_left, int up_or_down){
-    set_pump_state(1);
-    set_EV_states(1 - pick_right, 1 - pick_left);
+    pump_left_active = pick_left;
+    pump_right_active = pick_right;
+    set_electrovalve_state(0);
     ultrasonic_blocked = up_or_down;
-   move_servo(up_or_down? 4 : 1);
+    move_servo(up_or_down? 4 : 1);
     if (up_or_down==1){
         // custom_delay(500);
         // move_servo(7);
         // custom_delay(500);
        // move_servo(4);
-        custom_delay(800);
+        custom_delay(2500);
     }else{
-        custom_delay(1000);
+        custom_delay(2500);
     }
     
     move_servo(up_or_down? 2 : 2);
@@ -455,17 +458,19 @@ void pickup(int pick_right, int pick_left, int up_or_down){
 void putdown(int bechwaya, int nid_lot){
     move_servo(nid_lot ? 6 : 8);
     custom_delay(bechwaya? 400 : 1);
-    set_pump_state(0);
-    set_EV_states(1, 1);
+    pump_left_active = 0;
+    pump_right_active = 0;
+    set_electrovalve_state(1);
     move_servo(0);
     custom_delay(1000);
-   // set_EV_states(0, 0);
+    set_electrovalve_state(0);
     heza = false;
 }
 void letgo(){
-    set_pump_state(0);
-    //set_EV_states(1, 1);
-   move_servo(5);
+    pump_left_active = 0;
+    pump_right_active = 0;
+    set_electrovalve_state(0);
+    move_servo(5);
     custom_delay(500);
 }
 void walking_position(int position){
@@ -492,9 +497,9 @@ void HAL_setup()
     pinMode(trigger, OUTPUT);
     pinMode(echo, INPUT);
 
-    pinMode(electrovalve_R_pin, OUTPUT);
-    pinMode(electrovalve_L_pin, OUTPUT);
-    pinMode(pump_pin, OUTPUT);
+    pinMode(electrovalve_pin, OUTPUT);
+    pinMode(pump_left_pin, OUTPUT);
+    pinMode(pump_right_pin, OUTPUT);
 
     servo.setPeriodHertz(50);
     servo.attach(servo_pin);
