@@ -41,19 +41,27 @@ void strategy()
   int* commands = strategy_commands; // Assuming strategy_commands is filled with ROS commands
   int num_commands = strategy_length; // Assuming strategy_length is set to the number of ROS
 
-  // int commands[] = {
-  //                 SET_POSITION, 75, 670, 90,
-  //                 GOTO, 75, 1350, 250, 1,
-  //                 GOTO, 120, 1350, 250, 1,
-  //                 GOTO, -50, 1350, 400, -1,
+  //  int commands[] = {
+  // //                 SET_POSITION, 75, 670, 90,
+  
+  //                 //  GOTO, 1000, 0, 200, 1,
+  //               //   GOTO, 200, 200, 350, 1,
+  //               //  GOTO, 400, 200, 350, 1,
+  //               //     GOTO, 400, 400, 350, 1,
+  //               //     GOTO, 600, 400, 350, 1,
+  //               //      GOTO, 600, 600, 350, 1,
+  //               //   GOTO, 600, 400, 350, -1,
+  //               //   GOTO, 400, 400, 350, -1,
+
+
   //                 SET_POSITION, 50, 1350, 0,
-  //                 GOTO, 100, 1350, 250, 1,
-  //                 // PICKUP, 1, 1, 1,
-  //                 // GOTO, 450, 0, 400, -1,
-  //                 // GOTO, 0, 0, 250, 1,
-  //                 // PUTDOWN, 1, 1,
-  //                 }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
-  // int num_commands = sizeof(commands) / sizeof(commands[0]);
+  //                 GOTO, 100, 1350, 200, 1,
+  //                 PICKUP, 1, 1, 1,
+  //                 GOTO, 450, 0, 200, -1,
+  //                 GOTO, 0, 0, 200, 1,
+  //                 PUTDOWN, 1, 1,
+  //                  }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
+  //  int num_commands = sizeof(commands) / sizeof(commands[0]);
 
   int i = 0;
   strategy_start_time = millis();
@@ -69,13 +77,13 @@ void strategy()
       int y = commands[i + 2];
       int speed = commands[i + 3];
       int direction = commands[i + 4];
-      Serial.printf("[CMD] goto_cmd: x=%d, y=%d, speed=%d, direction=%d\n", x, y, speed, direction);
+     // Serial.printf("[CMD] goto_cmd: x=%d, y=%d, speed=%d, direction=%d\n", x, y, speed, direction);
       while(go_to(x, y, speed, direction)){
         wait_for_obstacle_clearance();
         Serial.println("obstacle cleared, resuming...");
         Serial.println("mahdi y7ebb louled");
       }
-      Serial.printf("[POS] After goto: robot_x=%.1f, robot_y=%.1f, robot_phi=%.1f deg\n", current_x, current_y, rad_to_deg(current_phi));
+     // Serial.printf("[POS] After goto: robot_x=%.1f, robot_y=%.1f, robot_phi=%.1f deg\n", current_x, current_y, rad_to_deg(current_phi));
       i += 5;
     }
     else if (command_type == ORIENTATE)
@@ -107,14 +115,14 @@ void strategy()
       int x = commands[i + 3];
       int y = commands[i + 4];
       int direction = commands[i + 5];
-      Serial.printf("[CMD] forward_cmd: distance=%d, speed=%d, x=%d, y=%d, direction=%d\n", distance, speed, x, y, direction);
+     // Serial.printf("[CMD] forward_cmd: distance=%d, speed=%d, x=%d, y=%d, direction=%d\n", distance, speed, x, y, direction);
       move_forward(distance,speed, x, y,direction);
       i += 6;
     }
     else if (command_type == PICKUP){
-      Serial.printf("[CMD] pickup_cmd: arg1=%d, arg2=%d, arg3=%d\n", commands[i + 1], commands[i + 2], commands[i + 3]);
+    //  Serial.printf("[CMD] pickup_cmd: arg1=%d, arg2=%d, arg3=%d\n", commands[i + 1], commands[i + 2], commands[i + 3]);
       pickup(commands[i + 1], commands[i + 2], commands[i + 3]);
-      Serial.printf("[POS] After pickup: robot_x=%.1f, robot_y=%.1f, robot_phi=%.1f deg\n", current_x, current_y, rad_to_deg(current_phi));
+    //  Serial.printf("[POS] After pickup: robot_x=%.1f, robot_y=%.1f, robot_phi=%.1f deg\n", current_x, current_y, rad_to_deg(current_phi));
       i += 4;
     }
     else if (command_type == PUTDOWN){
@@ -157,7 +165,7 @@ void strategy()
     }
     else if (command_type == DELAY){
       int delay_time = commands[i + 1];
-      Serial.printf("[CMD] delay_cmd: custom_delay(%d)\n", delay_time);
+   //   Serial.printf("[CMD] delay_cmd: custom_delay(%d)\n", delay_time);
       custom_delay(delay_time);
       i += 2;
     }
@@ -366,16 +374,16 @@ void kill_comms(){
   Serial.println("=== PAMI ESP32 Setup ===");
 
   Serial.println("Setting motor pins...");
-  set_motor_pins(22, 21, 18, 19, 23, 17);  // shah 19, 18, 21, 22, 17, 23
+  set_motor_pins(19, 18, 21, 22, 17, 23);  // shah 19, 18, 21, 22, 17, 23
 
-  set_system_pins(32, 26, 33, 27);// bdlthom //25
+  set_system_pins(26, 26, 33, 27);// bdlthom //25
 
   set_tirettes_pins(35, 39);
 
   set_agent_led_pin(25);
 
   Serial.println("Setting encoder channels...");
-  set_encoder_channels(4, 16, 2, 15, 1400); // badalthom  2, 15, 4, 16, 
+  set_encoder_channels(32, 15, 4, 16 ,1400); // badalthom  2, 15, 4, 16, 
 
   Serial.println("Setting PWM parameters...");
   set_ultrasonic_pins(14, 34); // badalthom //14
@@ -383,7 +391,7 @@ void kill_comms(){
   set_PWM_min_max(1023, 80, 80, -80, -80); //yess    //130  120
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(34.50795296321506, 34.41740309472272, 109.63973494663571);
+  set_wheel_diameter_and_spacing(34.784016586920785, 34.6927423194805, 110.59825314052021);
   HAL_setup();
 
   Serial.println("Creating tasks...");
@@ -439,7 +447,6 @@ void kill_comms(){
   control_loop_state = DISACTIVATED;
   delay(1000);
   strategy_waiting = 0;
-  // kill_comms();
   if (get_tirette_state() == 0){
     kill_comms();
     for(int i=0; i<2; i++){
@@ -456,13 +463,13 @@ void kill_comms(){
       set_agent_led_state(state);
       state = !state;
     }
-    strategy_waiting = 1;
+    strategy_waiting = 1; //1 means b site
   }
 }
 void loop(){
   // send_values_to_usart(control_loop_state, PWM_L, encoder_count_R, encoder_count_L);
   // custom_delay(30);
-
+    
     // PWM_R=500;
     // PWM_L=500;
     // delay(2000);
@@ -483,8 +490,8 @@ void loop(){
   //  for(int i=0; i<100; i++){
   //    set_target_speeds(i*2, i*2);
 
-  //    send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
-  //    delay(10);
+    //  send_values_to_usart(encoder_count_L, encoder_count_R, target_speed_L, target_speed_R);
+    //  custom_delay(30);
   //  }
   //  for(int i=0; i<200; i++){
   //    send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
