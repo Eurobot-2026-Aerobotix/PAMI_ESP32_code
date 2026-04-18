@@ -431,25 +431,17 @@ void set_pump_states(int left_state, int right_state){
     digitalWrite(pump_left_pin, left_state);
     digitalWrite(pump_right_pin, right_state);
 }
-volatile int pump_left_active = 0;
-volatile int pump_right_active = 0;
 void pickup(int pick_right, int pick_left, int up_or_down){
-    pump_left_active = pick_left;
-    pump_right_active = pick_right;
+    set_pump_states(pick_left, pick_right);
     set_electrovalve_state(0);
     ultrasonic_blocked = up_or_down;
     move_servo(up_or_down? 4 : 1);
     if (up_or_down==1){
-        // custom_delay(500);
-        // move_servo(7);
-        // custom_delay(500);
-       // move_servo(4);
-        custom_delay(2500);
+        custom_delay(1000);
     }else{
-        custom_delay(2500);
+        custom_delay(1300);
     }
-    
-    move_servo(up_or_down? 2 : 2);
+    move_servo(2);
     custom_delay(500);
     heza = true;
 }
@@ -458,8 +450,7 @@ void pickup(int pick_right, int pick_left, int up_or_down){
 void putdown(int bechwaya, int nid_lot){
     move_servo(nid_lot ? 6 : 8);
     custom_delay(bechwaya? 400 : 1);
-    pump_left_active = 0;
-    pump_right_active = 0;
+    set_pump_states(0, 0);
     set_electrovalve_state(1);
     move_servo(0);
     custom_delay(1000);
@@ -467,8 +458,7 @@ void putdown(int bechwaya, int nid_lot){
     heza = false;
 }
 void letgo(){
-    pump_left_active = 0;
-    pump_right_active = 0;
+    set_pump_states(0, 0);
     set_electrovalve_state(0);
     move_servo(5);
     custom_delay(500);

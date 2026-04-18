@@ -27,27 +27,6 @@ TaskHandle_t PIDTaskHandle;
 TaskHandle_t commandExecutionTaskHandle;
 TaskHandle_t websocketTaskHandle;
 TaskHandle_t emergencyBreakTaskHandle;
-TaskHandle_t pumpTaskHandle;
-
-// Pump switching task
-void pumpTask(void *pvParameters) {
-  const TickType_t xDelay = pdMS_TO_TICKS(15);
-  TickType_t xLastWakeTime = xTaskGetTickCount();
-  static bool toggle = false;
-  for (;;) {
-    if (pump_left_active || pump_right_active) {
-      if (toggle) {
-        set_pump_states(pump_left_active, 0);
-      } else {
-        set_pump_states(0, pump_right_active);
-      }
-      toggle = !toggle;
-    } else {
-      set_pump_states(0, 0);
-    }
-    vTaskDelayUntil(&xLastWakeTime, xDelay);
-  }
-}
 int websocket=0;
 
 void kill_comms();
@@ -65,24 +44,24 @@ void strategy()
   //  int commands[] = {
   // //                 SET_POSITION, 75, 670, 90,
   
-  //                 //  GOTO, 1000, 0, 200, 1,
-  //               //   GOTO, 200, 200, 350, 1,
-  //               //  GOTO, 400, 200, 350, 1,
-  //               //     GOTO, 400, 400, 350, 1,
-  //               //     GOTO, 600, 400, 350, 1,
-  //               //      GOTO, 600, 600, 350, 1,
-  //               //   GOTO, 600, 400, 350, -1,
-  //               //   GOTO, 400, 400, 350, -1,
+  // //                 //  GOTO, 1000, 0, 200, 1,
+  // //               //   GOTO, 200, 200, 350, 1,
+  // //               //  GOTO, 400, 200, 350, 1,
+  // //               //     GOTO, 400, 400, 350, 1,
+  // //               //     GOTO, 600, 400, 350, 1,
+  // //               //      GOTO, 600, 600, 350, 1,
+  // //               //   GOTO, 600, 400, 350, -1,
+  // //               //   GOTO, 400, 400, 350, -1,
 
 
-  //                 SET_POSITION, 50, 1350, 0,
-  //                 GOTO, 100, 1350, 200, 1,
+  //                 SET_POSITION, 0, 0, 0,
+  //                 GOTO, 700, 0, 200, 1,
   //                 PICKUP, 1, 1, 1,
-  //                 GOTO, 450, 0, 200, -1,
   //                 GOTO, 0, 0, 200, 1,
+  //                 ORIENTATE, 0,
   //                 PUTDOWN, 1, 1,
   //                  }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
-  //  int num_commands = sizeof(commands) / sizeof(commands[0]);
+  // int num_commands = sizeof(commands) / sizeof(commands[0]);
 
   int i = 0;
   strategy_start_time = millis();
@@ -364,8 +343,8 @@ void commandExecutionTask(void *pvParameters)
   for (;;) // Infinite loop - CRITICAL!
   {
     if (strategy_waiting) {
-      strategy_waiting = 0;
-      //custom_delay(85000);
+      // strategy_waiting = 0;
+      // custom_delay(85000);
       strategy();
     }
     execute_command();
@@ -399,16 +378,6 @@ void kill_comms(){
 
   set_system_pins(13, 33, 26, 27);// example: electrovalve=26, pump_left=33, pump_right=32, servo=27
 
-
-  xTaskCreatePinnedToCore(
-      pumpTask,
-      "pumpTask",
-      2048,
-      NULL,
-      2,
-      &pumpTaskHandle,
-      1);
-
   set_tirettes_pins(35, 39);
 
   set_agent_led_pin(25);
@@ -419,7 +388,7 @@ void kill_comms(){
   Serial.println("Setting PWM parameters...");
   set_ultrasonic_pins(14, 34); // badalthom //14
 
-  set_PWM_min_max(1023, 80, 80, -80, -80); //yess    //130  120
+  set_PWM_min_max(1023, 130, 130, -130, -130); //yess    //130  120
 
   Serial.println("Setting wheel parameters...");
   set_wheel_diameter_and_spacing(34.784016586920785, 34.6927423194805, 110.59825314052021);
@@ -477,7 +446,7 @@ void kill_comms(){
   Serial.println("All tasks created successfully!");
   control_loop_state = DISACTIVATED;
   delay(1000);
-  strategy_waiting = 0;  // b site 
+  strategy_waiting = 0;
   if (get_tirette_state() == 0){
     kill_comms();
     for(int i=0; i<2; i++){
@@ -500,7 +469,6 @@ void kill_comms(){
 void loop(){
   // send_values_to_usart(control_loop_state, PWM_L, encoder_count_R, encoder_count_L);
   // custom_delay(30);
-    Serial.println("it workss");
     // PWM_R=500;
     // PWM_L=500;
     // delay(2000);

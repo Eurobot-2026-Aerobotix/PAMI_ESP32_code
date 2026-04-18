@@ -7,7 +7,7 @@ enum Trajectory trajectory = STRAIGHT;
 float ramping_acceleration = 1.25; // tzid acc tzid fl ramping meloul 
 float breaking_acceleration = -1.8; // tzid break tzid flkher 
 float emergency_breaking_acceleration = -10;
-float rotating_speed = 250;
+float rotating_speed = 230;
 
 float cruise_speed_R;
 float cruise_speed_L;
@@ -465,8 +465,8 @@ float calculate_instant_target_phi(float x, float distance)
 int rotate(float angle, int8_t is_radian){
 	wait_for_idle();
 	reset_speed_control_variables();
-	float rotating_breaking_acceleration = heza? -1.5 : -3;
-	float rotating_ramping_acceleration = heza? 1.5 : 3;
+	float rotating_breaking_acceleration = heza? -2 : -3;
+	float rotating_ramping_acceleration = heza? 2.2 : 3;
 	angle = is_radian ? angle : deg_to_rad(angle);
 	// rotating_ramping_acceleration = MIN(pow(fabs(rad_to_deg(angle)), 1.3) * 0.015, 3);
 	// rotating_breaking_acceleration = -MIN(pow(fabs(rad_to_deg(angle)), 1.3) * 0.015, 3);
