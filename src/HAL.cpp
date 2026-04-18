@@ -289,7 +289,14 @@ bool get_color_switch_state(){
 }
 
 void save_strategy(int* strategy, int strategy_length, bool yellow){
-    int buffer[strategy_length + 1];
+    if (strategy_length < 0) {
+        strategy_length = 0;
+    }
+    if (strategy_length > 400) {
+        strategy_length = 400;
+    }
+
+    int buffer[401] = {0};
     buffer[0] = strategy_length;
     for (int i = 0; i < strategy_length; i++){
         buffer[i+1] = strategy[i];
@@ -300,11 +307,17 @@ void save_strategy(int* strategy, int strategy_length, bool yellow){
 }
 void load_strategy(int* strategy, int* strategy_length, bool yellow){
     prefs.begin("pami", true);
-    int buffer[400]; // assuming max strategy length is 99
+    int buffer[401] = {0};
     size_t bytesRead = prefs.getBytes(yellow? "strategy_yellow" : "strategy_blue", buffer, sizeof(buffer));
     prefs.end();
     if (bytesRead > 0 && bytesRead <= sizeof(buffer)){
         *strategy_length = buffer[0];
+        if (*strategy_length < 0) {
+            *strategy_length = 0;
+        }
+        if (*strategy_length > 400) {
+            *strategy_length = 400;
+        }
         for (int i = 0; i < *strategy_length; i++){
             strategy[i] = buffer[i+1];
         }

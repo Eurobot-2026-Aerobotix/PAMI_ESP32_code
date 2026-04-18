@@ -576,6 +576,10 @@ void cleanup_micro_ros()
         destroy_entities();
         comm_state = WAITING_AGENT;
     }
+
+    WiFi.setAutoReconnect(false);
+    WiFi.disconnect(true);
+    WiFi.mode(WIFI_OFF);
     comm_stop_requested = false;
     micro_ros_init_successful = false;
     Serial.println("micro-ROS cleaned up");

@@ -64,6 +64,7 @@ extern std_srvs__srv__Trigger_Request status_req;
 extern std_srvs__srv__Trigger_Response status_res;
 extern bool micro_ros_init_successful;
 extern enum CommunicationState comm_state;
+extern volatile bool comm_stop_requested;
 extern bool crate_colors[8];
 extern bool is_yellow;
 

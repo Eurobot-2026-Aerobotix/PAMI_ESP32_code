@@ -31,6 +31,11 @@ int websocket=0;
 
 void kill_comms();
 
+static bool has_command_operands(int current_index, int required_count, int num_commands)
+{
+  return current_index >= 0 && required_count >= 0 && (current_index + required_count) <= num_commands;
+}
+
 // Custom strategy implementation
 void strategy()
 {
@@ -73,6 +78,10 @@ void strategy()
     int command_type = commands[i];
     if (command_type == GOTO)
     {
+      if (!has_command_operands(i, 5, num_commands)) {
+        Serial.println("[ERROR] Truncated GOTO command in strategy buffer");
+        break;
+      }
       int x = commands[i + 1];
       int y = commands[i + 2];
       int speed = commands[i + 3];
@@ -88,11 +97,19 @@ void strategy()
     }
     else if (command_type == ORIENTATE)
     {
+      if (!has_command_operands(i, 2, num_commands)) {
+        Serial.println("[ERROR] Truncated ORIENTATE command in strategy buffer");
+        break;
+      }
       int angle = commands[i + 1];
       orientate(angle, 0);
       i += 2;
     }
     else if (command_type == SET_POSITION) { 
+      if (!has_command_operands(i, 4, num_commands)) {
+        Serial.println("[ERROR] Truncated SET_POSITION command in strategy buffer");
+        break;
+      }
       int x = commands[i + 1];
       int y = commands[i + 2];
       int phi = commands[i + 3];
@@ -104,12 +121,20 @@ void strategy()
       set_position(x, y, deg_to_rad(phi), deg_to_rad(phi));
       i += 4; 
     }else if (command_type == WAIT_FOR) {
+      if (!has_command_operands(i, 2, num_commands)) {
+        Serial.println("[ERROR] Truncated WAIT_FOR command in strategy buffer");
+        break;
+      }
       int flag = commands[i + 1];
       while(millis() - strategy_start_time < flag){
         custom_delay(5);
       }
       i += 2;
     }else if (command_type == BACKWARDS) {
+      if (!has_command_operands(i, 6, num_commands)) {
+        Serial.println("[ERROR] Truncated BACKWARDS command in strategy buffer");
+        break;
+      }
       int distance = commands[i + 1];
       int speed = commands[i + 2];
       int x = commands[i + 3];
@@ -120,12 +145,20 @@ void strategy()
       i += 6;
     }
     else if (command_type == PICKUP){
+      if (!has_command_operands(i, 4, num_commands)) {
+        Serial.println("[ERROR] Truncated PICKUP command in strategy buffer");
+        break;
+      }
     //  Serial.printf("[CMD] pickup_cmd: arg1=%d, arg2=%d, arg3=%d\n", commands[i + 1], commands[i + 2], commands[i + 3]);
       pickup(commands[i + 1], commands[i + 2], commands[i + 3]);
     //  Serial.printf("[POS] After pickup: robot_x=%.1f, robot_y=%.1f, robot_phi=%.1f deg\n", current_x, current_y, rad_to_deg(current_phi));
       i += 4;
     }
     else if (command_type == PUTDOWN){
+      if (!has_command_operands(i, 3, num_commands)) {
+        Serial.println("[ERROR] Truncated PUTDOWN command in strategy buffer");
+        break;
+      }
       int bechwaya = commands[i+1];
       int nid_lot = commands[i+2];
       Serial.println("[CMD] putdown_cmd");
@@ -133,6 +166,10 @@ void strategy()
       i += 3;
     }
     else if (command_type == WALKING_POSITION){
+      if (!has_command_operands(i, 2, num_commands)) {
+        Serial.println("[ERROR] Truncated WALKING_POSITION command in strategy buffer");
+        break;
+      }
       int position = commands[i + 1];
       Serial.println("[CMD] walking_position_cmd");
       walking_position(position);
@@ -149,6 +186,10 @@ void strategy()
       i++;
     }
     else if (command_type == BEZIER){
+      if (!has_command_operands(i, 9, num_commands)) {
+        Serial.println("[ERROR] Truncated BEZIER command in strategy buffer");
+        break;
+      }
       int x1 = commands[i + 1];
       int y1 = commands[i + 2];
       int x2 = commands[i + 3];
@@ -164,10 +205,20 @@ void strategy()
       i += 9;
     }
     else if (command_type == DELAY){
+      if (!has_command_operands(i, 2, num_commands)) {
+        Serial.println("[ERROR] Truncated DELAY command in strategy buffer");
+        break;
+      }
       int delay_time = commands[i + 1];
    //   Serial.printf("[CMD] delay_cmd: custom_delay(%d)\n", delay_time);
       custom_delay(delay_time);
       i += 2;
+    }
+    else
+    {
+      Serial.print("[ERROR] Unknown strategy opcode: ");
+      Serial.println(command_type);
+      break;
     }
   }
   // control_loop_state = DISACTIVATED;
@@ -196,6 +247,14 @@ void communicationTask(void *pvParameters)
   
   for (;;) // Infinite loop - CRITICAL!
   {
+    if (comm_stop_requested)
+    {
+      Serial.println("Communication stop requested, cleaning up micro-ROS...");
+      cleanup_micro_ros();
+      communicationTaskHandle = NULL;
+      vTaskDelete(NULL);
+    }
+
     // Only run communication loop if WiFi is connected
     if (WiFi.status() == WL_CONNECTED) {
       communication_loop();
@@ -357,13 +416,18 @@ void kill_comms(){
     return;
   }
 
-  eTaskState comm_state = eTaskGetState(communicationTaskHandle);
-  if (comm_state != eDeleted) {
-    cleanup_micro_ros();
-    vTaskDelete(communicationTaskHandle);
+  comm_stop_requested = true;
+
+  TickType_t start_time = xTaskGetTickCount();
+  while (communicationTaskHandle != NULL && (xTaskGetTickCount() - start_time) < pdMS_TO_TICKS(500)) {
+    vTaskDelay(pdMS_TO_TICKS(10));
   }
 
-  communicationTaskHandle = NULL;
+  if (communicationTaskHandle != NULL) {
+    Serial.println("[WARN] Forcing communication task shutdown");
+    vTaskDelete(communicationTaskHandle);
+    communicationTaskHandle = NULL;
+  }
 }
 
  void setup()
@@ -400,7 +464,7 @@ void kill_comms(){
   xTaskCreatePinnedToCore(
       communicationTask,
       "communicationTask",
-      8192,
+      12288,
       NULL,
       1, // Lower priority
       &communicationTaskHandle,
@@ -413,7 +477,7 @@ void kill_comms(){
   xTaskCreatePinnedToCore(
       commandExecutionTask,
       "commandExecutionTask",
-      8192, // Back to smaller stack
+      12288,
       NULL,
       1, // Lower priority
       &commandExecutionTaskHandle,
@@ -424,7 +488,7 @@ void kill_comms(){
   xTaskCreatePinnedToCore(
       PIDTask,
       "PIDTask",
-      4096, // Back to smaller stack
+      6144,
       NULL,
       2, // Medium priority
       &PIDTaskHandle,
@@ -463,6 +527,7 @@ void kill_comms(){
       set_agent_led_state(state);
       state = !state;
     }
+    set_agent_led_on();
     strategy_waiting = 1; //1 means default mode
   }
 }
