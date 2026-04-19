@@ -99,10 +99,10 @@ float deg_to_rad(float degrees){
 }
 float normalize_angle(float angle){
 	float a = angle;
-	while (a > PI){
+	while (a >= PI){
 		a -= 2*PI;
 	}
-	while (a <= -PI){
+	while (a < -PI){
 		a += 2*PI;
 	}
 	return a;

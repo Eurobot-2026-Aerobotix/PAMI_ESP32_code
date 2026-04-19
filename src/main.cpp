@@ -458,20 +458,6 @@ void kill_comms(){
   HAL_setup();
 
   Serial.println("Creating tasks...");
-  
-  // Create communication task
-  xTaskCreatePinnedToCore(
-      communicationTask,
-      "communicationTask",
-      12288,
-      NULL,
-      1, // Lower priority
-      &communicationTaskHandle,
-      0); // Pin to core 0
-
-  delay(500); // Delay between task creation
-  Serial.println("Communication task created");
-
 
   xTaskCreatePinnedToCore(
       commandExecutionTask,
@@ -528,6 +514,19 @@ void kill_comms(){
     }
     set_agent_led_on();
     strategy_waiting = 1; //1 means default mode
+  }else{
+    // Create communication task
+    xTaskCreatePinnedToCore(
+        communicationTask,
+        "communicationTask",
+        12288,
+        NULL,
+        1, // Lower priority
+        &communicationTaskHandle,
+        0); // Pin to core 0
+
+    delay(500); // Delay between task creation
+    Serial.println("Communication task created");
   }
 }
 void loop(){

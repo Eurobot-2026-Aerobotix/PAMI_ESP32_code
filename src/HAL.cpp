@@ -100,9 +100,9 @@ float kpP_L = 100;
 float kdP_L = 5;
 float kiP_L = 400;
 volatile float debugger = 0;
-int strategy_start_time = 1000000;
+int strategy_start_time = 100000;
 //   {intial pos , pick pos down , walk pos without crates , 110, pick pos up , servo up , putdown pos nid , 70 , put down pos lot };  
-int servo_positions[9] =  {0, 150, 75, 110, 100, 30, 120 , 70 , 150};   //0, 130, 48, 85, 50, 15, 110, 50, 130
+int servo_positions[9] =  {0, 150, 75, 110, 106, 30, 120 , 70 , 150};   //0, 130, 48, 85, 50, 15, 110, 50, 130
 bool ultrasonic_blocked = true;
 bool heza = false;
 
