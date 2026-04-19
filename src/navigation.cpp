@@ -595,12 +595,7 @@ int orientate(float orientation, int8_t is_radian)
 	if (abs(orientation - current_phi) > deg_to_rad(0.5)){
 		wait_for_idle();
 		float angle = orientation - current_phi;
-		if (angle > PI){
-			angle -= 2 * PI;
-		}
-		else if (angle < -PI){
-			angle += 2 * PI;
-		}
+		normalize_angle(angle);
 		result = rotate(angle, 1);
 	}
 	return result;

@@ -47,9 +47,8 @@ void strategy()
   int num_commands = strategy_length; // Assuming strategy_length is set to the number of ROS
 
   //  int commands[] = {
-  // //                 SET_POSITION, 75, 670, 90,
-  
-  // //                 //  GOTO, 1000, 0, 200, 1,
+  //                 SET_POSITION, 0, 0, 0,
+  //                 GOTO, 1000, 0, 200, 1,
   // //               //   GOTO, 200, 200, 350, 1,
   // //               //  GOTO, 400, 200, 350, 1,
   // //               //     GOTO, 400, 400, 350, 1,
@@ -59,12 +58,12 @@ void strategy()
   // //               //   GOTO, 400, 400, 350, -1,
 
 
-  //                 SET_POSITION, 0, 0, 0,
-  //                 GOTO, 700, 0, 200, 1,
-  //                 PICKUP, 1, 1, 1,
-  //                 GOTO, 0, 0, 200, 1,
-  //                 ORIENTATE, 0,
-  //                 PUTDOWN, 1, 1,
+  //                 // SET_POSITION, 0, 0, 0,
+  //                 // GOTO, 700, 0, 200, 1,
+  //                 // PICKUP, 1, 1, 1,
+  //                 // GOTO, 0, 0, 200, 1,
+  //                 // ORIENTATE, 0,
+  //                 // PUTDOWN, 1, 1,
   //                  }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
   // int num_commands = sizeof(commands) / sizeof(commands[0]);
 
@@ -452,10 +451,10 @@ void kill_comms(){
   Serial.println("Setting PWM parameters...");
   set_ultrasonic_pins(14, 34); // badalthom //14
 
-  set_PWM_min_max(1023, 130, 130, -130, -130); //yess    //130  120
+  set_PWM_min_max(1023, 80, 80, -80, -80); //yess    //130  120
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(34.784016586920785, 34.6927423194805, 110.59825314052021);
+  set_wheel_diameter_and_spacing(34.731840562040404, 34.6927423194805, 110.10888033901348);
   HAL_setup();
 
   Serial.println("Creating tasks...");
