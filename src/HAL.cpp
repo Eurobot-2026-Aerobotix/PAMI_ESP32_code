@@ -44,6 +44,10 @@ int CPR;
 // global variables
 volatile int32_t encoder_count_R;
 volatile int32_t encoder_count_L;
+volatile int32_t encoder_raw_count_R;
+volatile int32_t encoder_raw_count_L;
+volatile int32_t encoder_offset_R;
+volatile int32_t encoder_offset_L;
 volatile int32_t speedCalculationPreviousTime;
 float direction_R;
 float direction_L;
@@ -224,23 +228,25 @@ void IRAM_ATTR encoderRISRA()
 {
     if (FAST_READ(encoderRB) == FAST_READ(encoderRA))
     {
-        encoder_count_R--;
+        encoder_raw_count_R--;
     }
     else
     {
-        encoder_count_R++;
+        encoder_raw_count_R++;
     }
+    encoder_count_R = encoder_raw_count_R + encoder_offset_R;
 }
 void IRAM_ATTR encoderLISRA()
 {
     if (FAST_READ(encoderLB) == FAST_READ(encoderLA))
     {
-        encoder_count_L++;
+        encoder_raw_count_L++;
     }
     else
     {
-        encoder_count_L--;
+        encoder_raw_count_L--;
     }
+    encoder_count_L = encoder_raw_count_L + encoder_offset_L;
 }
 void send_values_to_usart(float value1, float value2, float value3, float value4)
 {
@@ -420,7 +426,8 @@ void encoder_init()
 int16_t encoder_get_R() {
   int16_t count;
   pcnt_get_counter_value(PCNT_UNIT_0, &count);
-  encoder_count_R += count;
+    encoder_raw_count_R += count;
+    encoder_count_R = encoder_raw_count_R + encoder_offset_R;
 
   pcnt_counter_clear(PCNT_UNIT_0);
   return count;
@@ -429,7 +436,8 @@ int16_t encoder_get_R() {
 int16_t encoder_get_L() {
   int16_t count;
   pcnt_get_counter_value(PCNT_UNIT_1, &count);
-  encoder_count_L += count;
+    encoder_raw_count_L += count;
+    encoder_count_L = encoder_raw_count_L + encoder_offset_L;
 
   pcnt_counter_clear(PCNT_UNIT_1);
   return count;

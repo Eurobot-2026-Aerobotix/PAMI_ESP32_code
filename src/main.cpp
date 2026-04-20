@@ -116,8 +116,9 @@ void strategy()
       PWM_L = 0;
       stop_motors();
       control_loop_state = DISACTIVATED;
-      custom_delay(300);
+      custom_delay(200);
       set_position(x, y, deg_to_rad(phi), deg_to_rad(phi));
+      set_target_encoder_counts(encoder_count_R, encoder_count_L);
       i += 4; 
     }else if (command_type == WAIT_FOR) {
       if (!has_command_operands(i, 2, num_commands)) {

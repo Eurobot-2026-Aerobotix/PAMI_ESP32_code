@@ -72,6 +72,10 @@ extern int CPR;
 // global variables
 extern volatile int32_t encoder_count_R;
 extern volatile int32_t encoder_count_L;
+extern volatile int32_t encoder_raw_count_R;
+extern volatile int32_t encoder_raw_count_L;
+extern volatile int32_t encoder_offset_R;
+extern volatile int32_t encoder_offset_L;
 extern volatile int32_t speedCalculationPreviousTime;
 extern float direction_R;
 extern float direction_L;
