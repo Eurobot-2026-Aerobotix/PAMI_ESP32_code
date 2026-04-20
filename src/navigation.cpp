@@ -592,10 +592,9 @@ int orientate(float orientation, int8_t is_radian)
 	orientation = (is_radian) ? orientation : deg_to_rad(orientation);
 	int result = 0;
 	wait_for_idle();
-	if (abs(orientation - current_phi) > deg_to_rad(0.5)){
+	float angle = normalize_angle(orientation - current_phi);
+	if (fabs(angle) > deg_to_rad(0.5)){
 		wait_for_idle();
-		float angle = orientation - current_phi;
-		normalize_angle(angle);
 		result = rotate(angle, 1);
 	}
 	return result;
