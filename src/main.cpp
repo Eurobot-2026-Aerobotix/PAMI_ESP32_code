@@ -455,9 +455,9 @@ void setup()
 void loop(){
   //send_values_to_usart(distance_to_target, obstacle_distance, 0, 0);
   // custom_delay(10);
-  //   PWM_R=500;
-  //   PWM_L=500;
-  //   delay(2000);
+    // PWM_R=500;
+    // PWM_L=500;
+    // delay(2000);
    
   //   PWM_R=-500;
   //   PWM_L=-500;
