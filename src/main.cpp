@@ -195,8 +195,8 @@ void emergencyBreakTask(void *pvParameters)
     obstacle_distance = ultrasonic_dist;
     //target_allows_passing = distance_to_target < obstacle_distance + safety_margin;
     //}
-    
-    if (( (obstacle_too_close && distance_to_target > (obstacle_distance + safety_margin)) || (millis() - strategy_start_time >= max_running_time)) && wheel_state_R != EMERGENCY_BREAK && wheel_state_L != EMERGENCY_BREAK)
+    //ultrasonic sensor turned off in the nest
+     if (( (obstacle_too_close && distance_to_target > (obstacle_distance + safety_margin)) || (millis() - strategy_start_time >= max_running_time)) && wheel_state_R != EMERGENCY_BREAK && wheel_state_L != EMERGENCY_BREAK && current_x > 450)
     {
       prepare_emergency_break();
     }
