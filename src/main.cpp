@@ -47,7 +47,7 @@ void strategy()
 
   //  int commands[] = {
   //                   SET_POSITION, 0, 0, 0,
-  //                   GOTO, 1000, 0, 380,
+  //                   GOTO, 1000, 0, 200,
   //                    //ORIENTATE, 90, 0,
   //                  }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
   // int num_commands = sizeof(commands) / sizeof(commands[0]);
@@ -374,10 +374,10 @@ void setup()
   set_encoder_channels(4, 16, 15, 27, 350);
 
   Serial.println("Setting PWM parameters...");
-  set_PWM_min_max(1023, 270, 270, -270, -270);
+  set_PWM_min_max(1023, 150, 150, -150, -150);
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(32.3706436379525082114, 32.1290901822775894131375, 88.7783);
+  set_wheel_diameter_and_spacing(32.3706436379525082114, 32.1290901822775894131375, 89.28923283231826);
   HAL_setup();
 
   Serial.println("Creating tasks...");
