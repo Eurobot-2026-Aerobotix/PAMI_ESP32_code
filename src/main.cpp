@@ -196,7 +196,7 @@ void emergencyBreakTask(void *pvParameters)
     //target_allows_passing = distance_to_target < obstacle_distance + safety_margin;
     //}
     
-    if (( (obstacle_too_close && distance_to_target > (obstacle_distance + safety_margin)) || (millis() - strategy_start_time >= max_running_time)) && wheel_state_R != EMERGENCY_BREAK && wheel_state_L != EMERGENCY_BREAK)
+     if (( (obstacle_too_close && distance_to_target > (obstacle_distance + safety_margin)) || (millis() - strategy_start_time >= max_running_time)) && wheel_state_R != EMERGENCY_BREAK && wheel_state_L != EMERGENCY_BREAK && current_x > 450)
     {
       prepare_emergency_break();
     }
