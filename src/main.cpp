@@ -46,28 +46,15 @@ void strategy()
   //  int num_commands = strategy_length; // Assuming strategy_length is set to the number of ROS
 
    int commands[] = {
-                3, 72, 2320, -90,
-                1, 72, 1900, 180, 1,
-                1, 155, 1900, 180, 1,
-                1, 120, 2450, 100, 1,
-                3, 120, 2330, -90,
-                1, 120, 2205, 180, -1,
-                1, 0, 2205, 200, -1,
-                3, 50, 2205, -90,
-                1, 185, 2205, 180, 1,
-                1, 80, 2205, 200, -1,
-                1, 105, 1919, 180, -1,
-                2, -70,
-                1, 148, 1698, 180, 1,
-                1, 100, 2100, 200, -1,
-                1, 0, 2100, 200, -1,
-                3, 50, 2100, -90,
-                1, 185, 2100, 80, 1,
-                1, 355, 2100, 230, 1,
-                1, 256, 1980, 200, 1,
-                1, 0, 2235, 200, -1,
-                3, 50, 2235, -90,
-                1, 355, 2235, 200, 1
+                                SET_POSITION, 0, 600, -90,
+                  GOTO, 200, 600, 200, 1,
+                  GOTO, 200, 200, 200, 1,
+                 GOTO, 400, 200, 200, 1,
+                    GOTO, 400, 400, 200, 1,
+                    GOTO, 600, 400, 200, 1,
+                     GOTO, 600, 600, 200, 1,
+                  GOTO, 600, 400, 200, -1,
+                  GOTO, 400, 400, 200, -1,
                    }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
   int num_commands = sizeof(commands) / sizeof(commands[0]);
 
@@ -380,21 +367,21 @@ void setup()
   Serial.println("=== PAMI ESP32 Setup ===");
 
   Serial.println("Setting motor pins...");
-  set_motor_pins(19, 18, 21, 22, 17, 23);
+ set_motor_pins(19, 18, 21, 22, 17, 23);  // shah 19, 18, 21, 22, 17, 23
 
-  set_ultrasonic_pins(14, 12);
+  //set_system_pins(13, 33, 26, 27);// example: electrovalve=26, pump_left=33, pump_right=32, servo=27
 
-  set_tirettes_pins(26, 33);
-
-  set_servo_pin(32);
+  set_tirettes_pins(35, 39);
 
   set_agent_led_pin(25);
 
   Serial.println("Setting encoder channels...");
-  set_encoder_channels(32, 15, 4, 16 ,1400);
+  set_encoder_channels(32, 15, 4, 16 ,700); // badalthom  2, 15, 4, 16, 
 
   Serial.println("Setting PWM parameters...");
-  set_PWM_min_max(1023, 270, 270, -270, -270);
+  set_ultrasonic_pins(14, 34); // badalthom //14
+
+  set_PWM_min_max(1023, 80, 80, -80, -80); //yess    //130  120
 
   Serial.println("Setting wheel parameters...");
   set_wheel_diameter_and_spacing(34.731840562040404, 34.6927423194805, 110.10888033901348);
