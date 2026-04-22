@@ -86,6 +86,11 @@ void strategy()
       int phi = commands[i + 3];
       set_position(x, y, deg_to_rad(phi), deg_to_rad(phi)); 
       i += 4; 
+    }else if (command_type == ROTATE) {
+      int angle = commands[i + 1];
+      Serial.printf("[CMD] rotate_cmd (13): angle=%d deg\n", angle);
+      rotate(angle, 0);
+      i += 2;
     }else if (command_type == WAIT_FOR) {
       int flag = commands[i + 1];
       while(millis() - strategy_start_time < flag){
@@ -100,6 +105,15 @@ void strategy()
       int direction = commands[i + 5];
       Serial.printf("[CMD] forward_cmd: distance=%d, speed=%d, x=%d, y=%d, direction=%d\n", distance, speed, x, y, direction);
       move_forward(distance,speed, x, y,direction);
+      i += 6;
+    }else if (command_type == MOVE_FORWARD) {
+      int distance = commands[i + 1];
+      int speed = commands[i + 2];
+      int x = commands[i + 3];
+      int y = commands[i + 4];
+      int direction = commands[i + 5];
+      Serial.printf("[CMD] move_forward_cmd: distance=%d, speed=%d, x=%d, y=%d, direction=%d\n", distance, speed, x, y, direction);
+      move_forward(distance, speed, x, y, direction);
       i += 6;
     }
     else if (command_type == PICKUP){
@@ -151,6 +165,10 @@ void strategy()
       Serial.printf("[CMD] delay_cmd: custom_delay(%d)\n", delay_time);
       custom_delay(delay_time);
       i += 2;
+    }
+    else {
+      Serial.printf("[CMD] Unknown command id=%d at index=%d. Skipping one slot.\n", command_type, i);
+      i += 1;
     }
   }
   // control_loop_state = DISACTIVATED;
