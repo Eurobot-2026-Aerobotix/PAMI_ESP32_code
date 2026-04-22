@@ -689,7 +689,7 @@ bool check_for_collision(int* counter){
 	if ( (fabs(PWM_R) > STOP_PWM_THRESHOLD && fabs(current_speed_R) < STOP_SPEED_THRESHOLD)
 		|| (fabs(PWM_L) > STOP_PWM_THRESHOLD && fabs(current_speed_L) < STOP_SPEED_THRESHOLD) ){
 			// EMERGENCY STOP
-			*counter++;
+			(*counter)++;
 			if(*counter > 50){
 				return true;
 			}
