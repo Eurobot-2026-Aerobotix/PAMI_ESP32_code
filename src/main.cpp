@@ -42,15 +42,34 @@ void strategy()
 
   // Calculate total commands: ROS commands + yellow/blue strategy commands
   
-   int* commands = strategy_commands; // Assuming strategy_commands is filled with ROS commands
-   int num_commands = strategy_length; // Assuming strategy_length is set to the number of ROS
+  //  int* commands = strategy_commands; // Assuming strategy_commands is filled with ROS commands
+  //  int num_commands = strategy_length; // Assuming strategy_length is set to the number of ROS
 
-  //  int commands[] = {
-  //                   SET_POSITION, 0, 0, 0,
-  //                   GOTO, 1000, 0, 380,
-  //                    //ORIENTATE, 90, 0,
-  //                  }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
-  // int num_commands = sizeof(commands) / sizeof(commands[0]);
+   int commands[] = {
+                3, 72, 2320, -90,
+                1, 72, 1900, 180, 1,
+                1, 155, 1900, 180, 1,
+                1, 120, 2450, 100, 1,
+                3, 120, 2330, -90,
+                1, 120, 2205, 180, -1,
+                1, 0, 2205, 200, -1,
+                3, 50, 2205, -90,
+                1, 185, 2205, 180, 1,
+                1, 80, 2205, 200, -1,
+                1, 105, 1919, 180, -1,
+                2, -70,
+                1, 148, 1698, 180, 1,
+                1, 100, 2100, 200, -1,
+                1, 0, 2100, 200, -1,
+                3, 50, 2100, -90,
+                1, 185, 2100, 80, 1,
+                1, 355, 2100, 230, 1,
+                1, 256, 1980, 200, 1,
+                1, 0, 2235, 200, -1,
+                3, 50, 2235, -90,
+                1, 355, 2235, 200, 1
+                   }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
+  int num_commands = sizeof(commands) / sizeof(commands[0]);
 
   int i = 0;
   strategy_start_time = millis();
@@ -80,7 +99,8 @@ void strategy()
       int x = commands[i + 1];
       int y = commands[i + 2];
       int phi = commands[i + 3];
-      set_position(x, y, deg_to_rad(phi), deg_to_rad(phi)); 
+      set_position(x, y, deg_to_rad(phi), deg_to_rad(phi));
+      set_target_encoder_counts(encoder_count_R, encoder_count_L); // Reset encoder counts to match new position
       i += 4; 
     }else if (command_type == WAIT_FOR) {
       int flag = commands[i + 1];
@@ -360,7 +380,7 @@ void setup()
   Serial.println("=== PAMI ESP32 Setup ===");
 
   Serial.println("Setting motor pins...");
-  set_motor_pins(22, 21, 18, 19, 23, 27);
+  set_motor_pins(19, 18, 21, 22, 17, 23);
 
   set_ultrasonic_pins(14, 12);
 
@@ -371,13 +391,13 @@ void setup()
   set_agent_led_pin(25);
 
   Serial.println("Setting encoder channels...");
-  set_encoder_channels(4, 16, 15, 2, 350);
+  set_encoder_channels(32, 15, 4, 16 ,1400);
 
   Serial.println("Setting PWM parameters...");
   set_PWM_min_max(1023, 270, 270, -270, -270);
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(32.224200589862505, 32.11898861837906, 89.24533586904563);
+  set_wheel_diameter_and_spacing(34.731840562040404, 34.6927423194805, 110.10888033901348);
   HAL_setup();
 
   Serial.println("Creating tasks...");
@@ -431,25 +451,25 @@ void setup()
   Serial.println("All tasks created successfully!");
   control_loop_state = DISACTIVATED;
   delay(1000);
-  strategy_waiting = 0;
-  if (get_tirette_state() == 0){
-    kill_comms();
-    for(int i=0; i<2; i++){
-      set_agent_led_on();
-      custom_delay(300);
-      set_agent_led_off();
-      custom_delay(300);
-    }
-    is_yellow = get_color_switch_state();
-    load_strategy(strategy_commands, &strategy_length, is_yellow);
-    bool status = false;
-    while(get_tirette_state() == 0){
-      custom_delay(40);
-      set_agent_led_state(status);
-      status = !status;
-    }
-    strategy_waiting = 1;
-  }
+  strategy_waiting = 1;
+  // if (get_tirette_state() == 0){
+  //   kill_comms();
+  //   for(int i=0; i<2; i++){
+  //     set_agent_led_on();
+  //     custom_delay(300);
+  //     set_agent_led_off();
+  //     custom_delay(300);
+  //   }
+  //   is_yellow = get_color_switch_state();
+  //   load_strategy(strategy_commands, &strategy_length, is_yellow);
+  //   bool status = false;
+  //   while(get_tirette_state() == 0){
+  //     custom_delay(40);
+  //     set_agent_led_state(status);
+  //     status = !status;
+  //   }
+  //   strategy_waiting = 1;
+  // }
 }
 
 void loop(){
