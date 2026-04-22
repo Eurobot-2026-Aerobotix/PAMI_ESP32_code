@@ -166,12 +166,17 @@ void strategy()
     }else if (command_type == MOVE_FORWARD) {
       int distance = commands[i + 1];
       int speed = commands[i + 2];
-      int x = commands[i + 3];
-      int y = commands[i + 4];
-      int direction = commands[i + 5];
+      int direction = commands[i + 3];
+      int x = current_x + cos(current_phi) * distance * direction;
+      int y = current_y + sin(current_phi) * distance * direction;
       Serial.printf("[CMD] move_forward_cmd: distance=%d, speed=%d, x=%d, y=%d, direction=%d\n", distance, speed, x, y, direction);
       move_forward(distance, speed, x, y, direction);
-      i += 6;
+      i += 4;
+    }else if (command_type == ROTATE) {
+      int angle = commands[i + 1];
+      Serial.printf("[CMD] rotate_cmd (13): angle=%d deg\n", angle);
+      rotate(angle, 0);
+      i += 2;
     }
     else if (command_type == PICKUP){
       if (!has_command_operands(i, 4, num_commands)) {
@@ -484,7 +489,7 @@ void kill_comms(){
   set_PWM_min_max(1023, 90, 90, -90, -90); //yess    //130  120
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(34.731840562040404, 34.6927423194805, 112.76485819108356);
+  set_wheel_diameter_and_spacing(34.731840562040404, 34.6927423194805, 110.37343379225145);
   HAL_setup();
 
   Serial.println("Creating tasks...");
@@ -601,8 +606,8 @@ void loop(){
   // send_values_to_usart(current_speed_R, current_speed_L, target_speed_R, target_speed_L);
   // delay(10);
   // send_values_to_usart(debugger*100, 0, target_speed_R, target_speed_L); // send encoder counts and position for debugging
-  // send_values_to_usart(encoder_count_R, encoder_count_L, 0, 0); // send encoder counts and position for debugging
-  // delay(20);
+  send_values_to_usart(encoder_count_R, encoder_count_L, 0, 0); // send encoder counts and position for debugging
+  delay(40);
   // send_values_to_usart(current_x, current_y, current_phi * 100, 0);
   // delay(10);
 }
