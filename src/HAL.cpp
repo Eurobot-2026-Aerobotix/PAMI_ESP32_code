@@ -384,7 +384,7 @@ void encoder_init()
 
     pcnt_unit_config(&pcnt_config_R);
 
-    pcnt_set_filter_value(PCNT_UNIT_0, 200);   // Start small (50–200 typical)
+    pcnt_set_filter_value(PCNT_UNIT_0, 1023);   // Start small (50–200 typical)
     pcnt_filter_enable(PCNT_UNIT_0);
 
     pcnt_counter_pause(PCNT_UNIT_0);
@@ -415,7 +415,7 @@ void encoder_init()
 
     pcnt_unit_config(&pcnt_config_L);
 
-    pcnt_set_filter_value(PCNT_UNIT_1, 200);
+    pcnt_set_filter_value(PCNT_UNIT_1, 1023);
     pcnt_filter_enable(PCNT_UNIT_1);
 
     pcnt_counter_pause(PCNT_UNIT_1);

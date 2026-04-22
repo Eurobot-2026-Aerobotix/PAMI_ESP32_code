@@ -43,29 +43,42 @@ void strategy()
 
   // Calculate total commands: ROS commands + yellow/blue strategy commands
   
-  int* commands = strategy_commands; // Assuming strategy_commands is filled with ROS commands
-  int num_commands = strategy_length; // Assuming strategy_length is set to the number of ROS
+  // int* commands = strategy_commands; // Assuming strategy_commands is filled with ROS commands
+  // int num_commands = strategy_length; // Assuming strategy_length is set to the number of ROS
 
-  //  int commands[] = {
-  //                 SET_POSITION, 0, 0, 0,
-  //                 GOTO, 1000, 0, 200, 1,
-  // //               //   GOTO, 200, 200, 350, 1,
-  // //               //  GOTO, 400, 200, 350, 1,
-  // //               //     GOTO, 400, 400, 350, 1,
-  // //               //     GOTO, 600, 400, 350, 1,
-  // //               //      GOTO, 600, 600, 350, 1,
-  // //               //   GOTO, 600, 400, 350, -1,
-  // //               //   GOTO, 400, 400, 350, -1,
-
-
-  //                 // SET_POSITION, 0, 0, 0,
-  //                 // GOTO, 700, 0, 200, 1,
-  //                 // PICKUP, 1, 1, 1,
-  //                 // GOTO, 0, 0, 200, 1,
-  //                 // ORIENTATE, 0,
-  //                 // PUTDOWN, 1, 1,
-  //                  }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
-  // int num_commands = sizeof(commands) / sizeof(commands[0]);
+   int commands[] = {
+              3, 72, 2320, -90,
+              1, 72, 1900, 180, 1,
+              1, 155, 1900, 180, 1,
+              7, 1, 1, 0,
+              1, 120, 2450, 100, 1,
+              8, 0, 0,
+              3, 120, 2330, 90,
+              1, 120, 2205, 180, -1,
+              1, 0, 2205, 200, -1,
+              3, 50, 2205, 0,
+              1, 185, 2205, 180, 1,
+              7, 1, 1, 1,
+              1, 80, 2205, 200, -1,
+              1, 105, 1919, 180, -1,
+              2, -70,
+              8, 0, 1,
+              1, 148, 1698, 180, 1,
+              1, 100, 2100, 200, -1,
+              1, 0, 2100, 200, -1,
+              3, 50, 2100, 0,
+              1, 185, 2100, 80, 1,
+              7, 1, 1, 1,
+              1, 355, 2100, 230, 1,
+              1, 256, 1980, 200, 1,
+              8, 0, 1,
+              4, 113, 1998, 107, 2131, 110, 2235, 180, 1,
+              1, 0, 2235, 200, -1,
+              3, 50, 2235, 0,
+              1, 355, 2235, 200, 1,
+              4, 393, 1692, 366, 1215, 404, 1150, 180, 1
+                   }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
+  int num_commands = sizeof(commands) / sizeof(commands[0]);
 
   int i = 0;
   strategy_start_time = millis();
@@ -440,7 +453,7 @@ void kill_comms(){
   Serial.println("Setting motor pins...");
   set_motor_pins(19, 18, 21, 22, 17, 23);  // shah 19, 18, 21, 22, 17, 23
 
-  set_system_pins(13, 33, 26, 27);// example: electrovalve=26, pump_left=33, pump_right=32, servo=27
+  set_system_pins(26, 33, 13, 27);// example: electrovalve=26, pump_left=33, pump_right=32, servo=27
 
   set_tirettes_pins(35, 39);
 
@@ -452,7 +465,7 @@ void kill_comms(){
   Serial.println("Setting PWM parameters...");
   set_ultrasonic_pins(14, 34); // badalthom //14
 
-  set_PWM_min_max(1023, 80, 80, -80, -80); //yess    //130  120
+  set_PWM_min_max(1023, 150, 150, -150, -150); //yess    //130  120
 
   Serial.println("Setting wheel parameters...");
   set_wheel_diameter_and_spacing(34.731840562040404, 34.6927423194805, 110.10888033901348);
@@ -496,39 +509,39 @@ void kill_comms(){
   Serial.println("All tasks created successfully!");
   control_loop_state = DISACTIVATED;
   delay(1000);
-  strategy_waiting = 0;
-  if (get_tirette_state() == 0){
-    kill_comms();
-    for(int i=0; i<2; i++){
-      set_agent_led_on();
-      custom_delay(300);
-      set_agent_led_off();
-      custom_delay(300);
-    }
-    is_yellow = get_color_switch_state();
-    load_strategy(strategy_commands, &strategy_length, is_yellow);
-    bool state = true;
-    while(get_tirette_state() == 0){
-      custom_delay(30);
-      set_agent_led_state(state);
-      state = !state;
-    }
-    set_agent_led_on();
-    strategy_waiting = 1; //1 means default mode
-  }else{
-    // Create communication task
-    xTaskCreatePinnedToCore(
-        communicationTask,
-        "communicationTask",
-        12288,
-        NULL,
-        1, // Lower priority
-        &communicationTaskHandle,
-        0); // Pin to core 0
+  strategy_waiting = 1;
+  // if (get_tirette_state() == 0){
+  //   kill_comms();
+  //   for(int i=0; i<2; i++){
+  //     set_agent_led_on();
+  //     custom_delay(300);
+  //     set_agent_led_off();
+  //     custom_delay(300);
+  //   }
+  //   is_yellow = get_color_switch_state();
+  //   load_strategy(strategy_commands, &strategy_length, is_yellow);
+  //   bool state = true;
+  //   while(get_tirette_state() == 0){
+  //     custom_delay(30);
+  //     set_agent_led_state(state);
+  //     state = !state;
+  //   }
+  //   set_agent_led_on();
+  //   strategy_waiting = 1; //1 means default mode
+  // }else{
+  //   // Create communication task
+  //   xTaskCreatePinnedToCore(
+  //       communicationTask,
+  //       "communicationTask",
+  //       12288,
+  //       NULL,
+  //       1, // Lower priority
+  //       &communicationTaskHandle,
+  //       0); // Pin to core 0
 
-    delay(500); // Delay between task creation
-    Serial.println("Communication task created");
-  }
+  //   delay(500); // Delay between task creation
+  //   Serial.println("Communication task created");
+  // }
 }
 void loop(){
   // send_values_to_usart(control_loop_state, PWM_L, encoder_count_R, encoder_count_L);
