@@ -64,6 +64,7 @@ extern std_srvs__srv__Trigger_Request status_req;
 extern std_srvs__srv__Trigger_Response status_res;
 extern bool micro_ros_init_successful;
 extern enum CommunicationState comm_state;
+extern volatile bool comm_stop_requested;
 extern bool crate_colors[8];
 extern bool is_yellow;
 
@@ -72,7 +73,7 @@ extern float received_floats[200];
 extern size_t received_floats_count;
 extern int commands[200];
 extern size_t commands_count;
-extern int recieved_commands[100];
+extern int recieved_commands[200];
 // Core functions
 bool setup_micro_ros(const char *wifi_ssid, const char *wifi_password, const char *agent_ip, int agent_port);
 void communication_loop();

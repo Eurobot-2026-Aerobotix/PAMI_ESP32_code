@@ -23,9 +23,9 @@ int trigger;
 int echo;
 
 //system pins
-int electrovalve_R_pin;
-int electrovalve_L_pin;
-int pump_pin;
+int electrovalve_pin;
+int pump_left_pin;
+int pump_right_pin;
 int servo_pin;
 Servo servo;
 // tirette
@@ -44,6 +44,10 @@ int CPR;
 // global variables
 volatile int32_t encoder_count_R;
 volatile int32_t encoder_count_L;
+volatile int32_t encoder_raw_count_R;
+volatile int32_t encoder_raw_count_L;
+volatile int32_t encoder_offset_R;
+volatile int32_t encoder_offset_L;
 volatile int32_t speedCalculationPreviousTime;
 float direction_R;
 float direction_L;
@@ -66,14 +70,14 @@ double wheel_diameter_L;
 double wheels_spacing;
 
 // PID control parameters
-float kpS_R = 4;
+float kpS_R = 10;
 float kdS_R = 0.0000;
 float kiS_R = 100;
 float speed_integral_R = 0;
 float speed_derivative_R = 0;
 float previous_speed_error_R = 0;
 
-float kpS_L = 4;
+float kpS_L = 10;
 float kdS_L = 0;
 float kiS_L = 100;
 float speed_integral_L = 0;
@@ -100,9 +104,9 @@ float kpP_L = 100;
 float kdP_L = 5;
 float kiP_L = 400;
 volatile float debugger = 0;
-int strategy_start_time = 1000000;
+int strategy_start_time = 100000;
 //   {intial pos , pick pos down , walk pos without crates , 110, pick pos up , servo up , putdown pos nid , 70 , put down pos lot };  
-int servo_positions[9] =  {0, 150, 75, 110, 100, 30, 120 , 70 , 150};   //0, 130, 48, 85, 50, 15, 110, 50, 130
+int servo_positions[9] =  {0, 150, 75, 110, 106, 30, 120 , 70 , 150};   //0, 130, 48, 85, 50, 15, 110, 50, 130
 bool ultrasonic_blocked = true;
 bool heza = false;
 
@@ -128,10 +132,10 @@ void set_ultrasonic_pins(int trigger_pin, int echo_pin){
     trigger = trigger_pin;
     echo = echo_pin;
 }
-void set_system_pins(int right_electrovalve, int left_electrovalve, int pump, int servo){
-    electrovalve_R_pin = right_electrovalve;
-    electrovalve_L_pin = left_electrovalve;
-    pump_pin = pump;
+void set_system_pins(int electrovalve, int pump_left, int pump_right, int servo){
+    electrovalve_pin = electrovalve;
+    pump_left_pin = pump_left;
+    pump_right_pin = pump_right;
     servo_pin = servo;
 }
 void set_agent_led_pin(int led_pin)
@@ -224,23 +228,25 @@ void IRAM_ATTR encoderRISRA()
 {
     if (FAST_READ(encoderRB) == FAST_READ(encoderRA))
     {
-        encoder_count_R--;
+        encoder_raw_count_R--;
     }
     else
     {
-        encoder_count_R++;
+        encoder_raw_count_R++;
     }
+    encoder_count_R = encoder_raw_count_R + encoder_offset_R;
 }
 void IRAM_ATTR encoderLISRA()
 {
     if (FAST_READ(encoderLB) == FAST_READ(encoderLA))
     {
-        encoder_count_L++;
+        encoder_raw_count_L++;
     }
     else
     {
-        encoder_count_L--;
+        encoder_raw_count_L--;
     }
+    encoder_count_L = encoder_raw_count_L + encoder_offset_L;
 }
 void send_values_to_usart(float value1, float value2, float value3, float value4)
 {
@@ -289,7 +295,14 @@ bool get_color_switch_state(){
 }
 
 void save_strategy(int* strategy, int strategy_length, bool yellow){
-    int buffer[strategy_length + 1];
+    if (strategy_length < 0) {
+        strategy_length = 0;
+    }
+    if (strategy_length > 400) {
+        strategy_length = 400;
+    }
+
+    int buffer[401] = {0};
     buffer[0] = strategy_length;
     for (int i = 0; i < strategy_length; i++){
         buffer[i+1] = strategy[i];
@@ -300,11 +313,17 @@ void save_strategy(int* strategy, int strategy_length, bool yellow){
 }
 void load_strategy(int* strategy, int* strategy_length, bool yellow){
     prefs.begin("pami", true);
-    int buffer[400]; // assuming max strategy length is 99
+    int buffer[401] = {0};
     size_t bytesRead = prefs.getBytes(yellow? "strategy_yellow" : "strategy_blue", buffer, sizeof(buffer));
     prefs.end();
     if (bytesRead > 0 && bytesRead <= sizeof(buffer)){
         *strategy_length = buffer[0];
+        if (*strategy_length < 0) {
+            *strategy_length = 0;
+        }
+        if (*strategy_length > 400) {
+            *strategy_length = 400;
+        }
         for (int i = 0; i < *strategy_length; i++){
             strategy[i] = buffer[i+1];
         }
@@ -360,12 +379,12 @@ void encoder_init()
     pcnt_config_R.lctrl_mode = PCNT_MODE_KEEP;
     pcnt_config_R.hctrl_mode = PCNT_MODE_REVERSE;
 
-    pcnt_config_R.counter_h_lim = 32767;
-    pcnt_config_R.counter_l_lim = -32768;
+    pcnt_config_R.counter_h_lim = 30000;
+    pcnt_config_R.counter_l_lim = -30000;
 
     pcnt_unit_config(&pcnt_config_R);
 
-    pcnt_set_filter_value(PCNT_UNIT_0, 200);   // Start small (50–200 typical)
+    pcnt_set_filter_value(PCNT_UNIT_0, 1023);   // Start small (50–200 typical)
     pcnt_filter_enable(PCNT_UNIT_0);
 
     pcnt_counter_pause(PCNT_UNIT_0);
@@ -391,12 +410,12 @@ void encoder_init()
     pcnt_config_L.lctrl_mode = PCNT_MODE_KEEP;
     pcnt_config_L.hctrl_mode = PCNT_MODE_REVERSE;
 
-    pcnt_config_L.counter_h_lim = 32767;
-    pcnt_config_L.counter_l_lim = -32768;
+    pcnt_config_L.counter_h_lim = 30000;
+    pcnt_config_L.counter_l_lim = -30000;
 
     pcnt_unit_config(&pcnt_config_L);
 
-    pcnt_set_filter_value(PCNT_UNIT_1, 200);
+    pcnt_set_filter_value(PCNT_UNIT_1, 1023);
     pcnt_filter_enable(PCNT_UNIT_1);
 
     pcnt_counter_pause(PCNT_UNIT_1);
@@ -407,40 +426,43 @@ void encoder_init()
 int16_t encoder_get_R() {
   int16_t count;
   pcnt_get_counter_value(PCNT_UNIT_0, &count);
+    encoder_raw_count_R += count;
+    encoder_count_R = encoder_raw_count_R + encoder_offset_R;
+
+  pcnt_counter_clear(PCNT_UNIT_0);
   return count;
 }
 
 int16_t encoder_get_L() {
   int16_t count;
   pcnt_get_counter_value(PCNT_UNIT_1, &count);
+    encoder_raw_count_L += count;
+    encoder_count_L = encoder_raw_count_L + encoder_offset_L;
+
+  pcnt_counter_clear(PCNT_UNIT_1);
   return count;
 }
 void move_servo(int position){
     servo.write(servo_positions[position]);
 }
-void set_EV_states(int left_electrovalve_state, int right_electrovalve_state){
-    digitalWrite(electrovalve_R_pin, right_electrovalve_state);
-    digitalWrite(electrovalve_L_pin, left_electrovalve_state);
+void set_electrovalve_state(int state){
+    digitalWrite(electrovalve_pin, state);
 }
-void set_pump_state(int pump_state){
-    digitalWrite(pump_pin, pump_state);
+void set_pump_states(int left_state, int right_state){
+    digitalWrite(pump_left_pin, left_state);
+    digitalWrite(pump_right_pin, right_state);
 }
 void pickup(int pick_right, int pick_left, int up_or_down){
-    set_pump_state(1);
-    set_EV_states(1 - pick_right, 1 - pick_left);
+    set_pump_states(pick_left, pick_right);
+    set_electrovalve_state(0);
     ultrasonic_blocked = up_or_down;
-   move_servo(up_or_down? 4 : 1);
+    move_servo(up_or_down? 4 : 1);
     if (up_or_down==1){
-        // custom_delay(500);
-        // move_servo(7);
-        // custom_delay(500);
-       // move_servo(4);
-        custom_delay(800);
-    }else{
         custom_delay(1000);
+    }else{
+        custom_delay(1300);
     }
-    
-    move_servo(up_or_down? 2 : 2);
+    move_servo(2);
     custom_delay(500);
     heza = true;
 }
@@ -449,17 +471,17 @@ void pickup(int pick_right, int pick_left, int up_or_down){
 void putdown(int bechwaya, int nid_lot){
     move_servo(nid_lot ? 6 : 8);
     custom_delay(bechwaya? 400 : 1);
-    set_pump_state(0);
-    set_EV_states(1, 1);
+    set_pump_states(0, 0);
+    set_electrovalve_state(1);
     move_servo(0);
     custom_delay(1000);
-   // set_EV_states(0, 0);
+    set_electrovalve_state(0);
     heza = false;
 }
 void letgo(){
-    set_pump_state(0);
-    //set_EV_states(1, 1);
-   move_servo(5);
+    set_pump_states(0, 0);
+    set_electrovalve_state(0);
+    move_servo(5);
     custom_delay(500);
 }
 void walking_position(int position){
@@ -486,9 +508,9 @@ void HAL_setup()
     pinMode(trigger, OUTPUT);
     pinMode(echo, INPUT);
 
-    pinMode(electrovalve_R_pin, OUTPUT);
-    pinMode(electrovalve_L_pin, OUTPUT);
-    pinMode(pump_pin, OUTPUT);
+    pinMode(electrovalve_pin, OUTPUT);
+    pinMode(pump_left_pin, OUTPUT);
+    pinMode(pump_right_pin, OUTPUT);
 
     servo.setPeriodHertz(50);
     servo.attach(servo_pin);

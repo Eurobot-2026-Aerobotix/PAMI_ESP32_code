@@ -50,9 +50,9 @@ extern int trigger;
 extern int echo;
 
 //system pins
-extern int electrovalve_R_pin;
-extern int electrovalve_L_pin;
-extern int pump_pin;
+extern int electrovalve_pin;
+extern int pump_left_pin;
+extern int pump_right_pin;
 extern int servo_pin;
 extern Servo servo;
 
@@ -72,6 +72,10 @@ extern int CPR;
 // global variables
 extern volatile int32_t encoder_count_R;
 extern volatile int32_t encoder_count_L;
+extern volatile int32_t encoder_raw_count_R;
+extern volatile int32_t encoder_raw_count_L;
+extern volatile int32_t encoder_offset_R;
+extern volatile int32_t encoder_offset_L;
 extern volatile int32_t speedCalculationPreviousTime;
 extern float direction_R;
 extern float direction_L;
@@ -141,7 +145,7 @@ extern bool is_yellow;
 void set_motor_pins(int right_forward, int right_backward, int left_forward, int left_backward, int right_enable, int left_enable);
 void set_tirettes_pins(int tirette_pin, int color_switch_pin);
 void set_ultrasonic_pins(int trigger_pin, int echo_pin);
-void set_system_pins(int right_electrovalve, int left_electrovalve, int pump, int servo);
+void set_system_pins(int electrovalve, int pump_left, int pump_right, int servo);
 void set_agent_led_pin(int led_pin);
 void set_agent_led_state(bool state);
 void set_agent_led_on();
@@ -174,8 +178,10 @@ int16_t encoder_get_R();
 int16_t encoder_get_L();
 
 void move_servo(int position);//0 means down position and so on till 5 means up position
-void set_EV_states(int left_electrovalve_state, int right_electrovalve_state);//0 means off means fantzing, 1 means no tfantiz
-void set_pump_state(int pump_state);
+void set_electrovalve_state(int state);
+void set_pump_states(int left_state, int right_state);
+extern volatile int pump_left_active;
+extern volatile int pump_right_active;
 void pickup(int pick_right, int pick_left, int up_or_down);
 void putdown(int bechwaya, int nid_lot);
 void walking_position(int position);
