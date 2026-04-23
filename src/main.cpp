@@ -83,7 +83,9 @@ void strategy()
   // int num_commands = sizeof(commands) / sizeof(commands[0]);
 
   int i = 0;
+  strategy_started = true;
   strategy_start_time = millis();
+  ultrasonic_blocked = false;
   // rotating_speed = 100;
   // rotate(3600, 0);
   // while(1){custom_delay(10);};
@@ -310,11 +312,10 @@ void emergencyBreakTask(void *pvParameters)
   
   for (;;)
   {
-    if (( (( (!ultrasonic_blocked) && get_ultrasonic_distance() < min_distance && trajectory == STRAIGHT) || (millis() - strategy_start_time >= max_running_time)) && wheel_state_R != EMERGENCY_BREAK && wheel_state_L != EMERGENCY_BREAK) ) 
+    if (( (( (!ultrasonic_blocked) && get_ultrasonic_distance() < min_distance && trajectory == STRAIGHT) || (strategy_started && (millis() - strategy_start_time >= max_running_time))) && wheel_state_R != EMERGENCY_BREAK && wheel_state_L != EMERGENCY_BREAK) ) 
     {
      prepare_emergency_break();
     }
-      //send_values_to_usart(encoder_count_L, encoder_count_R, current_phi*100,0);
 
     vTaskDelayUntil(&xLastWakeTime, xDelay);
   }
@@ -327,7 +328,7 @@ void emergencyBreakTaskWithoutUltrason(void *pvParameters)
 
   for (;;)
   {
-    if ((millis() - strategy_start_time >= max_running_time) &&
+    if (strategy_started && (millis() - strategy_start_time >= max_running_time) &&
         wheel_state_R != EMERGENCY_BREAK &&
         wheel_state_L != EMERGENCY_BREAK)
     {
@@ -515,14 +516,14 @@ void kill_comms(){
       1); // Pin to core 1
   Serial.println("PID task created");
 
-  // xTaskCreatePinnedToCore(
-  //     emergencyBreakTaskWithoutUltrason,
-  //     "emergencyBreakTask",
-  //     2048, // Stack size
-  //     NULL,
-  //     2, // High priority
-  //     &emergencyBreakTaskHandle,
-  //     1); // Pin to core 1
+  xTaskCreatePinnedToCore(
+      emergencyBreakTaskWithoutUltrason,
+      "emergencyBreakTask",
+      2048, // Stack size
+      NULL,
+      2, // High priority
+      &emergencyBreakTaskHandle,
+      1); // Pin to core 1
 
   delay(500); // Delay between task creation
   Serial.println("WebSocket task created");
@@ -530,6 +531,8 @@ void kill_comms(){
   Serial.println("All tasks created successfully!");
   control_loop_state = DISACTIVATED;
   delay(1000);
+  ultrasonic_blocked = true;
+  strategy_started = false;
   strategy_waiting = 0;
   if (get_tirette_state() == 0){
     kill_comms();

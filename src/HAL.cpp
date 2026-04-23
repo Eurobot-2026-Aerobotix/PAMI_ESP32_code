@@ -105,6 +105,7 @@ float kdP_L = 5;
 float kiP_L = 400;
 volatile float debugger = 0;
 int strategy_start_time = 100000;
+bool strategy_started = false;
 //   {intial pos , pick pos down , walk pos without crates , 110, pick pos up , servo up , putdown pos nid , 70 , put down pos lot };  
 int servo_positions[9] =  {0, 150, 75, 110, 106, 30, 120 , 70 , 150};   //0, 130, 48, 85, 50, 15, 110, 50, 130
 bool ultrasonic_blocked = true;
@@ -556,9 +557,9 @@ void custom_delay(int ms)
 }
 void party_time(){
     while(1){
-      move_servo(1);
-        custom_delay(300);
+        move_servo(1);
+        custom_delay(250);
         move_servo(3);
-        custom_delay(300);
+        custom_delay(250);
     }
 }

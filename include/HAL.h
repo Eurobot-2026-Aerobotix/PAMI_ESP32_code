@@ -134,6 +134,7 @@ extern float kiP_L;
 extern volatile float debugger;
 extern int strategy_start_time;
 const int max_running_time = 100000;
+extern bool strategy_started;
 extern bool strategy_waiting;
 extern int servo_positions[9];
 extern bool ultrasonic_blocked;
