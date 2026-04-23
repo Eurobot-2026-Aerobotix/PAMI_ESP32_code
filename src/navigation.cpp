@@ -637,6 +637,9 @@ void reset_speed_control_variables(){
 	previous_speed_error_R = 0;
 }
 bool is_idle(){
+	if (encoder_guard_fault || control_loop_state == DISACTIVATED){
+		return true;
+	}
 	int encoder_tolerance = 3;
 	int pwm_tolerance = 70;
 	bool right_wheel_idle = (fabs(target_encoder_count_R - encoder_count_R) < encoder_tolerance) && (fabs(PWM_R) < pwm_tolerance) && (fabs(previous_position_error_R) < encoder_tolerance);
@@ -646,6 +649,9 @@ bool is_idle(){
 void wait_for_idle(){
 	int start_time = millis();
 	while(!is_idle() || control_loop_state != POSITION){
+		if (encoder_guard_fault || control_loop_state == DISACTIVATED){
+			return;
+		}
 		custom_delay(10);
 		if (millis() - start_time > 200){
 			break;
@@ -690,7 +696,7 @@ bool check_for_collision(int* counter){
 		|| (fabs(PWM_L) > STOP_PWM_THRESHOLD && fabs(current_speed_L) < STOP_SPEED_THRESHOLD) ){
 			// EMERGENCY STOP
 			(*counter)++;
-			if(*counter > 50){
+			if(*counter > 20){
 				return true;
 			}
 	}

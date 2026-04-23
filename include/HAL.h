@@ -122,6 +122,8 @@ extern float position_integral_L;
 extern float position_derivative_L;
 extern int32_t target_encoder_count_R;
 extern int32_t target_encoder_count_L;
+extern volatile bool encoder_guard_fault;
+extern int32_t encoder_guard_threshold_ticks;
 
 // position control parameters
 extern float kpP_R;

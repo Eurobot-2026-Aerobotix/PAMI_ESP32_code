@@ -1,4 +1,5 @@
 #include "HAL.h"
+#include "navigation.h"
 
 Preferences prefs;
 
@@ -94,6 +95,22 @@ float position_integral_L = 0;
 float position_derivative_L = 0;
 int32_t target_encoder_count_R = 0;
 int32_t target_encoder_count_L = 0;
+volatile bool encoder_guard_fault = false;
+int32_t encoder_guard_threshold_ticks = 170;
+
+static inline void latch_encoder_guard_fault()
+{
+    encoder_guard_fault = true;
+    control_loop_state = DISACTIVATED;
+    wheel_state_R = DEAD_STOP;
+    wheel_state_L = DEAD_STOP;
+    PWM_R = 0;
+    PWM_L = 0;
+    target_speed_R = 0;
+    target_speed_L = 0;
+    target_encoder_count_R = encoder_count_R;
+    target_encoder_count_L = encoder_count_L;
+}
 
 // position control parameters
 float kpP_R = 100;
@@ -427,6 +444,17 @@ void encoder_init()
 int16_t encoder_get_R() {
   int16_t count;
   pcnt_get_counter_value(PCNT_UNIT_0, &count);
+
+    if (!encoder_guard_fault && control_loop_state == POSITION) {
+        const int32_t candidate_count = encoder_raw_count_R + count + encoder_offset_R;
+        const int32_t deviation = target_encoder_count_R - candidate_count;
+        if (deviation > encoder_guard_threshold_ticks || deviation < -encoder_guard_threshold_ticks) {
+            latch_encoder_guard_fault();
+            pcnt_counter_clear(PCNT_UNIT_0);
+            return 0;
+        }
+    }
+
     encoder_raw_count_R += count;
     encoder_count_R = encoder_raw_count_R + encoder_offset_R;
 
@@ -437,6 +465,17 @@ int16_t encoder_get_R() {
 int16_t encoder_get_L() {
   int16_t count;
   pcnt_get_counter_value(PCNT_UNIT_1, &count);
+
+    if (!encoder_guard_fault && control_loop_state == POSITION) {
+        const int32_t candidate_count = encoder_raw_count_L + count + encoder_offset_L;
+        const int32_t deviation = target_encoder_count_L - candidate_count;
+        if (deviation > encoder_guard_threshold_ticks || deviation < -encoder_guard_threshold_ticks) {
+            latch_encoder_guard_fault();
+            pcnt_counter_clear(PCNT_UNIT_1);
+            return 0;
+        }
+    }
+
     encoder_raw_count_L += count;
     encoder_count_L = encoder_raw_count_L + encoder_offset_L;
 
