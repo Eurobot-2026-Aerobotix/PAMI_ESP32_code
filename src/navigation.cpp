@@ -87,7 +87,7 @@ int move_forward(float distance, float speed, float target_x, float target_y, fl
             if (communicationTaskHandle != NULL) {
                 vTaskResume(communicationTaskHandle);
             }
-			return 0;
+			return 1;
 		}
 		if (check_for_collision(&collision_check_counter)){
 			emergency_break();
@@ -149,7 +149,7 @@ int move_forward(float distance, float speed, float target_x, float target_y, fl
             if (communicationTaskHandle != NULL) {
                 vTaskResume(communicationTaskHandle);
             }
-			return 0;
+			return 1;
 		}
 		if (check_for_collision(&collision_check_counter)){
 			emergency_break();

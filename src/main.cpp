@@ -312,7 +312,8 @@ void emergencyBreakTask(void *pvParameters)
   
   for (;;)
   {
-    if (( (( (!ultrasonic_blocked) && get_ultrasonic_distance() < min_distance && trajectory == STRAIGHT) || (strategy_started && (millis() - strategy_start_time >= max_running_time))) && wheel_state_R != EMERGENCY_BREAK && wheel_state_L != EMERGENCY_BREAK) ) 
+    //(!ultrasonic_blocked) &&
+    if (( (( get_ultrasonic_distance() < min_distance && trajectory == STRAIGHT || trajectory == BEZIER_CURVE) || (strategy_started && (millis() - strategy_start_time >= max_running_time))) && wheel_state_R != EMERGENCY_BREAK && wheel_state_L != EMERGENCY_BREAK) ) 
     {
      prepare_emergency_break();
     }
@@ -517,8 +518,9 @@ void kill_comms(){
   Serial.println("PID task created");
 
   xTaskCreatePinnedToCore(
-      emergencyBreakTaskWithoutUltrason,
-      "emergencyBreakTask",
+     // emergencyBreakTaskWithoutUltrason,
+     emergencyBreakTask,  
+     "emergencyBreakTask",
       2048, // Stack size
       NULL,
       2, // High priority
@@ -531,7 +533,7 @@ void kill_comms(){
   Serial.println("All tasks created successfully!");
   control_loop_state = DISACTIVATED;
   delay(1000);
-  ultrasonic_blocked = true;
+ // ultrasonic_blocked = true;
   strategy_started = false;
   strategy_waiting = 0;
   if (get_tirette_state() == 0){
@@ -566,6 +568,7 @@ void kill_comms(){
     delay(500); // Delay between task creation
     Serial.println("Communication task created");
   }
+  move_servo(0);
 }
 void loop(){
   // send_values_to_usart(control_loop_state, PWM_L, encoder_count_R, encoder_count_L);
