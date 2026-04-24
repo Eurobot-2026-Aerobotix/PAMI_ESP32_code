@@ -1,5 +1,7 @@
 #include "odometry.h"
 
+#define LERP(a,b,t) ((a) + (t)*((b)-(a)))
+
 float current_x = 0;
 float current_y = 0;
 double current_phi = 0;
@@ -251,4 +253,68 @@ double signed_distance_to_bezier(double px, double py, double x0, double y0, dou
     double cross = tx*vy - ty*vx;
 
     return (cross < 0.0) ? dist : -dist;
+}
+
+void approximate_sub_bezier(
+    float x0, float y0,
+    float x1, float y1,
+    float x2, float y2,
+    float x3, float y3,
+    float t0,
+    int *ox0, int *oy0,
+    int *ox1, int *oy1,
+    int *ox2, int *oy2,
+    int *ox3, int *oy3
+) {
+    // ---- evaluate point at t0 (De Casteljau) ----
+    float q0x = LERP(x0, x1, t0);
+    float q0y = LERP(y0, y1, t0);
+
+    float q1x = LERP(x1, x2, t0);
+    float q1y = LERP(y1, y2, t0);
+
+    float q2x = LERP(x2, x3, t0);
+    float q2y = LERP(y2, y3, t0);
+
+    float r0x = LERP(q0x, q1x, t0);
+    float r0y = LERP(q0y, q1y, t0);
+
+    float r1x = LERP(q1x, q2x, t0);
+    float r1y = LERP(q1y, q2y, t0);
+
+    float Px = LERP(r0x, r1x, t0);
+    float Py = LERP(r0y, r1y, t0);
+
+    // ---- derivative at t0 ----
+    float ax = 3.0f * (x1 - x0);
+    float ay = 3.0f * (y1 - y0);
+
+    float bx = 3.0f * (x2 - x1);
+    float by = 3.0f * (y2 - y1);
+
+    float cx = 3.0f * (x3 - x2);
+    float cy = 3.0f * (y3 - y2);
+
+    float d0x = LERP(LERP(ax, bx, t0), LERP(bx, cx, t0), t0);
+    float d0y = LERP(LERP(ay, by, t0), LERP(by, cy, t0), t0);
+
+    // ---- derivative at t = 1 ----
+    float d1x = 3.0f * (x3 - x2);
+    float d1y = 3.0f * (y3 - y2);
+
+    // ---- scaling ----
+    float alpha = (1.0f - t0) / 3.0f;
+
+    // ---- output curve ----
+    *ox0 = Px;
+    *oy0 = Py;
+
+    *ox3 = x3;
+    *oy3 = y3;
+
+    *ox1 = Px + alpha * d0x;
+    *oy1 = Py + alpha * d0y;
+
+    *ox2 = x3 - alpha * d1x;
+    *oy2 = y3 - alpha * d1y;
 }

@@ -9,6 +9,7 @@
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 
+
 extern float current_x;
 extern float current_y;
 extern double current_phi; // angle between x axis and the robot's center axis, in radians
@@ -36,3 +37,4 @@ void bezier_derivative(float t, float x0, float y0, float x1, float y1, float x2
 float get_bezier_radius(float t,float x0, float y0,float x1, float y1, float x2, float y2,float x3, float y3);
 double signed_distance_to_bezier(double px, double py, double x0, double y0, double x1, double y1, double x2, double y2, double x3, double y3, double t);
 float project_bezier(float px, float py, float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3);
+void approximate_sub_bezier(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3, float t0, int *ox0, int *oy0, int *ox1, int *oy1, int *ox2, int *oy2, int *ox3, int *oy3);
