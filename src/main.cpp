@@ -322,7 +322,7 @@ void emergencyBreakTask(void *pvParameters)
   for (;;)
   {
     //(!ultrasonic_blocked) &&
-    if (( (( get_ultrasonic_distance() < min_distance && (trajectory == STRAIGHT || trajectory == BEZIER_CURVE)) || (strategy_started && (millis() - strategy_start_time >= max_running_time))) && wheel_state_R != EMERGENCY_BREAK && wheel_state_L != EMERGENCY_BREAK) ) 
+    if (( (( get_ultrasonic_distance() < min_distance && (trajectory == STRAIGHT || trajectory == BEZIER_CURVE)) || (strategy_started && (millis() - strategy_start_time >= max_running_time))) && wheel_state_R != EMERGENCY_BREAK && wheel_state_L != EMERGENCY_BREAK && control_loop_state != POSITION) ) 
     {
      prepare_emergency_break();
     }
@@ -340,7 +340,7 @@ void emergencyBreakTaskWithoutUltrason(void *pvParameters)
   {
     if (strategy_started && (millis() - strategy_start_time >= max_running_time) &&
         wheel_state_R != EMERGENCY_BREAK &&
-        wheel_state_L != EMERGENCY_BREAK)
+        wheel_state_L != EMERGENCY_BREAK && control_loop_state != POSITION)
     {
       prepare_emergency_break();
     }
@@ -578,8 +578,10 @@ void kill_comms(){
     Serial.println("Communication task created");
   }
   move_servo(0);
+
 }
 void loop(){
+
   // send_values_to_usart(control_loop_state, PWM_L, encoder_count_R, encoder_count_L);
   // custom_delay(30);
     // PWM_R=500;
