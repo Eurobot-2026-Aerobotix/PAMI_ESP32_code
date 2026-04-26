@@ -14,8 +14,10 @@ float cruise_speed_R;
 float cruise_speed_L;
 float starting_phi;
 float turning_radius;
+float lane_correction_term;
 int min_distance = 120;
 int safety_margin = 80; // safety margin in mm to allow passing close to obstacles
+int fixed = 0;
 
 // bool has_target = false;
 
@@ -54,7 +56,6 @@ int move_forward(float distance, float speed, float target_point_x, float target
 	starting_phi = atan2(target_point_y - current_y, target_point_x - current_x);
 	float starting_x = current_x;
 	float starting_y = current_y;
-	float lane_correction_term;
 	float phase_two_distance = 30;
 	while (distance_to_target > phase_two_distance){
 		x = distance - distance_to_target;
@@ -75,6 +76,9 @@ int move_forward(float distance, float speed, float target_point_x, float target
 		float phi_correction_term = (phi_error) * ( 2 / ( MAX( ( abs(target_speed_R) + abs(target_speed_L) )/2, 100.0) /500.0) ); // the first coefficient is tunable
 		lane_correction_term = (deviation_distance) * ( 0.01 / ( MAX( ( abs(target_speed_R) + abs(target_speed_L) )/2, 100.0) /500.0)) + phi_correction_term; // the first coefficient is tunable
 		lane_correction_term = MIN(MAX(lane_correction_term, -0.1), 0.1); // the coefficient is tunable
+		if(fixed){
+			lane_correction_term *= 1.1 ;
+		}
 
 		set_target_speeds(fabs(calculate_instant_target_speed_R(x, distance)) * (1 + lane_correction_term), fabs(calculate_instant_target_speed_L(x, distance)) * (1 - lane_correction_term));
 		custom_delay(4);
@@ -93,7 +97,9 @@ int move_forward(float distance, float speed, float target_point_x, float target
 		float phi_correction_term = (phi_error) * ( 1.5 / ( MAX( ( abs(target_speed_R) + abs(target_speed_L) )/2, 100.0) /500.0) ); // the first coefficient is tunable
 		lane_correction_term = (deviation_distance) * ( 0.01 / ( MAX( ( abs(target_speed_R) + abs(target_speed_L) )/2, 100.0) /500.0)) + phi_correction_term; // the first coefficient is tunable
 		lane_correction_term = MIN(MAX(lane_correction_term, -0.1), 0.1); // the coefficient is tunable
-
+        if(fixed){
+			lane_correction_term *= 1.1 ;
+		}
 		set_target_speeds(speed * (1 + lane_correction_term), speed * (1 - lane_correction_term));
 		speed = MAX(fabs(speed) * 0.995, 75);
 		previous_distance_to_target = distance_to_target;
@@ -154,7 +160,6 @@ int move_backwards(float distance, float speed){
 	starting_phi = atan2(target_point_y - current_y, target_point_x - current_x) + PI;
 	float starting_x = current_x;
 	float starting_y = current_y;
-	float lane_correction_term;
 	float phase_two_distance = 30;
 
 	int start_time = millis();
@@ -631,16 +636,16 @@ int add_fixed_strategy_part(int* strategy, int* output, int start_length, int* o
 	if (strategy == NULL || output == NULL || output_length == NULL) {
 		return 0;
 	}
-
+    fixed = 1;
 	const int yellow_commands[] = {
 						BACKWARDS, 180, 200,
 						SET_POSITION, 1900, 0, 90,
-						GOTO, 1900, 540, 400,
+						GOTO, 1900, 540, 280,
 					};
 	const int blue_commands[] = { 
 						BACKWARDS, 180, 200,
 						SET_POSITION, 1900, 3000, -90,
-						GOTO, 1890, 2460, 400,
+						GOTO, 1890, 2460, 280,
 					};
 	const int max_commands = 300;
 	if (start_length < 0) {
