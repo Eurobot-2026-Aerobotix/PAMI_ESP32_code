@@ -687,7 +687,6 @@ void prepare_emergency_break(){
 	if (strategy_started && (millis() - strategy_start_time >= max_running_time)) {
 		stop_motors();
 		party_time();
-		return;
 	}
 }
 bool check_for_collision(int* counter){

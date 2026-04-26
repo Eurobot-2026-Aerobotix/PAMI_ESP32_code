@@ -40,7 +40,8 @@ static bool has_command_operands(int current_index, int required_count, int num_
 void strategy()
 {
   kill_comms();
-
+  move_servo(0);
+  
   // Calculate total commands: ROS commands + yellow/blue strategy commands
   
   int* commands = strategy_commands; // Assuming strategy_commands is filled with ROS commands
@@ -576,8 +577,6 @@ void kill_comms(){
     delay(500); // Delay between task creation
     Serial.println("Communication task created");
   }
-  move_servo(0);
-
 }
 void loop(){
 
@@ -622,8 +621,8 @@ void loop(){
   // send_values_to_usart(current_speed_R, current_speed_L, target_speed_R, target_speed_L);
   // delay(10);
   // send_values_to_usart(debugger*100, 0, target_speed_R, target_speed_L); // send encoder counts and position for debugging
-  send_values_to_usart(encoder_count_R, encoder_count_L, 0, 0); // send encoder counts and position for debugging
-  delay(40);
+  // send_values_to_usart(encoder_count_R, encoder_count_L, 0, 0); // send encoder counts and position for debugging
+  // delay(40);
   // send_values_to_usart(current_x, current_y, current_phi * 100, 0);
   // delay(10);
 }
