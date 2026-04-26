@@ -321,28 +321,27 @@ void emergencyBreakTask(void *pvParameters)
   
   for (;;)
   {
-    //(!ultrasonic_blocked) &&
-    if (( (( get_ultrasonic_distance() < min_distance && (trajectory == STRAIGHT || trajectory == BEZIER_CURVE)) || (strategy_started && (millis() - strategy_start_time >= max_running_time))) && wheel_state_R != EMERGENCY_BREAK && wheel_state_L != EMERGENCY_BREAK && control_loop_state != POSITION) ) 
+    if (
+          (
+            ( 
+              (get_ultrasonic_distance() < min_distance)
+              && 
+              (trajectory != ROTATING) 
+              && 
+              (control_loop_state != POSITION)
+            ) 
+            || 
+            (
+              strategy_started 
+              && 
+              (millis() - strategy_start_time >= max_running_time)
+            )
+          ) 
+          && 
+          (wheel_state_R != EMERGENCY_BREAK) 
+        )
     {
      prepare_emergency_break();
-    }
-
-    vTaskDelayUntil(&xLastWakeTime, xDelay);
-  }
-}
-
-void emergencyBreakTaskWithoutUltrason(void *pvParameters)
-{
-  const TickType_t xDelay = pdMS_TO_TICKS(30);
-  TickType_t xLastWakeTime = xTaskGetTickCount();
-
-  for (;;)
-  {
-    if (strategy_started && (millis() - strategy_start_time >= max_running_time) &&
-        wheel_state_R != EMERGENCY_BREAK &&
-        wheel_state_L != EMERGENCY_BREAK && control_loop_state != POSITION)
-    {
-      prepare_emergency_break();
     }
 
     vTaskDelayUntil(&xLastWakeTime, xDelay);
