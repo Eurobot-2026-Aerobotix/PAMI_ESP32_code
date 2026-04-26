@@ -34,11 +34,6 @@ int tirette_pin;
 int color_switch_pin;
 int agent_led_pin = -1;
 
-//servo
-int servo_pin;
-
-Servo servo;
-
 // global constants
 int PWM_R_forward_min;
 int PWM_R_backward_min;

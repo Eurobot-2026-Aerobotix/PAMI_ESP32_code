@@ -33,7 +33,6 @@ float target_y;
 float distance_to_target;
 float obstacle_distance;
 //bool has_target = false;
-int32_t previous_speed_control_time = 0;
 
 void kill_comms();
 
@@ -169,15 +168,15 @@ void strategy()
       int y = commands[i + 4];
       int direction = commands[i + 5];
      // Serial.printf("[CMD] forward_cmd: distance=%d, speed=%d, x=%d, y=%d, direction=%d\n", distance, speed, x, y, direction);
-      move_forward(distance,speed, x, y,direction);
+      move_forward(distance,speed, x, y, direction);
       i += 6;
     }else if (command_type == MOVE_FORWARD) {
       int distance = commands[i + 1];
       int speed = commands[i + 2];
+      int x = current_x + cos(current_phi) * distance;
+      int y = current_y + sin(current_phi) * distance;
       int direction = commands[i + 3];
-      int x = current_x + cos(current_phi) * distance * direction;
-      int y = current_y + sin(current_phi) * distance * direction;
-      Serial.printf("[CMD] move_forward_cmd: distance=%d, speed=%d, x=%d, y=%d, direction=%d\n", distance, speed, x, y, direction);
+      Serial.printf("[CMD] move_forward_cmd: distance=%d, speed=%d, x=%d, y=%d", distance, speed, x, y);
       move_forward(distance, speed, x, y, direction);
       i += 4;
     }else if (command_type == ROTATE) {

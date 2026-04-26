@@ -37,8 +37,6 @@ void prepare_go_to(float x, float y, float speed)
         vTaskDelay(1);
     }
     */
-    target_x = x;
-    target_y = y;
     //has_target = true;
     arguments["x"] = x;
     arguments["y"] = y;
