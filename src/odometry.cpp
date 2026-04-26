@@ -4,72 +4,85 @@
 
 float current_x = 0;
 float current_y = 0;
-float current_phi = 0;
-float absolute_phi = 0;
+double current_phi = 0;
+double absolute_phi = 0;
 int32_t previous_encoder_count_R = 0;
 int32_t previous_encoder_count_L = 0;
-int32_t previous_encoder_PCNT_count_R = 0;
-int32_t previous_encoder_PCNT_count_L = 0;
-float phi_offset = 0;
+int32_t previous_encoder_timer_CNT_R = 0;
+int32_t previous_encoder_timer_CNT_L = 0;
+bool odometry_encoder_initialized = false;
 
 void update_speed(float dt){
     current_speed_L = current_speed_L*0.95 + 0.05*(encoder_count_L - previous_encoder_count_L)*(wheel_diameter_L * PI / CPR * directionL) / dt;
 	current_speed_R = current_speed_R*0.95 + 0.05*(encoder_count_R - previous_encoder_count_R)*(wheel_diameter_R * PI / CPR * directionR) / dt;
 	speedCalculationPreviousTime = micros();
 }
-
 void update_encoder_counts(){
-    int32_t current_R = encoder_get_R();
-    int32_t current_L = encoder_get_L();
-    int32_t delta = current_R - previous_encoder_PCNT_count_R;
-	delta = (delta>20000)? delta-32768 : (delta<-20000)? delta+32768 : delta; // handling overflow
-	encoder_count_R += delta;
+    if (!odometry_encoder_initialized){
+        previous_encoder_timer_CNT_R = encoder_get_R();
+        previous_encoder_timer_CNT_L = encoder_get_L();
+        previous_encoder_count_R = encoder_count_R;
+        previous_encoder_count_L = encoder_count_L;
+        odometry_encoder_initialized = true;
+        return;
+    }
 
-	delta = current_L - previous_encoder_PCNT_count_L;
-	delta = (delta>20000)? delta-32768 : (delta<-20000)? delta+32768 : delta;
-	encoder_count_L += delta;
-
-	previous_encoder_PCNT_count_R = current_R;
-	previous_encoder_PCNT_count_L = current_L;
+    encoder_get_R();
+    encoder_get_L();
 }
-
 void update_position(float dt){
+
 	update_encoder_counts();
 
 	update_speed(dt);
-	float dR = ticks_to_distance(encoder_count_R - previous_encoder_count_R, wheel_diameter_R);
-	float dL = ticks_to_distance(encoder_count_L - previous_encoder_count_L, wheel_diameter_L);
-	float dC = (dR+dL)/2;
+	double dR = ticks_to_distance(encoder_count_R - previous_encoder_count_R, wheel_diameter_R);
+	double dL = ticks_to_distance(encoder_count_L - previous_encoder_count_L, wheel_diameter_L);
+	double dC = (dR+dL)/2;
 	previous_encoder_count_R = encoder_count_R;
 	previous_encoder_count_L = encoder_count_L;
 
-	float previous_absolute_phi = absolute_phi;
-	float encoder_phi = ( ticks_to_distance(encoder_count_R, wheel_diameter_R) - ticks_to_distance(encoder_count_L, wheel_diameter_L) )/wheels_spacing;
-	absolute_phi = encoder_phi + phi_offset;
+	double previous_absolute_phi = absolute_phi;
+    absolute_phi = ( ticks_to_distance(encoder_count_R, wheel_diameter_R) - ticks_to_distance(encoder_count_L, wheel_diameter_L) )/wheels_spacing;
+
 	current_x += dC*cos( ( previous_absolute_phi + absolute_phi ) / 2 );
 	current_y += dC*sin( ( previous_absolute_phi + absolute_phi ) / 2 );
 
 	current_phi = absolute_phi;
-	while (current_phi > PI){
-		current_phi -= 2*PI;
-	}
-	while (current_phi <= -PI){
-		current_phi += 2*PI;
-	}
+	normalize_angle(current_phi);
 }
 void reset_position(){
 	current_x = 0;
 	current_y = 0;
 	current_phi = 0;
 	absolute_phi = 0;
+    encoder_offset_R = 0;
+    encoder_offset_L = 0;
+    encoder_count_R = encoder_raw_count_R;
+    encoder_count_L = encoder_raw_count_L;
+    odometry_encoder_initialized = false;
 }
 void set_position(float current__x, float current__y, float current__phi, float absolute__phi){
+    update_encoder_counts();
+
 	current_x = current__x;
 	current_y = current__y;
 	current_phi = current__phi;
 	absolute_phi = absolute__phi;
-	float encoder_phi = ( ticks_to_distance(encoder_get_R(), wheel_diameter_R) - ticks_to_distance(encoder_get_L(), wheel_diameter_L) )/wheels_spacing;
-	phi_offset = absolute__phi - encoder_phi;
+
+    float encoder_phi = ( ticks_to_distance(encoder_count_R, wheel_diameter_R) - ticks_to_distance(encoder_count_L, wheel_diameter_L) )/wheels_spacing;
+    float phi_error = absolute__phi - encoder_phi;
+
+    // Apply opposite wheel offsets so heading matches while center displacement stays unchanged.
+    float right_distance_delta = (phi_error * wheels_spacing) / 2.0f;
+    float left_distance_delta = -right_distance_delta;
+
+    encoder_offset_R += (int32_t)lround(distance_to_ticks(right_distance_delta, wheel_diameter_R));
+    encoder_offset_L += (int32_t)lround(distance_to_ticks(left_distance_delta, wheel_diameter_L));
+    encoder_count_R = encoder_raw_count_R + encoder_offset_R;
+    encoder_count_L = encoder_raw_count_L + encoder_offset_L;
+
+    previous_encoder_count_R = encoder_count_R;
+    previous_encoder_count_L = encoder_count_L;
 }
 float get_distance_to(float x, float y){
 	return sqrt(SQR(current_x - x) + SQR(current_y - y));
@@ -82,10 +95,10 @@ float get_arc_distance_to(float target_point__x, float target_point__y, float ce
 float get_angle_to(float x, float y){
 	return atan2(y - current_y, x - current_x);
 }
-float ticks_to_distance(int32_t ticks, float wheel_diameter){
+double ticks_to_distance(int32_t ticks, double wheel_diameter){
 	return (ticks*wheel_diameter*PI/CPR);
 }
-float distance_to_ticks(int32_t distance, float wheel_diameter){
+double distance_to_ticks(int32_t distance, double wheel_diameter){
 	return (distance*CPR)/(wheel_diameter*PI);
 }
 float rad_to_deg(float radian){
@@ -96,10 +109,10 @@ float deg_to_rad(float degrees){
 }
 float normalize_angle(float angle){
 	float a = angle;
-	while (a > PI){
+	while (a >= PI){
 		a -= 2*PI;
 	}
-	while (a <= -PI){
+	while (a < -PI){
 		a += 2*PI;
 	}
 	return a;
@@ -112,7 +125,6 @@ float get_target_phi(float t,float x0, float y0,float x1, float y1,float x2, flo
 
     return atan2f(dy, dx);
 }
-
 float get_bezier_distance(float t ,float x0, float y0,float x1, float y1,float x2 , float y2 ,float x3, float y3){
     int N = 150 * sqrt(SQR(x3-x0)+SQR(y3-y0)) / 150.0;
     float length = 0.0f;

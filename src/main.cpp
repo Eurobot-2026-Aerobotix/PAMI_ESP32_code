@@ -18,6 +18,9 @@
 #include "communication.h"
 #include "websocket.h"
 
+// External variables from communication
+extern bool crate_colors[8];
+
 /// tasks
 TaskHandle_t communicationTaskHandle;
 TaskHandle_t PIDTaskHandle;
@@ -34,79 +37,197 @@ int32_t previous_speed_control_time = 0;
 
 void kill_comms();
 
+static bool has_command_operands(int current_index, int required_count, int num_commands)
+{
+  return current_index >= 0 && required_count >= 0 && (current_index + required_count) <= num_commands;
+}
+
 // Custom strategy implementation
 void strategy()
 {
   kill_comms();
-  Serial.println("Executing strategy...");
-
+  move_servo(0);
+  
   // Calculate total commands: ROS commands + yellow/blue strategy commands
   
-   int* commands = strategy_commands; // Assuming strategy_commands is filled with ROS commands
-   int num_commands = strategy_length; // Assuming strategy_length is set to the number of ROS
+  int* commands = strategy_commands; // Assuming strategy_commands is filled with ROS commands
+  int num_commands = strategy_length; // Assuming strategy_length is set to the number of ROS
 
-  // int commands[] = {
-  //                   SET_POSITION, 0, 0, 0,
-  //                 // bezier_cmd, 550, 0, 250, 1000, 1000, 500, 600, 1,
-  //                  GOTO, 300, 0, 380,
-  //                 // goto_cmd, 0, 0, 500,
-  //                 // orientate_cmd, 90, 0,
-  //                 // set_position_cmd, 357, 199, 0,
-  //                 // goto_cmd, 900, 400, 600,
-  //                 // goto_cmd, 1650, 380, 600,
-  //                 // goto_cmd, 1922, 50, 600,
-  //                 // orientate_cmd, 88, 0,
-  //                 // goto_cmd, 1900, 550, 400,
-  //                 }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
-  //int num_commands = sizeof(commands) / sizeof(commands[0]);
+  //  int commands[] = {
+  //             SET_POSITION, 0, 0, 0,
+  //             GOTO, 1000, 0, 100, 1,
+  //             // 3, 72, 2320, -90,
+  //             // 1, 72, 1900, 180, 1,
+  //             // 1, 155, 1900, 180, 1,
+  //             // 7, 1, 1, 0,
+  //             // 1, 120, 2450, 100, 1,
+  //             // 8, 0, 0,
+  //             // 3, 120, 2330, 90,
+  //             // 1, 120, 2205, 180, -1,
+  //             // 1, 0, 2205, 200, -1,
+  //             // 3, 50, 2205, 0,
+  //             // 1, 185, 2205, 180, 1,
+  //             // 7, 1, 1, 1,
+  //             // 1, 80, 2205, 200, -1,
+  //             // 1, 105, 1919, 180, -1,
+  //             // 2, -70,
+  //             // 8, 0, 1,
+  //             // 1, 148, 1698, 180, 1,
+  //             // 1, 100, 2100, 200, -1,
+  //             // 1, 0, 2100, 200, -1,
+  //             // 3, 50, 2100, 0,
+  //             // 1, 185, 2100, 80, 1,
+  //             // 7, 1, 1, 1,
+  //             // 1, 355, 2100, 230, 1,
+  //             // 1, 256, 1980, 200, 1,
+  //             // 8, 0, 1,
+  //             // 4, 113, 1998, 107, 2131, 110, 2235, 180, 1,
+  //             // 1, 0, 2235, 200, -1,
+  //             // 3, 50, 2235, 0,
+  //             // 1, 355, 2235, 200, 1,
+  //             // 4, 393, 1692, 366, 1215, 404, 1150, 180, 1
+  //                  }; // Example commands: go to (1000, 1000) at speed 100, then orientate to 90 degrees
+  // int num_commands = sizeof(commands) / sizeof(commands[0]);
 
   int i = 0;
+  strategy_started = true;
   strategy_start_time = millis();
-  // rotate(1800, 0);
-  // while(1);
+  ultrasonic_blocked = false;
+  // rotating_speed = 100;
+  // rotate(3600, 0);
+  // while(1){custom_delay(10);};
   while (i < num_commands)
   {
     int command_type = commands[i];
     if (command_type == GOTO)
     {
+      if (!has_command_operands(i, 5, num_commands)) {
+        Serial.println("[ERROR] Truncated GOTO command in strategy buffer");
+        break;
+      }
       int x = commands[i + 1];
       int y = commands[i + 2];
       int speed = commands[i + 3];
-      while(go_to(x, y, speed)){
+      int direction = commands[i + 4];
+     // Serial.printf("[CMD] goto_cmd: x=%d, y=%d, speed=%d, direction=%d\n", x, y, speed, direction);
+      while(go_to(x, y, speed, direction)){
         wait_for_obstacle_clearance();
         Serial.println("obstacle cleared, resuming...");
       }
-      i += 4;
+     // Serial.printf("[POS] After goto: robot_x=%.1f, robot_y=%.1f, robot_phi=%.1f deg\n", current_x, current_y, rad_to_deg(current_phi));
+      i += 5;
     }
     else if (command_type == ORIENTATE)
     {
+      if (!has_command_operands(i, 2, num_commands)) {
+        Serial.println("[ERROR] Truncated ORIENTATE command in strategy buffer");
+        break;
+      }
       int angle = commands[i + 1];
       orientate(angle, 0);
       i += 2;
     }
     else if (command_type == SET_POSITION) { 
+      if (!has_command_operands(i, 4, num_commands)) {
+        Serial.println("[ERROR] Truncated SET_POSITION command in strategy buffer");
+        break;
+      }
       int x = commands[i + 1];
       int y = commands[i + 2];
       int phi = commands[i + 3];
-      set_position(x, y, deg_to_rad(phi), deg_to_rad(phi)); 
+      PWM_R = 0;
+      PWM_L = 0;
+      stop_motors();
+      control_loop_state = DISACTIVATED;
+      custom_delay(200);
+      set_position(x, y, deg_to_rad(phi), deg_to_rad(phi));
+      set_target_encoder_counts(encoder_count_R, encoder_count_L);
       i += 4; 
+    }else if (command_type == ROTATE) {
+      int angle = commands[i + 1];
+      Serial.printf("[CMD] rotate_cmd (13): angle=%d deg\n", angle);
+      rotate(angle, 0);
+      i += 2;
     }else if (command_type == WAIT_FOR) {
+      if (!has_command_operands(i, 2, num_commands)) {
+        Serial.println("[ERROR] Truncated WAIT_FOR command in strategy buffer");
+        break;
+      }
       int flag = commands[i + 1];
       while(millis() - strategy_start_time < flag){
         custom_delay(5);
       }
       i += 2;
     }else if (command_type == BACKWARDS) {
+      if (!has_command_operands(i, 6, num_commands)) {
+        Serial.println("[ERROR] Truncated BACKWARDS command in strategy buffer");
+        break;
+      }
       int distance = commands[i + 1];
       int speed = commands[i + 2];
-      move_backwards(distance, speed);
-      control_loop_state = DISACTIVATED;
-      i += 3;
-    }else if (command_type == DELAY){
-      custom_delay(commands[i+1]);
+      int x = commands[i + 3];
+      int y = commands[i + 4];
+      int direction = commands[i + 5];
+     // Serial.printf("[CMD] forward_cmd: distance=%d, speed=%d, x=%d, y=%d, direction=%d\n", distance, speed, x, y, direction);
+      move_forward(distance,speed, x, y,direction);
+      i += 6;
+    }else if (command_type == MOVE_FORWARD) {
+      int distance = commands[i + 1];
+      int speed = commands[i + 2];
+      int direction = commands[i + 3];
+      int x = current_x + cos(current_phi) * distance * direction;
+      int y = current_y + sin(current_phi) * distance * direction;
+      Serial.printf("[CMD] move_forward_cmd: distance=%d, speed=%d, x=%d, y=%d, direction=%d\n", distance, speed, x, y, direction);
+      move_forward(distance, speed, x, y, direction);
+      i += 4;
+    }else if (command_type == ROTATE) {
+      int angle = commands[i + 1];
+      Serial.printf("[CMD] rotate_cmd (13): angle=%d deg\n", angle);
+      rotate(angle, 0);
       i += 2;
     }
-     else if (command_type == BEZIER){
+    else if (command_type == PICKUP){
+      if (!has_command_operands(i, 4, num_commands)) {
+        Serial.println("[ERROR] Truncated PICKUP command in strategy buffer");
+        break;
+      }
+    //  Serial.printf("[CMD] pickup_cmd: arg1=%d, arg2=%d, arg3=%d\n", commands[i + 1], commands[i + 2], commands[i + 3]);
+      pickup(commands[i + 1], commands[i + 2], commands[i + 3]);
+    //  Serial.printf("[POS] After pickup: robot_x=%.1f, robot_y=%.1f, robot_phi=%.1f deg\n", current_x, current_y, rad_to_deg(current_phi));
+      i += 4;
+    }
+    else if (command_type == PUTDOWN){
+      if (!has_command_operands(i, 3, num_commands)) {
+        Serial.println("[ERROR] Truncated PUTDOWN command in strategy buffer");
+        break;
+      }
+      int bechwaya = commands[i+1];
+      int nid_lot = commands[i+2];
+      Serial.println("[CMD] putdown_cmd");
+      putdown(bechwaya, nid_lot);
+      i += 3;
+    }
+    else if (command_type == WALKING_POSITION){
+      if (!has_command_operands(i, 2, num_commands)) {
+        Serial.println("[ERROR] Truncated WALKING_POSITION command in strategy buffer");
+        break;
+      }
+      int position = commands[i + 1];
+      Serial.println("[CMD] walking_position_cmd");
+      walking_position(position);
+      i += 2;
+    }
+    else if (command_type == PREPARE){
+      Serial.println("[CMD] prepare_cmd");
+      prepare_servo_up();
+      i++;
+    }
+    else if (command_type == LETGO){
+      Serial.println("[CMD] letgo_cmd");
+      letgo();
+      i++;
+    }
+   else if (command_type == BEZIER){
       int x0 = current_x;
       int y0 = current_y;
       int x1 = commands[i + 1];
@@ -134,12 +255,26 @@ void strategy()
       }
       i += 9;
     }
+    else if (command_type == DELAY){
+      if (!has_command_operands(i, 2, num_commands)) {
+        Serial.println("[ERROR] Truncated DELAY command in strategy buffer");
+        break;
+      }
+      int delay_time = commands[i + 1];
+   //   Serial.printf("[CMD] delay_cmd: custom_delay(%d)\n", delay_time);
+      custom_delay(delay_time);
+      i += 2;
+    }
+    else
+    {
+      Serial.print("[ERROR] Unknown strategy opcode: ");
+      Serial.println(command_type);
+      break;
+    }
   }
-  control_loop_state = DISACTIVATED;
-	stop_motors();
-  party_time();
+  // control_loop_state = DISACTIVATED;
+	// stop_motors();
   // 3. Send completion signal
-  send_action_done(1);
 
   Serial.println("Strategy execution completed!");
 }
@@ -152,7 +287,7 @@ void communicationTask(void *pvParameters)
   Serial.println("Communication task started");
   
   // Setup micro-ROS (will handle WiFi connection internally)
-  if (setup_micro_ros("harissa", "harissaharissa2026", "10.42.1.1", 8888))
+  if (setup_micro_ros("rouge", "t0rb@g26", "192.168.31.2", 8888))
   {
     Serial.println("micro-ROS setup successful");
   }
@@ -163,13 +298,21 @@ void communicationTask(void *pvParameters)
   
   for (;;) // Infinite loop - CRITICAL!
   {
+    if (comm_stop_requested)
+    {
+      Serial.println("Communication stop requested, cleaning up micro-ROS...");
+      cleanup_micro_ros();
+      communicationTaskHandle = NULL;
+      vTaskDelete(NULL);
+    }
+
     // Only run communication loop if WiFi is connected
     if (WiFi.status() == WL_CONNECTED) {
       communication_loop();
     } else {
       // If WiFi disconnected, try to reconnect
       Serial.println("WiFi disconnected in task, attempting reconnection...");
-      connect_wifi("harissa", "harissaharissa2026");
+      connect_wifi("rouge", "t0rb@g26");
       vTaskDelay(pdMS_TO_TICKS(5000)); // Wait 5 seconds before next attempt
     }
 
@@ -184,20 +327,27 @@ void emergencyBreakTask(void *pvParameters)
   
   for (;;)
   {
-    float ultrasonic_dist = get_ultrasonic_distance();
-    float min_dist = min_distance * (max(max(fabs(current_speed_R), fabs(current_speed_L)), 200.0f)/200);
-    bool obstacle_too_close = (ultrasonic_dist < min_dist) && trajectory != ROTATING;
-    bool target_allows_passing = true;
-    //if (obstacle_too_close) {
-    distance_to_target = get_distance_to(target_x, target_y);
-    //distance_to_target = get_distance_to(arguments["x"], arguments["y"]);
-    obstacle_distance = ultrasonic_dist;
-    //target_allows_passing = distance_to_target < obstacle_distance + safety_margin;
-    //}
-    
-    if (( (obstacle_too_close && distance_to_target > (obstacle_distance + safety_margin)) || (millis() - strategy_start_time >= max_running_time)) && wheel_state_R != EMERGENCY_BREAK && wheel_state_L != EMERGENCY_BREAK)
+    if (
+          (
+            ( 
+              (get_ultrasonic_distance() < min_distance)
+              && 
+              (trajectory != ROTATING) 
+              && 
+              (control_loop_state != POSITION)
+            ) 
+            || 
+            (
+              strategy_started 
+              && 
+              (millis() - strategy_start_time >= max_running_time)
+            )
+          ) 
+          && 
+          (wheel_state_R != EMERGENCY_BREAK) 
+        )
     {
-      prepare_emergency_break();
+     prepare_emergency_break();
     }
 
     vTaskDelayUntil(&xLastWakeTime, xDelay);
@@ -215,12 +365,6 @@ void PIDTask(void *pvParameters){
   float dt = 0.001;
 
   for (;;){
-    // Add error checking
-    if (previous_speed_control_time == 0){
-      previous_speed_control_time = micros();
-      vTaskDelayUntil(&xLastWakeTime, xDelay);
-      continue;
-    }
 
     update_position(dt);
 
@@ -249,6 +393,7 @@ void PIDTask(void *pvParameters){
       previous_speed_error_L = error;
 
       PWM_L = PWM_L * 0.0 + 1.0 * (PWM_offset_L + kpS_L * error + kdS_L * speed_derivative_L + kiS_L * speed_integral_L);
+      PWM_L = PWM_L * 0.0 + 1.0 * (PWM_offset_L + kpS_L * error + kdS_L * speed_derivative_L + kiS_L * speed_integral_L);
       PWM_L = (PWM_L > PWM_max) ? PWM_max : (PWM_L < -PWM_max) ? -PWM_max : PWM_L;
       PWM_L = (target_speed_L == 0) ? 0 : PWM_L;
 
@@ -256,7 +401,7 @@ void PIDTask(void *pvParameters){
     }
     else if (control_loop_state == POSITION){
       // right motor position control
-      float error = (target_encoder_count_R - encoder_count_R)*2; 
+      float error = (target_encoder_count_R - encoder_count_R); 
 
       position_derivative_R = (error - previous_position_error_R)/dt; // unit = tick/s²
 
@@ -270,7 +415,7 @@ void PIDTask(void *pvParameters){
       position_integral_R = ( (PWM_R == PWM_max) || (PWM_R == -PWM_max) )? (position_integral_R - 2*error*dt) : position_integral_R;
 
       // left motor position control
-      error = (target_encoder_count_L - encoder_count_L)*2;
+      error = (target_encoder_count_L - encoder_count_L);
 
       position_derivative_L = (error - previous_position_error_L)/dt; // unit = mm/s²
       position_integral_L = ( SGN(error) == SGN( previous_position_error_L) )? position_integral_L + error*dt : 0;
@@ -284,13 +429,17 @@ void PIDTask(void *pvParameters){
 
       previous_position_error_L = error;
     }
-    
-
+//set_target_speeds(600, 600); 
+  //  delay(10);
     run_right_motor();
     run_left_motor();
-
-    vTaskDelayUntil(&xLastWakeTime, xDelay);
+   //send_values_to_usart(current_speed_R, current_speed_L, target_speed_R, target_speed_L);
+  // delay(10);
+  // update target speeds in case they were changed by the command execution task
+//send_values_to_usart(encoder_count_R,encoder_count_L, 0, 0); // send encoder counts for debugging
+   vTaskDelayUntil(&xLastWakeTime, xDelay);
   }
+  
 }
 
 void commandExecutionTask(void *pvParameters)
@@ -304,26 +453,10 @@ void commandExecutionTask(void *pvParameters)
   {
     if (strategy_waiting) {
       strategy_waiting = 0;
+      // custom_delay(85000);
       strategy();
     }
     execute_command();
-    vTaskDelayUntil(&xLastWakeTime, xDelay);
-  }
-}
-
-void websocketTask(void *pvParameters)
-{
-  const TickType_t xDelay = pdMS_TO_TICKS(50); // 50ms delay for WebSocket operations
-  TickType_t xLastWakeTime = xTaskGetTickCount();
-  Serial.println("WebSocket task started");
-  
-  // Wait a bit for system initialization
-  vTaskDelay(pdMS_TO_TICKS(3));
-  
-  for (;;) // Infinite loop - CRITICAL!
-  {
-    //send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, debugger);
-    
     vTaskDelayUntil(&xLastWakeTime, xDelay);
   }
 }
@@ -333,16 +466,21 @@ void kill_comms(){
     return;
   }
 
-  eTaskState comm_state = eTaskGetState(communicationTaskHandle);
-  if (comm_state != eDeleted) {
-    cleanup_micro_ros();
-    vTaskDelete(communicationTaskHandle);
+  comm_stop_requested = true;
+
+  TickType_t start_time = xTaskGetTickCount();
+  while (communicationTaskHandle != NULL && (xTaskGetTickCount() - start_time) < pdMS_TO_TICKS(500)) {
+    vTaskDelay(pdMS_TO_TICKS(10));
   }
 
-  communicationTaskHandle = NULL;
+  if (communicationTaskHandle != NULL) {
+    Serial.println("[WARN] Forcing communication task shutdown");
+    vTaskDelete(communicationTaskHandle);
+    communicationTaskHandle = NULL;
+  }
 }
 
-void setup()
+ void setup()
 {
   // Initialize Serial for debugging
   Serial.begin(115200);
@@ -350,56 +488,43 @@ void setup()
   Serial.println("=== PAMI ESP32 Setup ===");
 
   Serial.println("Setting motor pins...");
-  set_motor_pins(27, 21, 18, 19, 23, 17);
+  set_motor_pins(19, 18, 21, 22, 17, 23);  // shah 19, 18, 21, 22, 17, 23
 
-  set_ultrasonic_pins(14, 12);
+  set_system_pins(26, 33, 13, 27);// example: electrovalve=26, pump_left=33, pump_right=32, servo=27
 
-  set_tirettes_pins(26, 33);
-
-  set_servo_pin(32);
+  set_tirettes_pins(35, 39);
 
   set_agent_led_pin(25);
 
   Serial.println("Setting encoder channels...");
-  set_encoder_channels(4, 16, 15, 2, 350);
+  set_encoder_channels(32, 15, 4, 16 ,1400); // badalthom  2, 15, 4, 16, 
 
   Serial.println("Setting PWM parameters...");
-  set_PWM_min_max(1023, 270, 270, -270, -270);
+  set_ultrasonic_pins(14, 34); // badalthom //14
+
+  set_PWM_min_max(1023, 90, 90, -90, -90); //yess    //130  120
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(32.25, 32.25, 91.14313998872904);
+  set_wheel_diameter_and_spacing(34.731840562040404, 34.6927423194805, 110.37343379225145);
   HAL_setup();
 
   Serial.println("Creating tasks...");
 
-  //Create tasks with lower stack sizes first
-    xTaskCreatePinnedToCore(
-     communicationTask,
-      "communicationTask",
-      8192,
-      NULL,
-      1, // Lower priority
-       &communicationTaskHandle,
-       0); // Pin to core 0
-
-   delay(500); // Delay between task creation
-   Serial.println("Communication task created");
-
   xTaskCreatePinnedToCore(
       commandExecutionTask,
       "commandExecutionTask",
-      4096, // Back to smaller stack
+      12288,
       NULL,
       1, // Lower priority
       &commandExecutionTaskHandle,
-      1); // Pin to core 0
+      0); // Pin to core 0
   Serial.println("Command execution task created");
 
   // Create PID task last (it might be causing issues)
   xTaskCreatePinnedToCore(
       PIDTask,
       "PIDTask",
-      4096, // Back to smaller stack
+      6144,
       NULL,
       2, // Medium priority
       &PIDTaskHandle,
@@ -407,8 +532,9 @@ void setup()
   Serial.println("PID task created");
 
   xTaskCreatePinnedToCore(
-      emergencyBreakTask,
-      "emergencyBreakTask",
+     // emergencyBreakTaskWithoutUltrason,
+     emergencyBreakTask,  
+     "emergencyBreakTask",
       2048, // Stack size
       NULL,
       2, // High priority
@@ -421,6 +547,8 @@ void setup()
   Serial.println("All tasks created successfully!");
   control_loop_state = DISACTIVATED;
   delay(1000);
+ // ultrasonic_blocked = true;
+  strategy_started = false;
   strategy_waiting = 0;
   if (get_tirette_state() == 0){
     kill_comms();
@@ -432,19 +560,33 @@ void setup()
     }
     is_yellow = get_color_switch_state();
     load_strategy(strategy_commands, &strategy_length, is_yellow);
-    bool status = false;
+    bool state = true;
     while(get_tirette_state() == 0){
-      custom_delay(40);
-      set_agent_led_state(status);
-      status = !status;
+      custom_delay(30);
+      set_agent_led_state(state);
+      state = !state;
     }
-    strategy_waiting = 1;
+    set_agent_led_on();
+    strategy_waiting = 1; //1 means default mode
+  }else{
+    // Create communication task
+    xTaskCreatePinnedToCore(
+        communicationTask,
+        "communicationTask",
+        12288,
+        NULL,
+        1, // Lower priority
+        &communicationTaskHandle,
+        0); // Pin to core 0
+
+    delay(500); // Delay between task creation
+    Serial.println("Communication task created");
   }
 }
-
 void loop(){
-  //send_values_to_usart(distance_to_target, obstacle_distance, 0, 0);
-  // custom_delay(10);
+
+  // send_values_to_usart(control_loop_state, PWM_L, encoder_count_R, encoder_count_L);
+  // custom_delay(30);
     // PWM_R=500;
     // PWM_L=500;
     // delay(2000);
@@ -461,41 +603,31 @@ void loop(){
     // PWM_R=0;
     // PWM_L=500;
     // delay(2000);
+  //  control_loop_state = SPEED;
+  //  for(int i=0; i<100; i++){
+  //    set_target_speeds(i*2, i*2);
 
-  // Serial.print(encoder_count_L);
-  //  Serial.print(" - ");
-  //  Serial.println(encoder_count_R);
-  // for(int i=0; i<100; i++){
-  //   set_target_speeds(i*2, 0);
-  //   send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
-  //   delay(10);
-  // }
-  // for(int i=0; i<200; i++){
-  //   send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
-  //   delay(10);
-  // }
-  // set_target_speeds(0, 0);
-  // for(int i=0; i<200; i++){
-  //   send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
-  //   delay(10);
-  // }
-  // for(int i=0; i<100; i++){
-  //   set_target_speeds(0, i*2);
-  //   send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
-  //   delay(10);
-  // }
-  // for(int i=0; i<200; i++){
-  //   send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
-  //   delay(10);
-  // }
-  // set_target_speeds(0, 0);
-  // for(int i=0; i<200; i++){
-  //   send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
-  //   delay(10);
-  // }
-  ///////////////////////////////////
-  // send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, debugger);
-  // custom_delay(10);
-  // send_values_to_usart(current_x, current_y, 0, 0);
-  // custom_delay(10);
+    //  send_values_to_usart(encoder_count_L, encoder_count_R, target_speed_L, target_speed_R);
+    //  custom_delay(30);
+  //  }
+  //  for(int i=0; i<200; i++){
+  //    send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
+  //    delay(10);
+  //    }
+  //  set_target_speeds(0, 0);
+  //  for(int i=0; i<200; i++){
+  //    send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, target_speed_R);
+  //  delay(10);
+  //  }
+  //  reset_speed_control_variables();
+
+  // send_values_to_usart(current_speed_L, current_speed_R, fabs(PWM_L)/(MAX(fabs(current_speed_L), 10))*100, target_speed_R);
+  // delay(10);
+  // send_values_to_usart(current_speed_R, current_speed_L, target_speed_R, target_speed_L);
+  // delay(10);
+  // send_values_to_usart(debugger*100, 0, target_speed_R, target_speed_L); // send encoder counts and position for debugging
+  // send_values_to_usart(encoder_count_R, encoder_count_L, 0, 0); // send encoder counts and position for debugging
+  // delay(40);
+  // send_values_to_usart(current_x, current_y, current_phi * 100, 0);
+  // delay(10);
 }

@@ -56,7 +56,7 @@ void execute_command()
         orientate(arguments["orientation"], (int8_t)arguments["is_radian"]);
         break;
     case GOIN_TO:
-        go_to(arguments["x"], arguments["y"], arguments["speed"]);
+        go_to(arguments["x"], arguments["y"], arguments["speed"], arguments["direction"]);
         break;
     default:
         vTaskDelay(10);

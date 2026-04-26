@@ -3,7 +3,7 @@
 
 // Micro-ROS name constant
 
-const char* micro_ros_name = "pami6";
+const char* micro_ros_name = "pami7";
 // Dynamic topic names (constructed from micro_ros_name)
 char topic_action_done[50];
 char topic_start[50];
@@ -24,14 +24,20 @@ std_msgs__msg__Int32 action_done_msg;
 std_msgs__msg__Float32MultiArray strategy_msg;
 std_srvs__srv__Trigger_Request status_req;
 std_srvs__srv__Trigger_Response status_res;
-float received_floats[100]; // Adjust size as needed
+float received_floats[200]; // Adjust size as needed
 size_t received_floats_count = 0;
-int recieved_commands[100]; // Integer array for converted recieved_commands
+int recieved_commands[200]; // Integer array for converted recieved_commands
 int deploy_pos[3];
 int first_delay = 1;
 size_t commands_count = 0;
 bool micro_ros_init_successful = false;
 enum CommunicationState comm_state = WAITING_AGENT;
+volatile bool comm_stop_requested = false;
+static bool entities_created = false;
+
+static const size_t STRATEGY_MSG_CAPACITY = 200;
+static const size_t MAX_RECEIVED_FLOATS = 200;
+static const size_t MAX_STRATEGY_COMMANDS = 200;
 
 // WiFi reconnection variables
 unsigned long last_wifi_check = 0;
@@ -284,13 +290,13 @@ bool create_entities()
     
     // Allocate memory for incoming array
     Serial.println("DEBUG: Allocating memory for strategy message...");
-    strategy_msg.data.data = (float *)malloc(60 * sizeof(float));
+    strategy_msg.data.data = (float *)malloc(STRATEGY_MSG_CAPACITY * sizeof(float));
     if (strategy_msg.data.data == NULL) {
         Serial.println("ERROR: Failed to allocate memory for strategy message!");
         return false;
     }
     strategy_msg.data.size = 0;
-    strategy_msg.data.capacity = 60;
+    strategy_msg.data.capacity = STRATEGY_MSG_CAPACITY;
     
     // Create status service
     Serial.println("DEBUG: Creating status service...");
@@ -340,6 +346,7 @@ bool create_entities()
     }
 
     Serial.println("DEBUG: All entities created successfully!");
+    entities_created = true;
     return true;
 }
 
@@ -347,36 +354,65 @@ bool create_entities()
 void destroy_entities()
 {
     Serial.println("DEBUG: Cleaning up entities...");
+
+    if (!entities_created && support.context.impl == NULL) {
+        Serial.println("DEBUG: No active entities/context, skipping cleanup");
+        return;
+    }
     
-    // Set destroy timeout to 0 for immediate cleanup
-    rmw_context_t *rmw_context = rcl_context_get_rmw_context(&support.context);
-    (void)rmw_uros_set_context_entity_destroy_session_timeout(rmw_context, 0);
+    // Set destroy timeout to 0 for immediate cleanup when context is valid.
+    if (support.context.impl != NULL) {
+        rmw_context_t *rmw_context = rcl_context_get_rmw_context(&support.context);
+        if (rmw_context != NULL) {
+            (void)rmw_uros_set_context_entity_destroy_session_timeout(rmw_context, 0);
+        }
+    }
 
     // Destroy entities in reverse order of creation
     rcl_ret_t rc;
     
-    rc = rcl_publisher_fini(&action_done_publisher, &node);
-    if (rc != RCL_RET_OK) {
-        Serial.print("WARN: Failed to destroy publisher, code: ");
-        Serial.println(rc);
-    }
+    if (entities_created) {
+        rc = rcl_publisher_fini(&action_done_publisher, &node);
+        if (rc != RCL_RET_OK) {
+            Serial.print("WARN: Failed to destroy publisher, code: ");
+            Serial.println(rc);
+        }
     
-    rc = rcl_subscription_fini(&subscriber, &node);
-    if (rc != RCL_RET_OK) {
-        Serial.print("WARN: Failed to destroy start subscriber, code: ");
-        Serial.println(rc);
-    }
+        rc = rcl_subscription_fini(&subscriber, &node);
+        if (rc != RCL_RET_OK) {
+            Serial.print("WARN: Failed to destroy start subscriber, code: ");
+            Serial.println(rc);
+        }
     
-    rc = rcl_subscription_fini(&strategy_subscriber, &node);
-    if (rc != RCL_RET_OK) {
-        Serial.print("WARN: Failed to destroy strategy subscriber, code: ");
-        Serial.println(rc);
-    }
+        rc = rcl_subscription_fini(&strategy_subscriber, &node);
+        if (rc != RCL_RET_OK) {
+            Serial.print("WARN: Failed to destroy strategy subscriber, code: ");
+            Serial.println(rc);
+        }
     
-    rc = rcl_service_fini(&status_service, &node);
-    if (rc != RCL_RET_OK) {
-        Serial.print("WARN: Failed to destroy status service, code: ");
-        Serial.println(rc);
+        rc = rcl_service_fini(&status_service, &node);
+        if (rc != RCL_RET_OK) {
+            Serial.print("WARN: Failed to destroy status service, code: ");
+            Serial.println(rc);
+        }
+
+        rc = rclc_executor_fini(&executor);
+        if (rc != RCL_RET_OK) {
+            Serial.print("WARN: Failed to destroy executor, code: ");
+            Serial.println(rc);
+        }
+
+        rc = rcl_node_fini(&node);
+        if (rc != RCL_RET_OK) {
+            Serial.print("WARN: Failed to destroy node, code: ");
+            Serial.println(rc);
+        }
+
+        rc = rclc_support_fini(&support);
+        if (rc != RCL_RET_OK) {
+            Serial.print("WARN: Failed to destroy support, code: ");
+            Serial.println(rc);
+        }
     }
     
     // Free allocated memory for strategy message
@@ -385,23 +421,8 @@ void destroy_entities()
         strategy_msg.data.data = NULL;
     }
     
-    rc = rclc_executor_fini(&executor);
-    if (rc != RCL_RET_OK) {
-        Serial.print("WARN: Failed to destroy executor, code: ");
-        Serial.println(rc);
-    }
-    
-    rc = rcl_node_fini(&node);
-    if (rc != RCL_RET_OK) {
-        Serial.print("WARN: Failed to destroy node, code: ");
-        Serial.println(rc);
-    }
-    
-    rc = rclc_support_fini(&support);
-    if (rc != RCL_RET_OK) {
-        Serial.print("WARN: Failed to destroy support, code: ");
-        Serial.println(rc);
-    }
+    entities_created = false;
+    support.context.impl = NULL;
     
     Serial.println("DEBUG: Entity cleanup complete");
 }
@@ -437,15 +458,31 @@ void start_callback(const void *msgin)
 void strategy_callback(const void *msgin)
 {
     const std_msgs__msg__Float32MultiArray *msg = (const std_msgs__msg__Float32MultiArray *)msgin;
+    const size_t msg_size = msg->data.size;
+    const size_t safe_copy_count = (msg_size < MAX_RECEIVED_FLOATS) ? msg_size : MAX_RECEIVED_FLOATS;
+    const size_t safe_strategy_count = (msg_size < MAX_STRATEGY_COMMANDS) ? msg_size : MAX_STRATEGY_COMMANDS;
     
     Serial.println("Received float table:");
-    received_floats_count = msg->data.size;
-    commands_count = msg->data.size;
+    received_floats_count = safe_copy_count;
+    commands_count = safe_strategy_count;
+
+    if (msg_size > STRATEGY_MSG_CAPACITY) {
+        Serial.print("WARN: Incoming strategy too large for message buffer. Size: ");
+        Serial.print(msg_size);
+        Serial.print(", capacity: ");
+        Serial.println(STRATEGY_MSG_CAPACITY);
+    }
+
+    if (msg_size > MAX_STRATEGY_COMMANDS) {
+        Serial.print("WARN: Strategy truncated to ");
+        Serial.print(MAX_STRATEGY_COMMANDS);
+        Serial.println(" elements");
+    }
     
     // Blink LED to indicate message received
     LED_BLINK();
     
-    for (size_t i = 0; i < msg->data.size && i < 100; i++)
+    for (size_t i = 0; i < safe_copy_count; i++)
     {
         received_floats[i] = msg->data.data[i];
         recieved_commands[i] = (int)msg->data.data[i]; // Convert float to int
@@ -457,12 +494,15 @@ void strategy_callback(const void *msgin)
         Serial.print(" -> command: ");
         Serial.println(recieved_commands[i]);
     }
-    is_yellow = (recieved_commands[2] < 1500);
 
-    for (int i = 0; i < received_floats_count && i < 200; i++){
-        strategy_commands[i] = received_floats[i];
+    if (safe_copy_count > 2) {
+        is_yellow = (recieved_commands[2] < 1500);
     }
-    strategy_length = received_floats_count;
+
+    for (size_t i = 0; i < safe_strategy_count; i++){
+        strategy_commands[i] = (int)msg->data.data[i];
+    }
+    strategy_length = (int)safe_strategy_count;
     
     save_strategy(strategy_commands, strategy_length, is_yellow);
     
@@ -536,6 +576,11 @@ void cleanup_micro_ros()
         destroy_entities();
         comm_state = WAITING_AGENT;
     }
+
+    WiFi.setAutoReconnect(false);
+    WiFi.disconnect(true);
+    WiFi.mode(WIFI_OFF);
+    comm_stop_requested = false;
     micro_ros_init_successful = false;
     Serial.println("micro-ROS cleaned up");
 }
