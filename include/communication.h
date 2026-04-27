@@ -69,11 +69,11 @@ extern bool crate_colors[8];
 extern bool is_yellow;
 
 // Strategy data arrays
-extern float received_floats[200];
+extern float received_floats[300];
 extern size_t received_floats_count;
-extern int commands[200];
+extern int commands[300];
 extern size_t commands_count;
-extern int recieved_commands[200];
+extern int recieved_commands[300];
 // Core functions
 bool setup_micro_ros(const char *wifi_ssid, const char *wifi_password, const char *agent_ip, int agent_port);
 void communication_loop();
