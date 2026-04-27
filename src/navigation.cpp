@@ -13,7 +13,7 @@ float cruise_speed_R;
 float cruise_speed_L;
 float starting_phi;
 float turning_radius;
-int min_distance = 120;
+int min_distance = 170;
 
 int32_t previous_speed_control_time = 0;
 float speed_offset = 50;
@@ -702,4 +702,8 @@ bool check_for_collision(int* counter){
 			*counter = 0;
 	}
 	return false;
+}
+void recover_from_emergency_break() {
+    wheel_state_R = ACCELERATING; 
+    wheel_state_L = ACCELERATING;
 }

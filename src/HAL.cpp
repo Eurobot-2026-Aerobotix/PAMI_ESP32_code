@@ -278,29 +278,23 @@ void send_values_to_usart(float value1, float value2, float value3, float value4
     Serial.write((uint8_t)0xAD);
     Serial.write((uint8_t*)&value4, sizeof(value4));
 }
-float get_ultrasonic_distance(){
-    long duration;
-    float distance;
 
-    // Clear the trigger pin
+float get_ultrasonic_distance() {
+    long duration;
+
     digitalWrite(trigger, LOW);
     delayMicroseconds(2);
-
-    // Set the trigger pin HIGH for 10 microseconds
     digitalWrite(trigger, HIGH);
     delayMicroseconds(10);
     digitalWrite(trigger, LOW);
 
-    // Read the echo pin
-    duration = pulseIn(echo, HIGH, 2000); // Timeout after 2000us to avoid blocking
+    duration = pulseIn(echo, HIGH, 3000);
 
-    // Calculate distance in mm
-    distance = (duration / 2.0) * 0.343; // Speed of sound is ~343 m/s or 0.0343 mm/µs
+    if (duration == 0) return 9999.0;
 
-    // If no echo received, return -1
-    if (duration == 0) {
-        return 500.0;
-    }
+    float distance = (duration / 2.0) * 0.343;
+
+    if (distance < 20.0) return 9999.0; // anything < 2cm is sensor noise
 
     return distance;
 }
