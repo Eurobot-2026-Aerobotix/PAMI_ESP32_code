@@ -498,12 +498,12 @@ void pickup(int pick_right, int pick_left, int up_or_down){
     ultrasonic_blocked = up_or_down;
     move_servo(up_or_down? 4 : 1);
     if (up_or_down==1){
-        custom_delay(1000);
+        custom_delay(600);
     }else{
-        custom_delay(1300);
+        custom_delay(900);
     }
     move_servo(2);
-    custom_delay(500);
+    custom_delay(400);
     heza = true;
 }
 
@@ -514,7 +514,7 @@ void putdown(int bechwaya, int nid_lot){
     set_pump_states(0, 0);
     set_electrovalve_state(1);
     move_servo(0);
-    custom_delay(1000);
+    custom_delay(800);
     set_electrovalve_state(0);
     heza = false;
 }
@@ -524,10 +524,9 @@ void letgo(){
     move_servo(5);
     custom_delay(500);
 }
-void walking_position(int position){
-    move_servo(position? 0 : 3);
-    custom_delay(500);
-    ultrasonic_blocked = false;
+void walking_position(){
+    move_servo(3);
+    custom_delay(400);
 }
 void prepare_servo_up(){
     move_servo(5);

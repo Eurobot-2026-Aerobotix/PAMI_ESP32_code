@@ -203,14 +203,13 @@ void strategy()
       i += 3;
     }
     else if (command_type == WALKING_POSITION){
-      if (!has_command_operands(i, 2, num_commands)) {
+      if (!has_command_operands(i, 1, num_commands)) {
         Serial.println("[ERROR] Truncated WALKING_POSITION command in strategy buffer");
         break;
       }
-      int position = commands[i + 1];
       Serial.println("[CMD] walking_position_cmd");
-      walking_position(position);
-      i += 2;
+      walking_position();
+      i += 1;
     }
     else if (command_type == PREPARE){
       Serial.println("[CMD] prepare_cmd");
