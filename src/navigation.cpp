@@ -606,7 +606,7 @@ int go_to(float x, float y, float speed, float direction)
 	if(direction == -1){
 		target_angle = normalize_angle(target_angle - PI);
 	}
-   while (fabs(normalize_angle(target_angle - current_phi)) > deg_to_rad(2))
+    if (fabs(normalize_angle(target_angle - current_phi)) > deg_to_rad(2))
 	{
 		if (orientate(target_angle, 1)){
 			return 1;
@@ -640,15 +640,15 @@ bool is_idle(){
 	if (encoder_guard_fault || control_loop_state == DISACTIVATED){
 		return true;
 	}
-	int encoder_tolerance = 3;
-	int pwm_tolerance = 70;
+	int encoder_tolerance = 6;
+	int pwm_tolerance = 100;
 	bool right_wheel_idle = (fabs(target_encoder_count_R - encoder_count_R) < encoder_tolerance) && (fabs(PWM_R) < pwm_tolerance) && (fabs(previous_position_error_R) < encoder_tolerance);
 	bool left_wheel_idle = (fabs(target_encoder_count_L - encoder_count_L) < encoder_tolerance) && (fabs(PWM_L) < pwm_tolerance) && (fabs(previous_position_error_L) < encoder_tolerance);
 	return right_wheel_idle && left_wheel_idle;
 }
 void wait_for_idle(){
 	int start_time = millis();
-	while(!is_idle() || control_loop_state != POSITION){
+	while(!is_idle() && control_loop_state == POSITION){
 		if (encoder_guard_fault || control_loop_state == DISACTIVATED){
 			return;
 		}
