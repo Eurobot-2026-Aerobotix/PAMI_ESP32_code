@@ -13,11 +13,7 @@ float cruise_speed_R;
 float cruise_speed_L;
 float starting_phi;
 float turning_radius;
-int min_distance = 120;
-int safety_margin = 80; // safety margin in mm to allow passing close to obstacles
-
-// bool has_target = false;
-
+int min_distance = 170;
 
 int32_t previous_speed_control_time = 0;
 float speed_offset = 50;
@@ -98,6 +94,11 @@ int move_forward(float distance, float speed, float target_x, float target_y, fl
 			return 0;
 		}
 
+		if (millis() - strategy_start_time >= max_running_time){
+			prepare_emergency_break();
+			return 1;
+		}
+
 		float phi_error = normalize_angle(calculate_instant_target_phi(x, distance) - current_phi);
 		float deviation_angle = normalize_angle(atan2(current_y - starting_y, current_x - starting_x) - atan2(target_y - starting_y, target_x - starting_x) );
 		float deviation_distance = -direction * sqrt(SQR(current_y - starting_y) + SQR(current_x - starting_x)) * sin(deviation_angle); // positive to the left and negative to the right
@@ -127,6 +128,11 @@ int move_forward(float distance, float speed, float target_x, float target_y, fl
 	int32_t phase_two_start_time = micros();
 	while (distance_to_target > 2.5){
 		
+		if (millis() - strategy_start_time >= max_running_time){
+			prepare_emergency_break();
+			return 1;
+		}
+
 		float phi_error = normalize_angle(calculate_instant_target_phi(x, distance) - current_phi);
 		float deviation_angle = normalize_angle(atan2(current_y - starting_y, current_x - starting_x) - atan2(target_y - starting_y, target_x - starting_x) );
 		float deviation_distance = -direction * sqrt(SQR(current_y - starting_y) + SQR(current_x - starting_x)) * sin(deviation_angle); // positive to the left and negative to the right
@@ -231,6 +237,11 @@ int move_backwards(float distance, float speed){
 			emergency_break();
 			return 0;
 		}
+		
+		if (millis() - strategy_start_time >= max_running_time){
+			prepare_emergency_break();
+			return 1;
+		}
 
 		if ((millis() - start_time) > 2000){
 			break;
@@ -314,6 +325,10 @@ int bezier_curve(float x1, float y1, float x2, float y2, float x3, float y3, flo
 			return 1;
 		}
 
+		if (millis() - strategy_start_time >= max_running_time){
+			prepare_emergency_break();
+			return 1;
+		}
 		t = project_bezier(current_x, current_y, x0, y0, x1, y1, x2, y2, x3, y3);
 
 		float radius = get_bezier_radius(t, x0, y0, x1, y1, x2, y2, x3, y3);
@@ -530,6 +545,12 @@ int rotate(float angle, int8_t is_radian){
 			wheel_state_R = CONTROLLED_BREAK;
 			wheel_state_L = CONTROLLED_BREAK;
 		}
+
+		if (millis() - strategy_start_time >= max_running_time){
+			prepare_emergency_break();
+			return 1;
+		}
+
 		distance_traveled_R = fabs(encoder_count_R - starting_encoder_count_R) * wheel_diameter_R * PI / CPR;
 		distance_traveled_L = fabs(encoder_count_L - starting_encoder_count_L) * wheel_diameter_L * PI / CPR;
 
@@ -556,6 +577,12 @@ int rotate(float angle, int8_t is_radian){
 
 	uint32_t phase_two_start_time = micros();
 	while (fabs(target_phi - absolute_phi) > deg_to_rad(5) && distance_to_target <= previous_distance_to_target + 10){
+
+		if (millis() - strategy_start_time >= max_running_time){
+			prepare_emergency_break();
+			return 1;
+		}
+
 		distance_traveled_R = (encoder_count_R - starting_encoder_count_R) * wheel_diameter_R * PI / CPR;
 		distance_traveled_L = (encoder_count_L - starting_encoder_count_L) * wheel_diameter_L * PI / CPR;
 		yaw_centering_term = MIN((fabs(distance_traveled_R) - fabs(distance_traveled_L)) * 0.1, 1);
@@ -610,7 +637,7 @@ int go_to(float x, float y, float speed, float direction)
 	if(direction == -1){
 		target_angle = normalize_angle(target_angle - PI);
 	}
-   while (fabs(normalize_angle(target_angle - current_phi)) > deg_to_rad(2))
+    if (fabs(normalize_angle(target_angle - current_phi)) > deg_to_rad(2))
 	{
 		if (orientate(target_angle, 1)){
 			return 1;
@@ -644,15 +671,15 @@ bool is_idle(){
 	if (encoder_guard_fault || control_loop_state == DISACTIVATED){
 		return true;
 	}
-	int encoder_tolerance = 3;
-	int pwm_tolerance = 70;
+	int encoder_tolerance = 6;
+	int pwm_tolerance = 100;
 	bool right_wheel_idle = (fabs(target_encoder_count_R - encoder_count_R) < encoder_tolerance) && (fabs(PWM_R) < pwm_tolerance) && (fabs(previous_position_error_R) < encoder_tolerance);
 	bool left_wheel_idle = (fabs(target_encoder_count_L - encoder_count_L) < encoder_tolerance) && (fabs(PWM_L) < pwm_tolerance) && (fabs(previous_position_error_L) < encoder_tolerance);
 	return right_wheel_idle && left_wheel_idle;
 }
 void wait_for_idle(){
 	int start_time = millis();
-	while(!is_idle() || control_loop_state != POSITION){
+	while(!is_idle() && control_loop_state == POSITION){
 		if (encoder_guard_fault || control_loop_state == DISACTIVATED){
 			return;
 		}
@@ -706,4 +733,8 @@ bool check_for_collision(int* counter){
 			*counter = 0;
 	}
 	return false;
+}
+void recover_from_emergency_break() {
+    wheel_state_R = ACCELERATING; 
+    wheel_state_L = ACCELERATING;
 }

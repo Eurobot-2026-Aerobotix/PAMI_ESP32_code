@@ -24,9 +24,9 @@ std_msgs__msg__Int32 action_done_msg;
 std_msgs__msg__Float32MultiArray strategy_msg;
 std_srvs__srv__Trigger_Request status_req;
 std_srvs__srv__Trigger_Response status_res;
-float received_floats[200]; // Adjust size as needed
+float received_floats[300]; // Adjust size as needed
 size_t received_floats_count = 0;
-int recieved_commands[200]; // Integer array for converted recieved_commands
+int recieved_commands[300]; // Integer array for converted recieved_commands
 int deploy_pos[3];
 int first_delay = 1;
 size_t commands_count = 0;
@@ -35,9 +35,9 @@ enum CommunicationState comm_state = WAITING_AGENT;
 volatile bool comm_stop_requested = false;
 static bool entities_created = false;
 
-static const size_t STRATEGY_MSG_CAPACITY = 200;
-static const size_t MAX_RECEIVED_FLOATS = 200;
-static const size_t MAX_STRATEGY_COMMANDS = 200;
+static const size_t STRATEGY_MSG_CAPACITY = 300;
+static const size_t MAX_RECEIVED_FLOATS = 300;
+static const size_t MAX_STRATEGY_COMMANDS = 300;
 
 // WiFi reconnection variables
 unsigned long last_wifi_check = 0;

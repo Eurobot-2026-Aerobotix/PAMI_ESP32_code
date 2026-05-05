@@ -34,6 +34,11 @@ float distance_to_target;
 float obstacle_distance;
 //bool has_target = false;
 
+const int TRIGGER_THRESHOLD = 3; // 3 × 30ms = 90ms of real obstacle
+const int CLEAR_THRESHOLD   = 7; // 7 × 30ms = 210ms of clear path
+int obstacle_count = 0;
+int clear_count    = 0;
+
 void kill_comms();
 
 static bool has_command_operands(int current_index, int required_count, int num_commands)
@@ -207,14 +212,13 @@ void strategy()
       i += 3;
     }
     else if (command_type == WALKING_POSITION){
-      if (!has_command_operands(i, 2, num_commands)) {
+      if (!has_command_operands(i, 1, num_commands)) {
         Serial.println("[ERROR] Truncated WALKING_POSITION command in strategy buffer");
         break;
       }
-      int position = commands[i + 1];
       Serial.println("[CMD] walking_position_cmd");
-      walking_position(position);
-      i += 2;
+      walking_position();
+      i += 1;
     }
     else if (command_type == PREPARE){
       Serial.println("[CMD] prepare_cmd");
@@ -323,36 +327,36 @@ void emergencyBreakTask(void *pvParameters)
 {
   const TickType_t xDelay = pdMS_TO_TICKS(10);
   TickType_t xLastWakeTime = xTaskGetTickCount();
-  
+
   for (;;)
   {
-    if (
-          (
-            ( 
-              (get_ultrasonic_distance() < min_distance)
-              && 
-              (trajectory != ROTATING) 
-              && 
-              (control_loop_state != POSITION)
-            ) 
-            || 
-            (
-              strategy_started 
-              && 
-              (millis() - strategy_start_time >= max_running_time)
-            )
-          ) 
-          && 
-          (wheel_state_R != EMERGENCY_BREAK) 
-        )
+    float dist = get_ultrasonic_distance();
+    bool timeout_triggered = strategy_started
+                             && (millis() - strategy_start_time >= max_running_time);
+    bool raw_obstacle = (dist < min_distance)
+                        && (trajectory != ROTATING)
+                        && (control_loop_state != POSITION);
+
+    if (raw_obstacle) { obstacle_count++; clear_count = 0; }
+    else              { clear_count++; obstacle_count = 0; }
+
+    if ((obstacle_count >= TRIGGER_THRESHOLD || timeout_triggered)
+        && (wheel_state_R != EMERGENCY_BREAK))
     {
-     prepare_emergency_break();
+      prepare_emergency_break();
+      obstacle_count = 0; 
+    }
+    else if (wheel_state_R == EMERGENCY_BREAK
+             && !timeout_triggered
+             && clear_count >= CLEAR_THRESHOLD)
+    {
+      recover_from_emergency_break();
+      clear_count = 0;
     }
 
     vTaskDelayUntil(&xLastWakeTime, xDelay);
   }
 }
-
 void PIDTask(void *pvParameters){
   const TickType_t xDelay = pdMS_TO_TICKS(1);
   TickType_t xLastWakeTime = xTaskGetTickCount();
@@ -583,7 +587,8 @@ void kill_comms(){
   }
 }
 void loop(){
-
+// Serial.printf("ultrasonic: %.2f mm\n", get_ultrasonic_distance());   
+// delay(1000);
   // send_values_to_usart(control_loop_state, PWM_L, encoder_count_R, encoder_count_L);
   // custom_delay(30);
     // PWM_R=500;

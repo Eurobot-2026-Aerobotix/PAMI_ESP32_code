@@ -281,29 +281,23 @@ void send_values_to_usart(float value1, float value2, float value3, float value4
     Serial.write((uint8_t)0xAD);
     Serial.write((uint8_t*)&value4, sizeof(value4));
 }
-float get_ultrasonic_distance(){
-    long duration;
-    float distance;
 
-    // Clear the trigger pin
+float get_ultrasonic_distance() {
+    long duration;
+
     digitalWrite(trigger, LOW);
     delayMicroseconds(2);
-
-    // Set the trigger pin HIGH for 10 microseconds
     digitalWrite(trigger, HIGH);
     delayMicroseconds(10);
     digitalWrite(trigger, LOW);
 
-    // Read the echo pin
-    duration = pulseIn(echo, HIGH, 2000); // Timeout after 2000us to avoid blocking
+    duration = pulseIn(echo, HIGH, 3000);
 
-    // Calculate distance in mm
-    distance = (duration / 2.0) * 0.343; // Speed of sound is ~343 m/s or 0.0343 mm/µs
+    if (duration == 0) return 9999.0;
 
-    // If no echo received, return -1
-    if (duration == 0) {
-        return 500.0;
-    }
+    float distance = (duration / 2.0) * 0.343;
+
+    if (distance < 20.0) return 9999.0; // anything < 2cm is sensor noise
 
     return distance;
 }
@@ -501,12 +495,12 @@ void pickup(int pick_right, int pick_left, int up_or_down){
     ultrasonic_blocked = up_or_down;
     move_servo(up_or_down? 4 : 1);
     if (up_or_down==1){
-        custom_delay(1000);
+        custom_delay(600);
     }else{
-        custom_delay(1300);
+        custom_delay(900);
     }
     move_servo(2);
-    custom_delay(500);
+    custom_delay(400);
     heza = true;
 }
 
@@ -517,7 +511,7 @@ void putdown(int bechwaya, int nid_lot){
     set_pump_states(0, 0);
     set_electrovalve_state(1);
     move_servo(0);
-    custom_delay(1000);
+    custom_delay(800);
     set_electrovalve_state(0);
     heza = false;
 }
@@ -527,10 +521,9 @@ void letgo(){
     move_servo(5);
     custom_delay(500);
 }
-void walking_position(int position){
-    move_servo(position? 0 : 3);
-    custom_delay(500);
-    ultrasonic_blocked = false;
+void walking_position(){
+    move_servo(3);
+    custom_delay(400);
 }
 void prepare_servo_up(){
     move_servo(5);

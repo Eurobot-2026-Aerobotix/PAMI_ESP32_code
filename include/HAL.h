@@ -192,7 +192,7 @@ extern volatile int pump_left_active;
 extern volatile int pump_right_active;
 void pickup(int pick_right, int pick_left, int up_or_down);
 void putdown(int bechwaya, int nid_lot);
-void walking_position(int position);
+void walking_position();
 void prepare_servo_up();
 void letgo();
 void HAL_setup();
