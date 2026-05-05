@@ -461,6 +461,9 @@ void HAL_setup()
     directionL = 1;
 
     servo.attach(servo_pin);
+    servo.write(180);
+    delay(250);
+    servo.write(0);
 
     // Interrupts
     //attachInterrupt(digitalPinToInterrupt(encoderRA), encoderRISRA, CHANGE);
