@@ -94,6 +94,11 @@ int move_forward(float distance, float speed, float target_x, float target_y, fl
 			return 0;
 		}
 
+		if (millis() - strategy_start_time >= max_running_time){
+			prepare_emergency_break();
+			return 1;
+		}
+
 		float phi_error = normalize_angle(calculate_instant_target_phi(x, distance) - current_phi);
 		float deviation_angle = normalize_angle(atan2(current_y - starting_y, current_x - starting_x) - atan2(target_y - starting_y, target_x - starting_x) );
 		float deviation_distance = -direction * sqrt(SQR(current_y - starting_y) + SQR(current_x - starting_x)) * sin(deviation_angle); // positive to the left and negative to the right
@@ -123,6 +128,11 @@ int move_forward(float distance, float speed, float target_x, float target_y, fl
 	int32_t phase_two_start_time = micros();
 	while (distance_to_target > 2.5){
 		
+		if (millis() - strategy_start_time >= max_running_time){
+			prepare_emergency_break();
+			return 1;
+		}
+
 		float phi_error = normalize_angle(calculate_instant_target_phi(x, distance) - current_phi);
 		float deviation_angle = normalize_angle(atan2(current_y - starting_y, current_x - starting_x) - atan2(target_y - starting_y, target_x - starting_x) );
 		float deviation_distance = -direction * sqrt(SQR(current_y - starting_y) + SQR(current_x - starting_x)) * sin(deviation_angle); // positive to the left and negative to the right
@@ -227,6 +237,11 @@ int move_backwards(float distance, float speed){
 			emergency_break();
 			return 0;
 		}
+		
+		if (millis() - strategy_start_time >= max_running_time){
+			prepare_emergency_break();
+			return 1;
+		}
 
 		if ((millis() - start_time) > 2000){
 			break;
@@ -310,6 +325,10 @@ int bezier_curve(float x1, float y1, float x2, float y2, float x3, float y3, flo
 			return 1;
 		}
 
+		if (millis() - strategy_start_time >= max_running_time){
+			prepare_emergency_break();
+			return 1;
+		}
 		t = project_bezier(current_x, current_y, x0, y0, x1, y1, x2, y2, x3, y3);
 
 		float radius = get_bezier_radius(t, x0, y0, x1, y1, x2, y2, x3, y3);
@@ -526,6 +545,12 @@ int rotate(float angle, int8_t is_radian){
 			wheel_state_R = CONTROLLED_BREAK;
 			wheel_state_L = CONTROLLED_BREAK;
 		}
+
+		if (millis() - strategy_start_time >= max_running_time){
+			prepare_emergency_break();
+			return 1;
+		}
+
 		distance_traveled_R = fabs(encoder_count_R - starting_encoder_count_R) * wheel_diameter_R * PI / CPR;
 		distance_traveled_L = fabs(encoder_count_L - starting_encoder_count_L) * wheel_diameter_L * PI / CPR;
 
@@ -552,6 +577,12 @@ int rotate(float angle, int8_t is_radian){
 
 	uint32_t phase_two_start_time = micros();
 	while (fabs(target_phi - absolute_phi) > deg_to_rad(5) && distance_to_target <= previous_distance_to_target + 10){
+
+		if (millis() - strategy_start_time >= max_running_time){
+			prepare_emergency_break();
+			return 1;
+		}
+
 		distance_traveled_R = (encoder_count_R - starting_encoder_count_R) * wheel_diameter_R * PI / CPR;
 		distance_traveled_L = (encoder_count_L - starting_encoder_count_L) * wheel_diameter_L * PI / CPR;
 		yaw_centering_term = MIN((fabs(distance_traveled_R) - fabs(distance_traveled_L)) * 0.1, 1);
