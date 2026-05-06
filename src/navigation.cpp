@@ -25,11 +25,21 @@ bool first_motion_softstart_done = false;
 
 int move_forward(float distance, float speed, float target_x, float target_y, float direction){
 	
-    // Suspend communication task to prevent interference during navigation
-    extern TaskHandle_t communicationTaskHandle;
-    if (communicationTaskHandle != NULL) {
-        vTaskSuspend(communicationTaskHandle);
-    }
+	// Suspend communication task to prevent interference during navigation
+	extern TaskHandle_t communicationTaskHandle;
+	if (communicationTaskHandle != NULL) {
+		vTaskSuspend(communicationTaskHandle);
+	}
+
+	// Encoder stuck detection variables
+	static int32_t last_encoder_R = 0;
+	static int32_t last_encoder_L = 0;
+	static uint32_t last_encoder_change_time = 0;
+	const uint32_t ENCODER_STUCK_TIMEOUT = 2000; // ms
+
+	last_encoder_R = encoder_count_R;
+	last_encoder_L = encoder_count_L;
+	last_encoder_change_time = millis();
 
 	distance = fabs(distance);
 
@@ -73,7 +83,16 @@ int move_forward(float distance, float speed, float target_x, float target_y, fl
 	float phase_two_distance = 10 * (distance/300.0);
 	int collision_check_counter = 0;
 	while (distance_to_target > phase_two_distance && !(distance_to_target > previous_distance_to_target && distance_to_target< distance/2) ){
-		
+		// Encoder stuck detection
+		if (encoder_count_R != last_encoder_R || encoder_count_L != last_encoder_L) {
+			last_encoder_R = encoder_count_R;
+			last_encoder_L = encoder_count_L;
+			last_encoder_change_time = millis();
+		} else if (millis() - last_encoder_change_time > ENCODER_STUCK_TIMEOUT) {
+			prepare_emergency_break();
+			return 1;
+		}
+
 		x = MAX(distance - distance_to_target, 0);
 		if (wheel_state_R == ACCELERATING && x > x1 ){
 			wheel_state_R = CRUISING;
@@ -127,7 +146,16 @@ int move_forward(float distance, float speed, float target_x, float target_y, fl
 	previous_distance_to_target = distance_to_target;
 	int32_t phase_two_start_time = micros();
 	while (distance_to_target > 2.5){
-		
+		// Encoder stuck detection
+		if (encoder_count_R != last_encoder_R || encoder_count_L != last_encoder_L) {
+			last_encoder_R = encoder_count_R;
+			last_encoder_L = encoder_count_L;
+			last_encoder_change_time = millis();
+		} else if (millis() - last_encoder_change_time > ENCODER_STUCK_TIMEOUT) {
+			prepare_emergency_break();
+			return 1;
+		}
+
 		if (millis() - strategy_start_time >= max_running_time){
 			prepare_emergency_break();
 			return 1;
