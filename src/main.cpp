@@ -40,7 +40,7 @@ void strategy()
   kill_comms();
   Serial.println("Executing strategy...");
 
-  // Calculate total commands: ROS commands + yellow/blue strategy commands
+  // // Calculate total commands: ROS commands + yellow/blue strategy commands
   
    int* commands = strategy_commands; // Assuming strategy_commands is filled with ROS commands
    int num_commands = strategy_length; // Assuming strategy_length is set to the number of ROS
@@ -359,7 +359,7 @@ void setup()
   Serial.println("=== PAMI ESP32 Setup ===");
 
   Serial.println("Setting motor pins...");
-  set_motor_pins(27, 21, 18, 19, 23, 17);
+  set_motor_pins(22, 21, 18, 19, 23, 17);
 
   set_ultrasonic_pins(14, 12);
 
@@ -376,7 +376,7 @@ void setup()
   set_PWM_min_max(1023, 270, 270, -270, -270);
 
   Serial.println("Setting wheel parameters...");
-  set_wheel_diameter_and_spacing(32.25, 32.25, 91.14313998872904);
+  set_wheel_diameter_and_spacing(32.25, 32.25, 88.72777283921702);
   HAL_setup();
 
   Serial.println("Creating tasks...");
@@ -454,22 +454,22 @@ void setup()
 void loop(){
   //send_values_to_usart(distance_to_target, obstacle_distance, 0, 0);
   // custom_delay(10);
-  //   PWM_R=500;
-  //   PWM_L=500;
-  //   delay(2000);
+    // PWM_R=500;
+    // PWM_L=500;
+    // delay(2000);
    
-  //   PWM_R=-500;
-  //   PWM_L=-500;
-  //   delay(2000);
+    // PWM_R=-500;
+    // PWM_L=-500;
+    // delay(2000);
     
-  //   PWM_R=500;
-  //   PWM_L=0;
-  //   delay(2000);
+    // PWM_R=500;
+    // PWM_L=0;
+    // delay(2000);
 
 
-  //   PWM_R=0;
-  //   PWM_L=500;
-  //   delay(2000);
+    // PWM_R=0;
+    // PWM_L=500;
+    // delay(2000);
 
   // Serial.print(encoder_count_L);
   //  Serial.print(" - ");
@@ -506,5 +506,5 @@ void loop(){
   // send_values_to_usart(current_speed_L, current_speed_R, target_speed_L, debugger);
   // custom_delay(10);
   // send_values_to_usart(encoder_count_R, encoder_count_L, 0, 0);
-  // custom_delay(10);
+  // custom_delay(30);
 }
