@@ -492,9 +492,9 @@ void pickup(int pick_right, int pick_left, int up_or_down){
     ultrasonic_blocked = up_or_down;
     move_servo(up_or_down? 4 : 1);
     if (up_or_down==1){
-        custom_delay(600);
+        custom_delay(1200);
     }else{
-        custom_delay(900);
+        custom_delay(2000);
     }
     move_servo(2);
     custom_delay(400);
